@@ -1,0 +1,301 @@
+.loginContainer {
+  min-height: 100vh;
+  background-color: var(--primary-brand-color, #57bc74); /* Brand green background */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Background brand name watermark */
+.brandBgPattern {
+  position: absolute;
+  font-family: 'Benn', Impact, sans-serif;
+  font-size: 20vw;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  transform: scaleY(1.05);
+  color: rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+  white-space: nowrap;
+  user-select: none;
+  bottom: -20px;
+  right: -5%;
+  z-index: 1;
+}
+
+/* Card layout */
+.loginCard {
+  background-color: #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  padding: 45px 40px;
+  max-width: 440px;
+  width: 90%;
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+}
+
+.backHomeBtn {
+  font-size: 0.8rem;
+  color: #666666;
+  text-decoration: none;
+  margin-bottom: 30px;
+  align-self: flex-start;
+  transition: color 0.2s ease;
+}
+
+.backHomeBtn:hover {
+  color: #000000;
+}
+
+.loginHeader {
+  text-align: center;
+  margin-bottom: 35px;
+}
+
+.logoText {
+  font-family: 'Benn', Impact, sans-serif;
+  font-size: 2.5rem;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  transform: scaleY(1.05);
+  color: #000000;
+  margin: 0 0 10px 0;
+  user-select: none;
+}
+
+.subtitle {
+  font-size: 0.85rem;
+  color: #666666;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+/* Form inputs */
+.loginForm {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.labelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.inputLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.forgotLink {
+  font-size: 0.78rem;
+  color: #666666;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.forgotLink:hover {
+  color: #000000;
+  text-decoration: underline;
+}
+
+.textInput {
+  background: transparent;
+  border: 1px solid #cccccc;
+  border-radius: 2px;
+  padding: 12px 14px;
+  font-size: 0.9rem;
+  color: #000000;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.textInput:focus {
+  border-color: #000000;
+}
+
+.textInput::placeholder {
+  color: #999999;
+}
+
+/* Submit Action Button */
+.loginBtn {
+  background-color: #000000;
+  color: #ffffff;
+  border: none;
+  border-radius: 2px;
+  padding: 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: opacity 0.2s ease;
+}
+
+.loginBtn:hover {
+  opacity: 0.9;
+}
+
+.loginBtn:disabled {
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.registerPrompt {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #666666;
+  margin-top: 15px;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.signUpLink {
+  color: #000000;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.signUpLink:hover {
+  text-decoration: underline;
+}
+
+/* Success State Styles */
+.successState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0;
+  text-align: center;
+}
+
+.checkCircle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #eaf7ee;
+  color: #2e7d32;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.checkIcon {
+  width: 32px;
+  height: 32px;
+}
+
+.successTitle {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #000000;
+  margin: 0 0 8px 0;
+}
+
+.successDesc {
+  font-size: 0.85rem;
+  color: #666666;
+  margin: 0;
+}
+
+/* Alert Boxes */
+.errorAlert {
+  background-color: rgba(211, 47, 47, 0.05);
+  border-left: 3px solid #d32f2f;
+  color: #d32f2f;
+  padding: 10px 12px;
+  font-size: 0.8rem;
+  border-radius: 2px;
+}
+
+.inactivityAlert {
+  background-color: rgba(245, 158, 11, 0.06);
+  border-left: 3px solid #f59e0b;
+  color: #b45309;
+  padding: 12px 14px;
+  font-size: 0.8rem;
+  border-radius: 2px;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  line-height: 1.4;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 15px 0;
+  width: 100%;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.divider:not(:empty)::before {
+  margin-right: 1em;
+}
+
+.divider:not(:empty)::after {
+  margin-left: 1em;
+}
+
+.dividerText {
+  font-size: 0.75rem;
+  color: #888888;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.googleBtnContainer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 5px;
+}
+@media (max-width: 768px) {
+  .loginCard {
+    width: 95%;
+    padding: 30px 20px;
+  }
+  .brandBgPattern {
+    font-size: 25vw;
+    bottom: -10px;
+    right: -2%;
+  }
+  .textInput {
+    padding: 14px 16px;
+    font-size: 1rem;
+  }
+  .loginBtn {
+    padding: 16px;
+    font-size: 0.9rem;
+  }
+}

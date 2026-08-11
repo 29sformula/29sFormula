@@ -1,0 +1,197 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 500px;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: modalScale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  box-sizing: border-box;
+}
+
+@keyframes modalScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.successIconWrapper {
+  margin-bottom: 24px;
+}
+
+.successCircle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background-color: rgba(87, 188, 116, 0.1);
+  color: var(--primary-color, #57bc74);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: popCircle 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes popCircle {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.checkIcon {
+  width: 36px;
+  height: 36px;
+}
+
+.title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  color: #000000;
+  margin: 0 0 8px 0;
+}
+
+.subtitle {
+  font-size: 0.82rem;
+  color: #555555;
+  margin: 0 0 25px 0;
+  line-height: 1.5;
+  max-width: 360px;
+}
+
+.detailsCard {
+  background-color: #f9fafb;
+  border: 1px solid #eaeaea;
+  border-radius: 6px;
+  width: 100%;
+  padding: 20px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  text-align: left;
+  gap: 15px;
+}
+
+.label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #888888;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.value {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #111111;
+  text-align: right;
+}
+
+.orderId {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary-color, #57bc74);
+  font-family: monospace;
+}
+
+.addressText {
+  font-size: 0.78rem;
+  color: #333333;
+  text-align: right;
+  line-height: 1.4;
+  max-width: 240px;
+}
+
+.totalPrice {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #000000;
+}
+
+.estimateBanner {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background-color: #f3f4f6;
+  border-radius: 6px;
+  width: 100%;
+  padding: 14px 20px;
+  text-align: left;
+  margin-bottom: 30px;
+  box-sizing: border-box;
+}
+
+.truckIcon {
+  width: 28px;
+  height: 28px;
+  color: #4b5563;
+  flex-shrink: 0;
+}
+
+.estimateTitle {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #111111;
+  display: block;
+  letter-spacing: 0.05em;
+}
+
+.estimateDesc {
+  font-size: 0.75rem;
+  color: #6b7280;
+  display: block;
+}
+
+.continueBtn {
+  width: 100%;
+  background-color: #000000;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.continueBtn:hover {
+  opacity: 0.9;
+}

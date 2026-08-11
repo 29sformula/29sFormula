@@ -1,0 +1,318 @@
+/* 11. Footer Section */
+.footerSection {
+  background-color: #f6f6f6;
+  /* Light grey background matching image */
+  color: #000000;
+  padding: 80px 10% 10px 10%;
+  width: 100%;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 1.2fr 1.5fr 1fr 1.8fr;
+  /* Responsive grid columns sizing */
+  gap: 50px;
+}
+
+.footerCol {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.footerColTitle {
+  font-size: 1.3rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: #000000;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.footerLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.footerLink {
+  font-size: 0.85rem;
+  color: #000000;
+  text-decoration: none;
+  font-weight: 400;
+  transition: opacity 0.2s ease;
+}
+
+.footerLink:hover {
+  opacity: 0.6;
+}
+
+.footerSupportInfo {
+  font-size: 0.8rem;
+  color: #555555;
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.footerSupportInfo p {
+  margin: 0;
+}
+
+.footerEmailLine {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mailIconSmall {
+  width: 14px;
+  height: 14px;
+  color: #888888;
+}
+
+.footerEmailLine a {
+  color: #000000;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.footerEmailLine a:hover {
+  text-decoration: underline;
+}
+
+.footerSubscribeGroup {
+  display: flex;
+  width: 100%;
+  gap: 10px;
+  align-items: center;
+}
+
+.footerSubscribeInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid #cccccc;
+  padding: 10px 0;
+  font-size: 0.85rem;
+  color: #000000;
+  outline: none;
+}
+
+.footerSubscribeInput::placeholder {
+  color: #888888;
+}
+
+.footerSubscribeBtn {
+  background-color: #000000;
+  color: #ffffff;
+  border: none;
+  padding: 12px 28px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: opacity 0.2s ease;
+}
+
+.footerSubscribeBtn:hover {
+  opacity: 0.8;
+}
+
+.footerSecureCheckout {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  margin-top: 15px;
+}
+
+.secureCheckoutTitle {
+  font-size: 0.75rem;
+  color: #666666;
+  margin: 0;
+}
+
+.paymentGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+  max-width: 260px;
+}
+
+.paymentBadge {
+  background-color: #ffffff;
+  border: 1px solid #e2e2e2;
+  border-radius: 2px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-family: sans-serif;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  user-select: none;
+}
+
+@media (max-width: 768px) {
+  .footerSection {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    padding: 60px 20px;
+  }
+}
+
+/* 12. Sub-Footer / Copyright Section */
+.subFooterSection {
+  background-color: #f6f6f6; /* Matching footer light background */
+  padding: 0 0 40px 0; /* Removed horizontal padding so logo can use full width */
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.subFooterLogo {
+  font-family: 'Benn', Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-size: 15vw; /* Adjusted to fit viewport precisely with scale transform */
+  font-weight: 300; /* Matching the main logo look */
+  letter-spacing: 0.02em;
+  transform: scaleY(1.05); /* Matching vertical stretch of main logo */
+  color: #000000;
+  text-align: center;
+  line-height: 0.85;
+  margin: 40px 0; /* Creates 40px margin above and below the logo text */
+  width: 100%;
+  white-space: nowrap; /* Ensures it stays on a single line */
+  user-select: none;
+}
+
+.subFooterDivider {
+  width: 80%; /* Centered divider, aligned to matches footer padding constraints */
+  border-top: 1px solid #e5e5e5;
+  margin: 30px auto 15px auto;
+}
+
+.subFooterCopyright {
+  align-self: flex-start;
+  margin-left: 10%; /* Indent to match footer column padding alignment */
+  margin-right: 10%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.subFooterCopyright p {
+  font-size: 0.65rem;
+  font-weight: 400;
+  color: #888888;
+  margin: 0;
+  letter-spacing: 0.05em;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .subFooterLogo {
+    font-size: 13.5vw;
+  }
+  .subFooterDivider {
+    width: 90%;
+    margin: 20px auto 12px auto;
+  }
+  .subFooterCopyright {
+    margin-left: 5%;
+    margin-right: 5%;
+  }
+}
+@media (max-width: 768px) {
+  .footerContent {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 30px;
+  }
+  .footerLinks {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+/* Policy Modal Styles */
+.policyModalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.policyModalOverlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.policyModalContent {
+  background-color: #ffffff;
+  padding: 40px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  border-radius: 4px;
+  position: relative;
+  transform: translateY(20px) scale(0.95);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.policyModalOverlay.open .policyModalContent {
+  transform: translateY(0) scale(1);
+}
+
+.policyModalCloseBtn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.policyModalCloseBtn:hover {
+  color: #000;
+}
+
+.policyModalTitle {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #111;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+}
+
+.policyModalText {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #333;
+  white-space: pre-wrap;
+}

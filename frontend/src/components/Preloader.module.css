@@ -1,0 +1,119 @@
+.preloaderContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--background, #09090b);
+  z-index: 999999;
+  display: flex;
+  transition: opacity 0.8s cubic-bezier(0.65, 0, 0.35, 1);
+  color: var(--foreground, #fafafa);
+}
+
+.fadeOut {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.fadeOutFast {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.centerWrapper {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  height: 60px;
+  /* Reduced height to look like a thick progress bar */
+  transition: width 0.7s cubic-bezier(0.76, 0, 0.24, 1),
+    height 0.7s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.centerWrapper.expand {
+  width: 100vw;
+  height: 100vh;
+}
+
+.rectangleOutline {
+  width: 100%;
+  height: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.5s ease;
+}
+
+.centerWrapper.expand .rectangleOutline {
+  border-color: transparent;
+}
+
+.rectangleFill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background-color: var(--foreground, #fafafa);
+  transition: opacity 0.5s ease;
+}
+
+.bottomLeftText {
+  position: absolute;
+  bottom: 0px;
+  left: 40px;
+  font-size: 8rem;
+  font-weight: 900;
+  font-family: var(--font-outfit), sans-serif;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: -2px;
+  z-index: 3;
+  display: flex;
+  align-items: baseline;
+}
+
+.slideChar {
+  display: inline-block;
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.percentSymbol {
+  display: inline-block;
+  font-size: 0.5em;
+  /* Half the size of the number */
+  font-weight: 600;
+  margin-left: 4px;
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .centerWrapper {
+    width: 300px;
+    height: 50px;
+  }
+
+  .bottomLeftText {
+    font-size: 5rem;
+    bottom: 0px;
+    left: 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .centerWrapper {
+    width: 220px;
+    height: 40px;
+  }
+
+  .bottomLeftText {
+    font-size: 3.5rem;
+    bottom: 0px;
+    left: 20px;
+  }
+}

@@ -1,0 +1,619 @@
+'use client';
+
+import { useState, useEffect, useRef } from "react";
+import confetti from "canvas-confetti";
+import styles from "./CheckoutDrawer.module.css";
+
+interface CartItem {
+  _id: string;
+  name: string;
+  price: number;
+  size: string;
+  quantity: number;
+  imageFront?: string;
+}
+
+interface CheckoutDrawerProps {
+  isOpen: boolean;
+  onClose: () => void;
+  cartItems: CartItem[];
+  primaryColor: string;
+  onOrderSuccess: (orderId: string, orderDetails: any) => void;
+}
+
+export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColor, onOrderSuccess }: CheckoutDrawerProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const autofillInputRef = useRef<HTMLInputElement>(null);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [stateVal, setStateVal] = useState("");
+  const [pinCode, setPinCode] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("COD");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [isReturningCustomer, setIsReturningCustomer] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [searchSuccess, setSearchSuccess] = useState<string | null>(null);
+  const [isSuccessExiting, setIsSuccessExiting] = useState(false);
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
+
+  const [couponCode, setCouponCode] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [couponSuccess, setCouponSuccess] = useState<string | null>(null);
+  const [appliedCouponCode, setAppliedCouponCode] = useState<string | null>(null);
+  const [showCouponField, setShowCouponField] = useState(false);
+
+  // Prevent background scrolling when checkout popup is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const subtotalAmount = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const totalAmount = Math.max(0, subtotalAmount - discount);
+
+  const handleApplyCoupon = () => {
+    setCouponError(null);
+    setCouponSuccess(null);
+    
+    if (!couponCode.trim()) {
+      setCouponError("Please enter a coupon code.");
+      return;
+    }
+    
+    const code = couponCode.trim().toUpperCase();
+    
+    if (code === "WELCOME10") {
+      const discountValue = Math.floor(subtotalAmount * 0.1);
+      setDiscount(discountValue);
+      setAppliedCouponCode(code);
+      setCouponSuccess(`Coupon applied! You saved ₹${discountValue.toLocaleString("en-IN")}.00`);
+    } else if (code === "FLAT100") {
+      if (subtotalAmount >= 500) {
+        setDiscount(100);
+        setAppliedCouponCode(code);
+        setCouponSuccess("Coupon applied! You saved ₹100.00");
+      } else {
+        setCouponError("Order amount must be greater than ₹500 for this coupon.");
+      }
+    } else {
+      setCouponError("Invalid or expired coupon code.");
+      setDiscount(0);
+      setAppliedCouponCode(null);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setDiscount(0);
+    setCouponCode("");
+    setAppliedCouponCode(null);
+    setCouponSuccess(null);
+    setCouponError(null);
+  };
+
+  const handleAutoFetchAddress = () => {
+    if (!navigator.geolocation) {
+      setError("Geolocation is not supported by your browser.");
+      return;
+    }
+
+    setIsFetchingLocation(true);
+    setError(null);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+          if (!res.ok) throw new Error("Failed to fetch address");
+
+          const data = await res.json();
+          if (data && data.address) {
+            const addr = data.address;
+
+            const fetchedCity = addr.city || addr.town || addr.village || addr.county || "";
+            if (fetchedCity) setCity(fetchedCity);
+
+            const fetchedState = addr.state || "";
+            if (fetchedState) setStateVal(fetchedState);
+
+            const fetchedPin = addr.postcode || "";
+            if (fetchedPin) setPinCode(fetchedPin);
+
+            const road = addr.road || addr.suburb || "";
+            const house = addr.house_number || "";
+            const fullStreet = [house, road].filter(Boolean).join(", ");
+            if (fullStreet) setAddress(fullStreet);
+          }
+        } catch (err) {
+          console.error(err);
+          setError("Could not automatically fetch your address. Please enter it manually.");
+        } finally {
+          setIsFetchingLocation(false);
+        }
+      },
+      (err) => {
+        setIsFetchingLocation(false);
+        setError("Location access denied or unavailable. Please enter your address manually.");
+      }
+    );
+  };
+
+  const handleAutofill = async () => {
+    if (!searchQuery.trim()) {
+      setSearchError("Please enter your email or phone number.");
+      return;
+    }
+    setIsSearching(true);
+    setSearchError(null);
+    setSearchSuccess(null);
+
+    try {
+      const res = await fetch(`http://127.0.0.1:5001/api/customers/search?query=${encodeURIComponent(searchQuery.trim())}`);
+      if (!res.ok) {
+        throw new Error("Customer not found. Please fill in your details manually.");
+      }
+      const data = await res.json();
+
+      if (data.name) setName(data.name);
+      if (data.email) setEmail(data.email);
+      if (data.phone) setPhone(data.phone);
+
+      if (data.address) {
+        const parts = data.address.split('-');
+        if (parts.length >= 2) {
+          setPinCode(parts[1].trim());
+          const addressParts = parts[0].split(',');
+          if (addressParts.length >= 3) {
+            setStateVal(addressParts[addressParts.length - 1].trim());
+            setCity(addressParts[addressParts.length - 2].trim());
+            setAddress(addressParts.slice(0, addressParts.length - 2).join(',').trim());
+          } else {
+            setAddress(parts[0].trim());
+          }
+        } else {
+          setAddress(data.address);
+        }
+      }
+
+      setIsSuccessExiting(false);
+      setSearchSuccess(`Welcome back ${data.name}! Your details have been autofilled.`);
+      setTimeout(() => {
+        setIsSuccessExiting(true);
+        setTimeout(() => {
+          setSearchSuccess(null);
+          setIsSuccessExiting(false);
+        }, 500);
+      }, 4000);
+
+      // Trigger confetti burst on local canvas for 3.5 seconds
+      if (canvasRef.current) {
+        const myConfetti = confetti.create(canvasRef.current, {
+          resize: true,
+          useWorker: true
+        });
+        const animationEnd = Date.now() + 300;
+
+        let originMinX = 0.5;
+        let originMaxX = 0.5;
+        let originY = 0.22;
+        if (autofillInputRef.current && canvasRef.current) {
+          const inputRect = autofillInputRef.current.getBoundingClientRect();
+          const canvasRect = canvasRef.current.getBoundingClientRect();
+          originMinX = (inputRect.left - canvasRect.left) / canvasRect.width;
+          originMaxX = ((inputRect.left - canvasRect.left) + inputRect.width) / canvasRect.width;
+          originY = ((inputRect.top - canvasRect.top) + (inputRect.height / 2)) / canvasRect.height;
+        }
+
+        const frame = () => {
+          const randomX = originMinX + Math.random() * (originMaxX - originMinX);
+
+          myConfetti({
+            particleCount: 8,
+            spread: 80,
+            startVelocity: 25,
+            origin: { x: randomX, y: originY }
+          });
+
+          if (Date.now() < animationEnd) {
+            requestAnimationFrame(frame);
+          }
+        };
+        frame();
+      } else {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { x: 0.85, y: 0.6 },
+          zIndex: 10000
+        });
+      }
+
+    } catch (err: any) {
+      setSearchError(err.message);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !email || !phone || !address || !city || !stateVal || !pinCode) {
+      setError("Please fill out all shipping details.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
+    const orderPayload = {
+      customerName: name,
+      customerEmail: email,
+      customerPhone: phone,
+      shippingAddress: `${address}, ${city}, ${stateVal} - ${pinCode}`,
+      cartItems: cartItems.map(item => ({
+        productId: item._id,
+        name: item.name,
+        price: item.price,
+        size: item.size,
+        quantity: item.quantity,
+        image: item.imageFront || ""
+      })),
+      totalAmount,
+      paymentMethod
+    };
+
+    try {
+      const res = await fetch("http://127.0.0.1:5001/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderPayload)
+      });
+
+      if (!res.ok) throw new Error("Failed to place order. Please try again.");
+
+      const data = await res.json();
+      if (data && data.orderId) {
+        onOrderSuccess(data.orderId, data);
+      } else {
+        throw new Error("Invalid order response from server.");
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to submit checkout.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className={styles.overlay} onClick={onClose} data-lenis-prevent="true">
+      <div className={styles.drawer} onClick={(e) => e.stopPropagation()} style={{ '--primary-color': primaryColor, position: 'relative' } as React.CSSProperties}>
+        <canvas
+          ref={canvasRef}
+          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 100 }}
+        />
+        <div className={styles.header}>
+          <h2>CHECKOUT</h2>
+          <button onClick={onClose} className={styles.closeBtn}>✕</button>
+        </div>
+
+        <form onSubmit={handleSubmit} className={styles.formContainer}>
+          {error && <div className={styles.errorAlert}>{error}</div>}
+
+          <div className={styles.scrollContent}>
+
+            {/* Returning Customer Section */}
+            <div className={styles.section} style={{ backgroundColor: "#f9fafb", padding: "16px", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
+              <label className={styles.checkboxLabel} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontWeight: 600, fontSize: "0.95rem" }}>
+                <input
+                  type="checkbox"
+                  checked={isReturningCustomer}
+                  onChange={(e) => setIsReturningCustomer(e.target.checked)}
+                  style={{ width: "18px", height: "18px", accentColor: primaryColor }}
+                />
+                Are you a returning customer? Autofill your details!
+              </label>
+
+              {isReturningCustomer && (
+                <div style={{ marginTop: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: 0 }}>Enter your email or phone number to quickly load your shipping details.</p>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <input
+                      ref={autofillInputRef}
+                      type="text"
+                      placeholder="Email or Phone Number"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className={styles.input}
+                      style={{ flex: 1 }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAutofill}
+                      disabled={isSearching}
+                      style={{
+                        backgroundColor: primaryColor,
+                        color: "white",
+                        border: "none",
+                        borderRadius: "4px",
+                        padding: "0 16px",
+                        fontWeight: 600,
+                        cursor: isSearching ? "not-allowed" : "pointer",
+                        opacity: isSearching ? 0.7 : 1
+                      }}
+                    >
+                      {isSearching ? "Searching..." : "Autofill"}
+                    </button>
+                  </div>
+                  {searchError && <p style={{ color: "#ef4444", fontSize: "0.85rem", margin: 0 }}>{searchError}</p>}
+                  {searchSuccess && (
+                    <div className={`${styles.successAlert} ${isSuccessExiting ? styles.slideOut : ''}`}>
+                      <span>{searchSuccess}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Contact Details */}
+            <div className={styles.section}>
+              <h3 className={styles.sectionTitle}>Contact Information</h3>
+              <div className={styles.inputGroup}>
+                <label className={styles.label}>Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className={styles.input}
+                />
+              </div>
+              <div className={styles.inputRow}>
+                <div className={styles.inputGroup}>
+                  <label className={styles.label}>Email Address</label>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={styles.input}
+                  />
+                </div>
+                <div className={styles.inputGroup}>
+                  <label className={styles.label}>Phone Number</label>
+                  <input
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className={styles.input}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Shipping Address */}
+            <div className={styles.section}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                <h3 className={styles.sectionTitle} style={{ margin: 0 }}>Delivery Address</h3>
+                <button
+                  type="button"
+                  onClick={handleAutoFetchAddress}
+                  disabled={isFetchingLocation}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    background: "none",
+                    border: `1px solid ${primaryColor}`,
+                    color: primaryColor,
+                    padding: "4px 10px",
+                    borderRadius: "4px",
+                    fontSize: "0.8rem",
+                    fontWeight: 600,
+                    cursor: isFetchingLocation ? "not-allowed" : "pointer",
+                    opacity: isFetchingLocation ? 0.7 : 1
+                  }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                  {isFetchingLocation ? "Fetching..." : "Auto Fetch"}
+                </button>
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label className={styles.label}>Street Address</label>
+                <input
+                  type="text"
+                  required
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  className={styles.input}
+                />
+              </div>
+              <div className={styles.inputRow}>
+                <div className={styles.inputGroup}>
+                  <label className={styles.label}>City</label>
+                  <input
+                    type="text"
+                    required
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    className={styles.input}
+                  />
+                </div>
+                <div className={styles.inputGroup}>
+                  <label className={styles.label}>State</label>
+                  <input
+                    type="text"
+                    required
+                    value={stateVal}
+                    onChange={(e) => setStateVal(e.target.value)}
+                    className={styles.input}
+                  />
+                </div>
+              </div>
+              <div className={styles.inputGroup}>
+                <label className={styles.label}>PIN Code</label>
+                <input
+                  type="text"
+                  required
+                  value={pinCode}
+                  onChange={(e) => setPinCode(e.target.value)}
+                  className={styles.input}
+                />
+              </div>
+            </div>
+
+            {/* Payment Options */}
+            <div className={styles.section}>
+              <h3 className={styles.sectionTitle}>Payment Method</h3>
+              <div className={styles.paymentOptions}>
+                <label className={`${styles.paymentLabel} ${paymentMethod === "COD" ? styles.paymentLabelActive : ""}`}>
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="COD"
+                    checked={paymentMethod === "COD"}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className={styles.radioInput}
+                  />
+                  <div className={styles.paymentInfo}>
+                    <span className={styles.paymentName}>Cash on Delivery (COD)</span>
+                    <span className={styles.paymentDesc}>Pay in cash upon doorstep fragrance delivery.</span>
+                  </div>
+                </label>
+
+                <label className={`${styles.paymentLabel} ${paymentMethod === "UPI" ? styles.paymentLabelActive : ""}`}>
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="UPI"
+                    checked={paymentMethod === "UPI"}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className={styles.radioInput}
+                  />
+                  <div className={styles.paymentInfo}>
+                    <span className={styles.paymentName}>UPI / Card Simulation</span>
+                    <span className={styles.paymentDesc}>Simulated secure digital checkout payment.</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            {/* Summary details */}
+            <div className={styles.summarySection}>
+              <h3 className={styles.sectionTitle}>Order Summary</h3>
+              <div className={styles.summaryList}>
+                {cartItems.map((item, index) => (
+                  <div key={index} className={styles.summaryItemRow}>
+                    <span className={styles.itemName}>
+                      {item.name} <span className={styles.itemSize}>({item.size})</span> x {item.quantity}
+                    </span>
+                    <span className={styles.itemPrice}>₹{(item.price * item.quantity).toLocaleString("en-IN")}.00</span>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Coupon Section */}
+              <div className={styles.couponSection}>
+                {!showCouponField ? (
+                  <button 
+                    type="button" 
+                    onClick={() => setShowCouponField(true)}
+                    style={{ background: 'none', border: 'none', color: primaryColor, textDecoration: 'underline', cursor: 'pointer', fontSize: '0.85rem', textAlign: 'left', padding: 0 }}
+                  >
+                    Have a coupon code?
+                  </button>
+                ) : appliedCouponCode ? (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#ecfdf5', padding: '10px 12px', borderRadius: '4px', border: '1px dashed #10b981' }}>
+                    <span style={{ color: '#10b981', fontWeight: 600, fontSize: '0.85rem' }}>✓ {appliedCouponCode} applied</span>
+                    <button 
+                      type="button"
+                      onClick={handleRemoveCoupon} 
+                      style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.85rem', textDecoration: 'underline' }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <div className={styles.couponInputGroup}>
+                    <input
+                      type="text"
+                      placeholder="Enter Coupon Code"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      className={styles.couponInput}
+                      style={{ '--primary-color': primaryColor } as React.CSSProperties}
+                    />
+                    <button 
+                      type="button" 
+                      onClick={handleApplyCoupon} 
+                      className={styles.couponBtn}
+                      style={{ backgroundColor: primaryColor }}
+                    >
+                      Apply
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        setShowCouponField(false);
+                        handleRemoveCoupon();
+                      }}
+                      style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: '0 4px', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      title="Cancel Coupon"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+                {couponError && !appliedCouponCode && <span style={{ color: "#ef4444", fontSize: "0.8rem" }}>{couponError}</span>}
+                {couponSuccess && <span style={{ color: "#10b981", fontSize: "0.8rem", marginTop: appliedCouponCode ? "4px" : "0" }}>{couponSuccess}</span>}
+              </div>
+
+              <div className={styles.shippingRow}>
+                <span>Shipping Fee</span>
+                <span className={styles.freeBadge}>FREE</span>
+              </div>
+              {discount > 0 && (
+                <div className={styles.discountRow}>
+                  <span>Discount</span>
+                  <span className={styles.discountAmount}>-₹{discount.toLocaleString("en-IN")}.00</span>
+                </div>
+              )}
+              <div className={styles.totalRow}>
+                <span>Total Amount Due</span>
+                <span className={styles.totalVal}>₹{totalAmount.toLocaleString("en-IN")}.00</span>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.footer}>
+            <button type="submit" disabled={isSubmitting || !(name.trim() && email.trim() && phone.trim() && address.trim() && city.trim() && stateVal.trim() && pinCode.trim())} className={styles.submitBtn}>
+              {isSubmitting ? "Processing Order..." : "Confirm & Place Order"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
