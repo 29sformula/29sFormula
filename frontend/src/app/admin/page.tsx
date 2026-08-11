@@ -307,7 +307,9 @@ export default function AdminDashboard() {
   const [newDiscountCode, setNewDiscountCode] = useState<string>("");
   const [newDiscountType, setNewDiscountType] = useState<string>("percentage");
   const [newDiscountValue, setNewDiscountValue] = useState<string>("");
+  const [newDiscountMinOrder, setNewDiscountMinOrder] = useState<string>("");
   const [discountError, setDiscountError] = useState<string | null>(null);
+  const [deleteDiscountConfirmId, setDeleteDiscountConfirmId] = useState<string | null>(null);
 
   // Orders Management State
   const [orders, setOrders] = useState<any[]>([]);
@@ -1022,12 +1024,14 @@ export default function AdminDashboard() {
         body: JSON.stringify({
           code: newDiscountCode,
           type: newDiscountType,
-          value: parseFloat(newDiscountValue)
-        })
+          value: parseFloat(newDiscountValue),
+          minOrderAmount: parseFloat(newDiscountMinOrder) || 0
+        }),
       });
       if (res.ok) {
         setNewDiscountCode("");
         setNewDiscountValue("");
+        setNewDiscountMinOrder("");
         setDiscountError(null);
         fetchDiscounts();
         setSuccessMessage("Discount coupon successfully created!");
@@ -1042,7 +1046,6 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteDiscount = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this discount coupon permanently?")) return;
     try {
       const res = await fetch(`http://127.0.0.1:5001/api/discounts/${id}`, {
         method: "DELETE"
@@ -1051,6 +1054,7 @@ export default function AdminDashboard() {
         fetchDiscounts();
         setSuccessMessage("Discount coupon removed!");
         setTimeout(() => setSuccessMessage(null), 3000);
+        setDeleteDiscountConfirmId(null);
       }
     } catch (e) {
       console.error("Failed to delete discount:", e);
@@ -5080,59 +5084,112 @@ export default function AdminDashboard() {
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "25px", marginTop: "20px" }}>
                 {/* Form to create discount */}
-                <div className={styles.dashboardCard} style={{ padding: "20px", height: "fit-content" }}>
-                  <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "15px" }}>Create Coupon Code</h3>
+                <div className={styles.dashboardCard} style={{ padding: "25px", height: "fit-content", background: "linear-gradient(145deg, #ffffff, #f8fafc)", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "25px" }}>
+                    <div style={{ backgroundColor: "#e0e7ff", padding: "8px", borderRadius: "8px", color: "#4f46e5" }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "20px", height: "20px" }}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+                      </svg>
+                    </div>
+                    <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#1e293b", margin: 0 }}>Generate Coupon</h3>
+                  </div>
+                  
                   <form onSubmit={handleCreateDiscount}>
-                    {discountError && <div className={styles.errorBanner} style={{ padding: "8px 12px", fontSize: "0.8rem", marginBottom: "15px" }}>{discountError}</div>}
-                    <div className={styles.inputGroup} style={{ marginBottom: "15px" }}>
-                      <label className={styles.inputLabel}>Coupon Code *</label>
+                    {discountError && <div className={styles.errorBanner} style={{ padding: "10px 14px", fontSize: "0.85rem", marginBottom: "20px", borderRadius: "6px", backgroundColor: "#fef2f2", color: "#b91c1c", border: "1px solid #fecaca" }}>{discountError}</div>}
+                    
+                    <div style={{ marginBottom: "20px" }}>
+                      <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "#475569", marginBottom: "6px" }}>Coupon Code <span style={{ color: "#ef4444" }}>*</span></label>
                       <input
                         type="text"
                         value={newDiscountCode}
                         onChange={(e) => setNewDiscountCode(e.target.value.toUpperCase().replace(/\s+/g, ""))}
-                        placeholder="e.g. WELCOME10"
-                        className={styles.textInput}
+                        placeholder="e.g. SUMMER2024"
+                        style={{ padding: "10px 12px", border: "2px solid #e2e8f0", borderRadius: "8px", width: "100%", fontSize: "0.9rem", fontWeight: 600, color: "#1e293b", transition: "border-color 0.2s", outline: "none" }}
+                        onFocus={(e) => e.target.style.borderColor = "#4f46e5"}
+                        onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
                         required
                       />
                     </div>
-                    <div className={styles.inputGroup} style={{ marginBottom: "15px" }}>
-                      <label className={styles.inputLabel}>Discount Type *</label>
+                    
+                    <div style={{ marginBottom: "20px" }}>
+                      <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "#475569", marginBottom: "6px" }}>Discount Type <span style={{ color: "#ef4444" }}>*</span></label>
                       <select
                         value={newDiscountType}
                         onChange={(e) => setNewDiscountType(e.target.value)}
-                        style={{ padding: "8px 12px", border: "1px solid #d1d5db", borderRadius: "6px", width: "100%", fontSize: "0.88rem", background: "#fff", color: "#000" }}
+                        style={{ padding: "10px 12px", border: "2px solid #e2e8f0", borderRadius: "8px", width: "100%", fontSize: "0.9rem", fontWeight: 600, color: "#1e293b", cursor: "pointer", outline: "none", appearance: "none", backgroundImage: "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"%23475569\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M6 9l6 6 6-6\"/></svg>')", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
+                        onFocus={(e) => e.target.style.borderColor = "#4f46e5"}
+                        onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
                       >
-                        <option value="percentage">Percentage Discount (%)</option>
-                        <option value="fixed">Flat Price Discount (₹)</option>
+                        <option value="percentage">Percentage (%)</option>
+                        <option value="fixed">Flat Amount (₹)</option>
                       </select>
                     </div>
-                    <div className={styles.inputGroup} style={{ marginBottom: "20px" }}>
-                      <label className={styles.inputLabel}>Discount Value *</label>
-                      <input
-                        type="number"
-                        value={newDiscountValue}
-                        onChange={(e) => setNewDiscountValue(e.target.value)}
-                        placeholder={newDiscountType === "percentage" ? "10" : "150"}
-                        className={styles.textInput}
-                        required
-                        min="1"
-                      />
+                    
+                    <div style={{ marginBottom: "25px" }}>
+                      <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "#475569", marginBottom: "6px" }}>Discount Value <span style={{ color: "#ef4444" }}>*</span></label>
+                      <div style={{ position: "relative" }}>
+                        <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8", fontWeight: 700, fontSize: "0.9rem" }}>
+                          {newDiscountType === "percentage" ? "%" : "₹"}
+                        </span>
+                        <input
+                          type="number"
+                          value={newDiscountValue}
+                          onChange={(e) => setNewDiscountValue(e.target.value)}
+                          placeholder={newDiscountType === "percentage" ? "10" : "150"}
+                          style={{ padding: "10px 12px 10px 32px", border: "2px solid #e2e8f0", borderRadius: "8px", width: "100%", fontSize: "0.9rem", fontWeight: 600, color: "#1e293b", outline: "none" }}
+                          onFocus={(e) => e.target.style.borderColor = "#4f46e5"}
+                          onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
+                          required
+                          min="1"
+                        />
+                      </div>
                     </div>
+                    
+                    <div style={{ marginBottom: "25px" }}>
+                      <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "#475569", marginBottom: "6px" }}>Minimum Order Amount (₹) <span style={{ color: "#94a3b8", fontWeight: 400 }}>(Optional)</span></label>
+                      <div style={{ position: "relative" }}>
+                        <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8", fontWeight: 700, fontSize: "0.9rem" }}>
+                          ₹
+                        </span>
+                        <input
+                          type="number"
+                          value={newDiscountMinOrder}
+                          onChange={(e) => setNewDiscountMinOrder(e.target.value)}
+                          placeholder="e.g. 500"
+                          style={{ padding: "10px 12px 10px 32px", border: "2px solid #e2e8f0", borderRadius: "8px", width: "100%", fontSize: "0.9rem", fontWeight: 600, color: "#1e293b", outline: "none" }}
+                          onFocus={(e) => e.target.style.borderColor = "#4f46e5"}
+                          onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
+                          min="0"
+                        />
+                      </div>
+                    </div>
+                    
                     <button
                       type="submit"
                       style={{
-                        backgroundColor: "#000",
+                        backgroundColor: "#4f46e5",
                         color: "#fff",
                         border: "none",
-                        borderRadius: "6px",
-                        padding: "10px 18px",
+                        borderRadius: "8px",
+                        padding: "12px 20px",
                         width: "100%",
                         fontWeight: 700,
-                        fontSize: "0.88rem",
-                        cursor: "pointer"
+                        fontSize: "0.95rem",
+                        cursor: "pointer",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        gap: "8px",
+                        boxShadow: "0 4px 6px -1px rgba(79, 70, 229, 0.3)",
+                        transition: "background-color 0.2s"
                       }}
+                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#4338ca"}
+                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#4f46e5"}
                     >
-                      + Create Coupon
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" style={{ width: "18px", height: "18px" }}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                      </svg>
+                      Create Coupon
                     </button>
                   </form>
                 </div>
@@ -5141,41 +5198,25 @@ export default function AdminDashboard() {
                 <div className={styles.dashboardCard} style={{ padding: "20px" }}>
                   <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "15px" }}>Active Storefront Coupons</h3>
                   {discountsList.length > 0 ? (
-                    <div style={{ overflowX: "auto" }}>
-                      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                        <thead>
-                          <tr style={{ borderBottom: "2px solid #e5e7eb", fontSize: "0.8rem", color: "#6b7280", textAlign: "left" }}>
-                            <th style={{ padding: "10px" }}>CouponCode</th>
-                            <th style={{ padding: "10px" }}>DiscountValue</th>
-                            <th style={{ padding: "10px" }}>Type</th>
-                            <th style={{ padding: "10px", textAlign: "right" }}>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {discountsList.map((disc) => (
-                            <tr key={disc._id} style={{ borderBottom: "1px solid #f3f4f6" }}>
-                              <td style={{ padding: "12px 10px", fontWeight: 700, fontFamily: "monospace", fontSize: "0.9rem", color: "#4f46e5" }}>
-                                {disc.code}
-                              </td>
-                              <td style={{ padding: "12px 10px", fontWeight: 600 }}>
-                                {disc.type === "percentage" ? `${disc.value}% Off` : `₹${disc.value.toLocaleString("en-IN")} Flat`}
-                              </td>
-                              <td style={{ padding: "12px 10px", fontSize: "0.82rem", textTransform: "capitalize", color: "#6b7280" }}>
-                                {disc.type}
-                              </td>
-                              <td style={{ padding: "12px 10px", textAlign: "right" }}>
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteDiscount(disc._id)}
-                                  style={{ backgroundColor: "transparent", border: "none", color: "#ef4444", cursor: "pointer", fontWeight: 700, fontSize: "0.82rem" }}
-                                >
-                                  Delete
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "15px" }}>
+                      {discountsList.map((disc) => (
+                        <div key={disc._id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "15px 20px", border: "2px dashed #d1d5db", borderRadius: "10px", backgroundColor: "#f8fafc", position: "relative" }}>
+                          <div>
+                            <div style={{ fontWeight: 800, fontFamily: "monospace", fontSize: "1.2rem", color: "#111827", letterSpacing: "1px" }}>{disc.code}</div>
+                            <div style={{ fontSize: "0.85rem", color: "#4f46e5", fontWeight: 700, marginTop: "4px" }}>
+                              {disc.type === "percentage" ? `${disc.value}% OFF` : `₹${disc.value.toLocaleString("en-IN")} FLAT OFF`}
+                              {disc.minOrderAmount > 0 && <span style={{ color: "#64748b", fontWeight: 500, marginLeft: "8px" }}>| Min ₹{disc.minOrderAmount.toLocaleString("en-IN")}</span>}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setDeleteDiscountConfirmId(disc._id)}
+                            style={{ backgroundColor: "#fee2e2", border: "none", color: "#dc2626", cursor: "pointer", fontWeight: 700, fontSize: "0.8rem", padding: "8px 12px", borderRadius: "6px", transition: "all 0.2s ease" }}
+                          >
+                            Revoke
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   ) : (
                     <div style={{ padding: "40px 10px", textAlign: "center", color: "#6b7280", fontSize: "0.88rem" }}>
@@ -5189,6 +5230,38 @@ export default function AdminDashboard() {
 
         </div>
       </div>
+
+      {deleteDiscountConfirmId && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.unsavedModal}>
+            <div className={styles.modalHeader}>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="#dc2626" className={styles.warningIcon}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+              </svg>
+              <h3>Confirm Coupon Deletion</h3>
+            </div>
+            <p className={styles.modalBody}>
+              Are you sure you want to permanently revoke this discount coupon? Customers will no longer be able to apply it during checkout.
+            </p>
+            <div className={styles.modalFooter}>
+              <button 
+                type="button" 
+                className={styles.modalCancelBtn}
+                onClick={() => setDeleteDiscountConfirmId(null)}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                className={styles.modalConfirmBtn}
+                onClick={() => handleDeleteDiscount(deleteDiscountConfirmId)}
+              >
+                Yes, Revoke Coupon
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {deleteOrderTargetId && (
         <div className={styles.modalOverlay}>

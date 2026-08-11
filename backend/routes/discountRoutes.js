@@ -1,0 +1,63 @@
+import express from "express";
+import Discount from "../models/Discount.js";
+
+const router = express.Router();
+
+router.get("/api/discounts", async (req, res) => {
+  try {
+    const discounts = await Discount.find({}).sort({ createdAt: -1 });
+    res.json(discounts);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch discounts" });
+  }
+});
+
+router.post("/api/discounts", async (req, res) => {
+  try {
+    const { code, type, value, minOrderAmount } = req.body;
+    if (!code || !value) {
+      return res.status(400).json({ error: "Code and value are required." });
+    }
+    const newDiscount = new Discount({
+      code: String(code).toUpperCase().trim(),
+      type: type || "percentage",
+      value: Number(value),
+      minOrderAmount: Number(minOrderAmount) || 0,
+      active: true
+    });
+    await newDiscount.save();
+    res.status(201).json(newDiscount);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to create discount (code may already exist)." });
+  }
+});
+
+router.delete("/api/discounts/:id", async (req, res) => {
+  try {
+    await Discount.findByIdAndDelete(req.params.id);
+    res.json({ message: "Discount deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete discount" });
+  }
+});
+
+router.get("/api/discounts/validate", async (req, res) => {
+  try {
+    const { code, subtotal } = req.query;
+    if (!code) return res.status(400).json({ error: "Discount code is required" });
+    const discount = await Discount.findOne({ code: String(code).toUpperCase().trim(), active: true });
+    if (!discount) return res.status(404).json({ error: "Invalid discount code" });
+    
+    if (discount.minOrderAmount > 0 && subtotal !== undefined) {
+      if (Number(subtotal) < discount.minOrderAmount) {
+        return res.status(400).json({ error: `This coupon requires a minimum order of ₹${discount.minOrderAmount}` });
+      }
+    }
+    
+    res.json(discount);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to validate code" });
+  }
+});
+
+export default router;

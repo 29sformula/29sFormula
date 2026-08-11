@@ -74,14 +74,16 @@ export default function ProductDetailPage() {
     if (!couponCodeInput.trim()) return;
 
     try {
-      const res = await fetch(`http://127.0.0.1:5001/api/discounts/validate?code=${couponCodeInput.trim()}`, { cache: "no-store" });
+      const cartSubtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+      const res = await fetch(`http://127.0.0.1:5001/api/discounts/validate?code=${couponCodeInput.trim()}&subtotal=${cartSubtotal}`, { cache: "no-store" });
       if (res.ok) {
         const discount = await res.json();
         setAppliedDiscount(discount);
         setCouponMessage(`Coupon ${discount.code} applied successfully!`);
       } else {
+        const errData = await res.json().catch(() => null);
         setAppliedDiscount(null);
-        setCouponMessage("Invalid discount coupon code.");
+        setCouponMessage(errData?.error || "Invalid discount coupon code.");
       }
     } catch (err) {
       setCouponMessage("Could not validate coupon.");
