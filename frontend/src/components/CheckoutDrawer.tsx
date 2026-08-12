@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import confetti from "canvas-confetti";
+// @ts-ignore
+import { load } from "@cashfreepayments/cashfree-js";
 import styles from "./CheckoutDrawer.module.css";
 
 interface CartItem {
@@ -31,10 +33,11 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
   const [city, setCity] = useState("");
   const [stateVal, setStateVal] = useState("");
   const [pinCode, setPinCode] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("COD");
+  const [paymentMethod, setPaymentMethod] = useState("UPI");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [loggedInUser, setLoggedInUser] = useState<any>(null);
   const [isReturningCustomer, setIsReturningCustomer] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -54,6 +57,45 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+      const session = localStorage.getItem("userSession");
+      if (session) {
+        try {
+          const user = JSON.parse(session);
+          setLoggedInUser(user);
+          if (user.name) setName(user.name);
+          if (user.email) {
+            setEmail(user.email);
+            // Automatically fetch customer details to pre-fill phone and address
+            fetch(`http://127.0.0.1:5001/api/customers/search?query=${encodeURIComponent(user.email)}`)
+              .then(res => {
+                if (res.ok) return res.json();
+                throw new Error("Not found");
+              })
+              .then(data => {
+                if (data.phone) setPhone(data.phone);
+                if (data.address) {
+                  const parts = data.address.split('-');
+                  if (parts.length >= 2) {
+                    setPinCode(parts[1].trim());
+                    const addressParts = parts[0].split(',');
+                    if (addressParts.length >= 3) {
+                      setStateVal(addressParts[addressParts.length - 1].trim());
+                      setCity(addressParts[addressParts.length - 2].trim());
+                      setAddress(addressParts.slice(0, addressParts.length - 2).join(',').trim());
+                    } else {
+                      setAddress(parts[0].trim());
+                    }
+                  } else {
+                    setAddress(data.address);
+                  }
+                }
+              })
+              .catch(err => console.log("No previous details found for autofill", err));
+          }
+        } catch (e) {
+          console.error("Error parsing userSession:", e);
+        }
+      }
     } else {
       document.body.style.overflow = "";
     }
@@ -290,8 +332,9 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
           <div className={styles.scrollContent}>
 
             {/* Returning Customer Section */}
-            <div className={styles.section} style={{ backgroundColor: "#f9fafb", padding: "16px", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
-              <label className={styles.checkboxLabel} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontWeight: 600, fontSize: "0.95rem" }}>
+            {!loggedInUser && (
+              <div className={styles.section} style={{ backgroundColor: "#f9fafb", padding: "16px", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
+                <label className={styles.checkboxLabel} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontWeight: 600, fontSize: "0.95rem" }}>
                 <input
                   type="checkbox"
                   checked={isReturningCustomer}
@@ -341,6 +384,7 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
                 </div>
               )}
             </div>
+            )}
 
             {/* Contact Details */}
             <div className={styles.section}>
@@ -458,20 +502,6 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
             <div className={styles.section}>
               <h3 className={styles.sectionTitle}>Payment Method</h3>
               <div className={styles.paymentOptions}>
-                <label className={`${styles.paymentLabel} ${paymentMethod === "COD" ? styles.paymentLabelActive : ""}`}>
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="COD"
-                    checked={paymentMethod === "COD"}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                    className={styles.radioInput}
-                  />
-                  <div className={styles.paymentInfo}>
-                    <span className={styles.paymentName}>Cash on Delivery (COD)</span>
-                    <span className={styles.paymentDesc}>Pay in cash upon doorstep fragrance delivery.</span>
-                  </div>
-                </label>
 
                 <label className={`${styles.paymentLabel} ${paymentMethod === "UPI" ? styles.paymentLabelActive : ""}`}>
                   <input
@@ -483,8 +513,8 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
                     className={styles.radioInput}
                   />
                   <div className={styles.paymentInfo}>
-                    <span className={styles.paymentName}>UPI / Card Simulation</span>
-                    <span className={styles.paymentDesc}>Simulated secure digital checkout payment.</span>
+                    <span className={styles.paymentName}>UPI / Cards (Cashfree)</span>
+                    <span className={styles.paymentDesc}>Secure digital checkout via Cashfree Payments.</span>
                   </div>
                 </label>
               </div>

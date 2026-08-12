@@ -1,9 +1,34 @@
 import express from "express";
 import { Product, ProductVariant } from "../models/Product.js";
 import Order from "../models/Order.js";
+import Review from "../models/Review.js";
 import { cachedProducts, setCachedProducts, cachedProductDetails, invalidateProductsCache } from "../utils/cache.js";
+import { deleteFromCloudinary } from "../utils/cloudinary.js";
 
 const router = express.Router();
+
+const enforceLatestArrivalsLimit = async () => {
+  try {
+    const limit = 10;
+    const latestProducts = await Product.find({ category: "Latest Arrivals" })
+      .sort({ createdAt: -1 })
+      .select('_id');
+    
+    if (latestProducts.length > limit) {
+      const idsToRemove = latestProducts.slice(limit).map(p => p._id);
+      await Product.updateMany(
+        { _id: { $in: idsToRemove } },
+        { $pull: { category: "Latest Arrivals" } }
+      );
+      await ProductVariant.updateMany(
+        { productId: { $in: idsToRemove } },
+        { $pull: { category: "Latest Arrivals" } }
+      );
+    }
+  } catch (error) {
+    console.error("Error enforcing Latest Arrivals limit:", error);
+  }
+};
 
 router.get("/api/products", async (req, res) => {
   try {

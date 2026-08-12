@@ -121,7 +121,15 @@ export default function Navbar({ onCartClick }: NavbarProps) {
               }}
               title={currentUser.name}
             >
-              {currentUser.name.charAt(0)}
+              {currentUser.profilePicture ? (
+                <img 
+                  src={currentUser.profilePicture} 
+                  alt={currentUser.name} 
+                  style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} 
+                />
+              ) : (
+                currentUser.name.charAt(0)
+              )}
             </button>
             
             {showProfileDropdown && (
@@ -140,6 +148,29 @@ export default function Navbar({ onCartClick }: NavbarProps) {
               }}>
                 <p style={{ margin: "0 0 4px 0", fontSize: "0.85rem", fontWeight: 700, color: "#111" }}>{currentUser.name}</p>
                 <p style={{ margin: "0 0 12px 0", fontSize: "0.75rem", color: "#6b7280", wordBreak: "break-all" }}>{currentUser.email}</p>
+                
+                <Link 
+                  href="/track" 
+                  onClick={() => setShowProfileDropdown(false)}
+                  style={{ 
+                    display: "block",
+                    width: "100%", 
+                    padding: "8px", 
+                    backgroundColor: "#f3f4f6", 
+                    color: "#111",
+                    textDecoration: "none",
+                    textAlign: "center",
+                    border: "none", 
+                    borderRadius: "4px", 
+                    fontSize: "0.75rem", 
+                    fontWeight: 700, 
+                    cursor: "pointer",
+                    marginBottom: "8px"
+                  }}
+                >
+                  Orders
+                </Link>
+
                 <button 
                   onClick={handleLogout}
                   style={{ 

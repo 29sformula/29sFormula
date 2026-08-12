@@ -5171,19 +5171,6 @@ export default function AdminDashboard() {
                     />
                   </div>
                 </div>
-
-                <h3 style={{ fontSize: "1.05rem", fontWeight: 700, margin: "30px 0 20px 0", borderBottom: "1px solid #f3f4f6", paddingBottom: "10px" }}>SEO Metadata Settings</h3>
-                <div className={styles.inputGroup}>
-                  <label className={styles.inputLabel}>Google Sign-In API Client ID</label>
-                  <input
-                    type="text"
-                    value={googleClientId}
-                    onChange={(e) => setGoogleClientId(e.target.value)}
-                    onBlur={saveSettingsSilent}
-                    placeholder="OAuth credentials..."
-                    className={styles.textInput}
-                  />
-                </div>
               </div>
             </div>
           )}
@@ -6558,6 +6545,8 @@ export default function AdminDashboard() {
                     <option value="Processing">Processing</option>
                     <option value="Shipped">Shipped</option>
                     <option value="Delivered">Delivered</option>
+                    <option value="Return Requested">Return Requested</option>
+                    <option value="Returned">Returned</option>
                     <option value="Cancelled">Cancelled</option>
                   </select>
                 </div>

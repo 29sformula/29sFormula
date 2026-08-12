@@ -37,6 +37,8 @@ export default function TrackOrderPage() {
   const [error, setError] = useState<string | null>(null);
   const [cancelSuccess, setCancelSuccess] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isReturning, setIsReturning] = useState(false);
+  const [returnSuccess, setReturnSuccess] = useState(false);
   const [primaryColor, setPrimaryColor] = useState<string>(
     typeof window !== 'undefined' ? (localStorage.getItem("settings_primaryColor") || "#57bc74") : "#57bc74"
   );
@@ -55,7 +57,19 @@ export default function TrackOrderPage() {
       })
       .catch(err => console.warn("Failed to load storefront theme color:", err));
 
-    // Session is now handled by Navbar
+    // Auto-fetch orders if user is logged in
+    const session = localStorage.getItem("userSession");
+    if (session) {
+      try {
+        const user = JSON.parse(session);
+        if (user && user.email) {
+          // fetchOrderData is defined below, but since useEffect runs after render, it will be available in the closure
+          fetchOrderData(user.email);
+        }
+      } catch (e) {
+        console.error("Error parsing userSession for tracking:", e);
+      }
+    }
   }, []);
 
   const fetchOrderData = async (queryStr: string) => {
@@ -136,6 +150,47 @@ export default function TrackOrderPage() {
     } finally {
       setIsCancelling(false);
     }
+  };
+
+  const handleReturnOrder = async (orderId: string) => {
+    const confirmReturn = window.confirm("Are you sure you want to request a return for this order?");
+    if (!confirmReturn) return;
+
+    setIsReturning(true);
+    setError(null);
+
+    try {
+      const res = await fetch(`http://127.0.0.1:5001/api/orders/${orderId}/return`, {
+        method: "POST"
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Order return request failed.");
+      }
+      
+      if (currentOrder && currentOrder._id === orderId) {
+        setCurrentOrder(data);
+      }
+      
+      setHistory(prevHistory => 
+        prevHistory.map(order => order._id === orderId ? data : order)
+      );
+
+      setReturnSuccess(true);
+    } catch (err: any) {
+      setError(err.message || "Failed to request return.");
+    } finally {
+      setIsReturning(false);
+    }
+  };
+
+  const isReturnEligible = (order: any) => {
+    if (order.status !== "Delivered") return false;
+    const orderDate = order.updatedAt ? new Date(order.updatedAt) : new Date(order.createdAt);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - orderDate.getTime());
+    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+    return diffDays <= 7;
   };
 
   return (
@@ -238,6 +293,17 @@ export default function TrackOrderPage() {
                       </div>
                     </>
                   )}
+                  {returnSuccess && (
+                    <div className={styles.successBanner} style={{ marginTop: "20px", display: "flex", gap: "12px", alignItems: "flex-start" }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: "24px", height: "24px", flexShrink: 0 }}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                      </svg>
+                      <div>
+                        <strong>Return Requested Successfully!</strong>
+                        <p style={{ margin: "5px 0 0 0", fontSize: "0.85rem" }}>Our support team will review your request shortly.</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Cancel Button Option */}
@@ -252,6 +318,23 @@ export default function TrackOrderPage() {
                       className={styles.cancelBtn}
                     >
                       {isCancelling ? "Cancelling..." : "Cancel Order"}
+                    </button>
+                  </div>
+                )}
+
+                {/* Return Request Option */}
+                {isReturnEligible(order) && (
+                  <div className={styles.cancellationBlock} style={{ borderLeftColor: "#f59e0b", backgroundColor: "#fffbeb" }}>
+                    <p className={styles.cancellationWarning} style={{ color: "#92400e" }}>
+                      Not satisfied? You can request a return for this delivered order.
+                    </p>
+                    <button 
+                      onClick={() => handleReturnOrder(order._id)} 
+                      disabled={isReturning} 
+                      className={styles.cancelBtn}
+                      style={{ backgroundColor: "#f59e0b", borderColor: "#f59e0b", color: "#fff" }}
+                    >
+                      {isReturning ? "Requesting..." : "Request Return"}
                     </button>
                   </div>
                 )}

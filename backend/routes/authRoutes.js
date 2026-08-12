@@ -87,7 +87,7 @@ router.post("/api/auth/google", async (req, res) => {
     }
 
     const payload = await verifyRes.json();
-    const { sub: googleId, email, name } = payload;
+    const { sub: googleId, email, name, picture } = payload;
 
     if (!email) {
       return res.status(400).json({ error: "Google account does not provide an email address." });
@@ -101,12 +101,19 @@ router.post("/api/auth/google", async (req, res) => {
         name: name || "Google User",
         email: trimmedEmail,
         googleId,
-        isGoogleUser: true
+        isGoogleUser: true,
+        profilePicture: picture
       });
       await user.save();
-    } else if (!user.isGoogleUser) {
-      user.isGoogleUser = true;
-      user.googleId = googleId;
+    } else {
+      if (!user.isGoogleUser) {
+        user.isGoogleUser = true;
+        user.googleId = googleId;
+      }
+      // Always update to the latest profile picture from Google
+      if (picture) {
+        user.profilePicture = picture;
+      }
       await user.save();
     }
 
@@ -114,7 +121,8 @@ router.post("/api/auth/google", async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
-      isGoogleUser: true
+      isGoogleUser: true,
+      profilePicture: user.profilePicture
     });
   } catch (error) {
     console.error("Google login failed:", error);
