@@ -591,7 +591,6 @@ export default function Home() {
               pointerEvents: "none"
             }}
           >
-            <strong style={{ fontWeight: 800 }}>RAW & HONEST</strong>{" "}
             {heroManifesto}
           </div>
           <h1 

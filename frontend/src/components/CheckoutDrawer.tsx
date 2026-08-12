@@ -69,6 +69,15 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
   const subtotalAmount = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const totalAmount = Math.max(0, subtotalAmount - discount);
 
+  const triggerConfetti = () => {
+    confetti({
+      particleCount: 150,
+      spread: 80,
+      origin: { y: 0.6 },
+      zIndex: 10000
+    });
+  };
+
   const handleApplyCoupon = () => {
     setCouponError(null);
     setCouponSuccess(null);
@@ -85,11 +94,13 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
       setDiscount(discountValue);
       setAppliedCouponCode(code);
       setCouponSuccess(`Coupon applied! You saved ₹${discountValue.toLocaleString("en-IN")}.00`);
+      triggerConfetti();
     } else if (code === "FLAT100") {
       if (subtotalAmount >= 500) {
         setDiscount(100);
         setAppliedCouponCode(code);
         setCouponSuccess("Coupon applied! You saved ₹100.00");
+        triggerConfetti();
       } else {
         setCouponError("Order amount must be greater than ₹500 for this coupon.");
       }
@@ -203,48 +214,7 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
         }, 500);
       }, 4000);
 
-      // Trigger confetti burst on local canvas for 3.5 seconds
-      if (canvasRef.current) {
-        const myConfetti = confetti.create(canvasRef.current, {
-          resize: true,
-          useWorker: true
-        });
-        const animationEnd = Date.now() + 300;
 
-        let originMinX = 0.5;
-        let originMaxX = 0.5;
-        let originY = 0.22;
-        if (autofillInputRef.current && canvasRef.current) {
-          const inputRect = autofillInputRef.current.getBoundingClientRect();
-          const canvasRect = canvasRef.current.getBoundingClientRect();
-          originMinX = (inputRect.left - canvasRect.left) / canvasRect.width;
-          originMaxX = ((inputRect.left - canvasRect.left) + inputRect.width) / canvasRect.width;
-          originY = ((inputRect.top - canvasRect.top) + (inputRect.height / 2)) / canvasRect.height;
-        }
-
-        const frame = () => {
-          const randomX = originMinX + Math.random() * (originMaxX - originMinX);
-
-          myConfetti({
-            particleCount: 8,
-            spread: 80,
-            startVelocity: 25,
-            origin: { x: randomX, y: originY }
-          });
-
-          if (Date.now() < animationEnd) {
-            requestAnimationFrame(frame);
-          }
-        };
-        frame();
-      } else {
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { x: 0.85, y: 0.6 },
-          zIndex: 10000
-        });
-      }
 
     } catch (err: any) {
       setSearchError(err.message);

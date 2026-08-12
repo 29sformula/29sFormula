@@ -13,6 +13,8 @@ export default function Navbar({ onCartClick }: NavbarProps) {
   const [currentUser, setCurrentUser] = useState<any | null>(null);
   const [showProfileDropdown, setShowProfileDropdown] = useState<boolean>(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+  const [brandLogoType, setBrandLogoType] = useState<string>("text");
+  const [brandLogoValue, setBrandLogoValue] = useState<string>("29sFORMULA");
   const pathname = usePathname();
 
   useEffect(() => {
@@ -25,6 +27,29 @@ export default function Navbar({ onCartClick }: NavbarProps) {
         console.error("Error parsing userSession:", e);
       }
     }
+
+    // Load cached logo for instant render
+    const cachedLogoType = localStorage.getItem("settings_brandLogoType");
+    const cachedLogoValue = localStorage.getItem("settings_brandLogoValue");
+    if (cachedLogoType) setBrandLogoType(cachedLogoType);
+    if (cachedLogoValue) setBrandLogoValue(cachedLogoValue);
+
+    // Fetch latest settings in background
+    fetch("http://127.0.0.1:5001/api/settings")
+      .then(res => res.json())
+      .then(data => {
+        if (data) {
+          if (data.brandLogoType) {
+            setBrandLogoType(data.brandLogoType);
+            localStorage.setItem("settings_brandLogoType", data.brandLogoType);
+          }
+          if (data.brandLogoValue) {
+            setBrandLogoValue(data.brandLogoValue);
+            localStorage.setItem("settings_brandLogoValue", data.brandLogoValue);
+          }
+        }
+      })
+      .catch(err => console.warn("Error fetching logo settings:", err));
   }, []);
 
   const handleLogout = () => {
@@ -43,7 +68,15 @@ export default function Navbar({ onCartClick }: NavbarProps) {
           </svg>
         </button>
         <Link href="/" aria-label="Home" className={styles.logo}>
-          29sFORMULA
+          {brandLogoType === "image" ? (
+            <img 
+              src={brandLogoValue} 
+              alt="Brand Logo" 
+              style={{ maxHeight: "35px", objectFit: "contain", display: "block" }} 
+            />
+          ) : (
+            brandLogoValue
+          )}
         </Link>
         <nav className={styles.navLinks}>
           <Link href="/" className={`${styles.navLink} ${pathname === "/" ? styles.activeLink : ""}`}>HOME</Link>

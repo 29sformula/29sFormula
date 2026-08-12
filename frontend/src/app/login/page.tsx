@@ -21,7 +21,7 @@ export default function LoginPage() {
     typeof window !== 'undefined' ? (localStorage.getItem("settings_primaryColor") || "#57bc74") : "#57bc74"
   );
   const [sessionExpired, setSessionExpired] = useState<boolean>(false);
-  const [googleClientId, setGoogleClientId] = useState<string>("");
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
 
   useEffect(() => {
     fetch("http://127.0.0.1:5001/api/settings")
@@ -30,7 +30,6 @@ export default function LoginPage() {
         if (data) {
           if (data.primaryColor) setPrimaryColor(data.primaryColor);
               if (typeof document !== "undefined") document.documentElement.style.setProperty("--primary-brand-color", data.primaryColor);
-          if (data.googleClientId) setGoogleClientId(data.googleClientId);
         }
       })
       .catch(err => console.error("Error querying settings:", err));

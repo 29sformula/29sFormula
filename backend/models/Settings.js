@@ -43,6 +43,8 @@ const settingsSchema = new mongoose.Schema({
   lifestyleText: { type: String, default: "Intense notes, Raw elements. This is 29sFORMULA." },
   lifestyleImage: { type: String, default: "https://images.unsplash.com/photo-1615655096345-61a54750068d?auto=format&fit=crop&w=1800&q=80" },
   primaryColor: { type: String, default: "#57bc74" },
+  brandLogoType: { type: String, default: "text" },
+  brandLogoValue: { type: String, default: "29sFORMULA" },
   showTicker: { type: Boolean, default: true },
   showAnnouncement: { type: Boolean, default: true },
   showVideo: { type: Boolean, default: true },

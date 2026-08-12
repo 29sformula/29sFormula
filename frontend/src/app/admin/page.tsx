@@ -533,6 +533,9 @@ export default function AdminDashboard() {
   const [lifestyleImage, setLifestyleImage] = useState<string>("");
   const [uploadingLifestyle, setUploadingLifestyle] = useState<boolean>(false);
   const [primaryColor, setPrimaryColor] = useState<string>("#57bc74");
+  const [brandLogoType, setBrandLogoType] = useState<string>("text");
+  const [brandLogoValue, setBrandLogoValue] = useState<string>("29sFORMULA");
+  const [uploadingLogo, setUploadingLogo] = useState<boolean>(false);
   const [heroBgType, setHeroBgType] = useState<string>("color");
   const [heroBgColor, setHeroBgColor] = useState<string>("#57bc74");
   const [heroBgImage, setHeroBgImage] = useState<string>("");
@@ -612,6 +615,8 @@ export default function AdminDashboard() {
     lifestyleText !== (originalSettings.lifestyleText || "") ||
     lifestyleImage !== (originalSettings.lifestyleImage || "") ||
     primaryColor !== (originalSettings.primaryColor || "#57bc74") ||
+    brandLogoType !== (originalSettings.brandLogoType || "text") ||
+    brandLogoValue !== (originalSettings.brandLogoValue || "29sFORMULA") ||
     heroBgType !== (originalSettings.heroBgType || "color") ||
     heroBgColor !== (originalSettings.heroBgColor || "#57bc74") ||
     heroBgImage !== (originalSettings.heroBgImage || "") ||
@@ -626,7 +631,6 @@ export default function AdminDashboard() {
     usageGuideText !== (originalSettings.usageGuideText || "Fits your mood. Handcrafted with scientific precision. Refer to our USAGE GUIDE for layering notes.") ||
     exploreMoreTitle !== (originalSettings.exploreMoreTitle || "Don't Stop. Explore More.") ||
     deliverySubtext !== (originalSettings.deliverySubtext || "TAXES INCLUDED. SHIPPING CALCULATED AT CHECKOUT.") ||
-    googleClientId !== (originalSettings.googleClientId || "753896502014-yourmockclientid.apps.googleusercontent.com") ||
     supportText !== (originalSettings.supportText || "For support inquiries, please contact us.") ||
     careersText !== (originalSettings.careersText || "Join our team! Check out our open positions.") ||
     tradeEnquiryText !== (originalSettings.tradeEnquiryText || "For trade and wholesale inquiries, contact our B2B team.") ||
@@ -664,6 +668,7 @@ export default function AdminDashboard() {
     if (lifestyleText !== (originalSettings.lifestyleText || "")) changes.push("Lifestyle overlay text copy");
     if (lifestyleImage !== (originalSettings.lifestyleImage || "")) changes.push("Lifestyle banner background image");
     if (primaryColor !== (originalSettings.primaryColor || "#57bc74")) changes.push("Primary brand theme color");
+    if (brandLogoType !== (originalSettings.brandLogoType || "text") || brandLogoValue !== (originalSettings.brandLogoValue || "29sFORMULA")) changes.push("Brand Logo");
     if (heroBgType !== (originalSettings.heroBgType || "color")) changes.push("Hero section background layout type");
     if (heroBgColor !== (originalSettings.heroBgColor || "#57bc74")) changes.push("Hero section custom background color");
     if (heroBgImage !== (originalSettings.heroBgImage || "")) changes.push("Hero section background image URL");
@@ -672,7 +677,6 @@ export default function AdminDashboard() {
     if (showAnnouncement !== (originalSettings.showAnnouncement !== undefined ? originalSettings.showAnnouncement : true)) changes.push("Top Announcement Banner visibility toggle");
     if (showVideo !== (originalSettings.showVideo !== undefined ? originalSettings.showVideo : true)) changes.push("Video section visibility toggle");
     if (showLifestyle !== (originalSettings.showLifestyle !== undefined ? originalSettings.showLifestyle : true)) changes.push("Lifestyle banner visibility toggle");
-    if (googleClientId !== (originalSettings.googleClientId || "753896502014-yourmockclientid.apps.googleusercontent.com")) changes.push("Google Sign-In OAuth Client ID");
     return changes;
   };
 
@@ -844,6 +848,8 @@ export default function AdminDashboard() {
         setLifestyleText(data.lifestyleText || "");
         setLifestyleImage(data.lifestyleImage || "https://images.unsplash.com/photo-1615655096345-61a54750068d?auto=format&fit=crop&w=1800&q=80");
         setPrimaryColor(data.primaryColor || "#57bc74");
+        setBrandLogoType(data.brandLogoType || "text");
+        setBrandLogoValue(data.brandLogoValue || "29sFORMULA");
         setHeroBgType(data.heroBgType || "color");
         setHeroBgColor(data.heroBgColor || "#57bc74");
         setHeroBgImage(data.heroBgImage || "");
@@ -904,6 +910,8 @@ export default function AdminDashboard() {
           lifestyleText: data.lifestyleText || "",
           lifestyleImage: data.lifestyleImage || "https://images.unsplash.com/photo-1615655096345-61a54750068d?auto=format&fit=crop&w=1800&q=80",
           primaryColor: data.primaryColor || "#57bc74",
+          brandLogoType: data.brandLogoType || "text",
+          brandLogoValue: data.brandLogoValue || "29sFORMULA",
           heroBgType: data.heroBgType || "color",
           heroBgColor: data.heroBgColor || "#57bc74",
           heroBgImage: data.heroBgImage || "",
@@ -1247,6 +1255,8 @@ export default function AdminDashboard() {
       setHeroBgImage(originalSettings.heroBgImage || "");
       setHeroBgVideo(originalSettings.heroBgVideo || "");
       setPrimaryColor(originalSettings.primaryColor || "#57bc74");
+      setBrandLogoType(originalSettings.brandLogoType || "text");
+      setBrandLogoValue(originalSettings.brandLogoValue || "29sFORMULA");
       setShowTicker(originalSettings.showTicker !== undefined ? originalSettings.showTicker : true);
       setShowAnnouncement(originalSettings.showAnnouncement !== undefined ? originalSettings.showAnnouncement : true);
       setShowVideo(originalSettings.showVideo !== undefined ? originalSettings.showVideo : true);
@@ -1318,6 +1328,8 @@ export default function AdminDashboard() {
           lifestyleText,
           lifestyleImage,
           primaryColor,
+          brandLogoType,
+          brandLogoValue,
           heroBgType,
           heroBgColor,
           heroBgImage,
@@ -1364,6 +1376,8 @@ export default function AdminDashboard() {
         lifestyleText,
         lifestyleImage,
         primaryColor,
+        brandLogoType,
+        brandLogoValue,
         heroBgType,
         heroBgColor,
         heroBgImage,
@@ -1682,6 +1696,37 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleBrandLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingLogo(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("http://127.0.0.1:5001/api/upload", {
+        method: "POST",
+        body: formData
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Upload failed");
+      }
+
+      const data = await res.json();
+      setBrandLogoValue(data.url);
+    } catch (err: any) {
+      setCustomAlert({
+        title: "Upload Failed",
+        message: "Failed to upload brand logo: " + err.message
+      });
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
   const handleResetToDefaults = () => {
     setTickerText("7-DAY EASY RETURNS & EXCHANGES | FREE SHIPPING ACROSS INDIA | 7-DAY EASY RETURNS & EXCHANGES | FREE SHIPPING ACROSS INDIA | 7-DAY EASY RETURNS & EXCHANGES | FREE SHIPPING ACROSS INDIA | ");
     setTickerSpeed(60);
@@ -1695,6 +1740,8 @@ export default function AdminDashboard() {
     setLifestyleText("Intense notes, Raw elements. This is 29sFORMULA.");
     setLifestyleImage("https://images.unsplash.com/photo-1615655096345-61a54750068d?auto=format&fit=crop&w=1800&q=80");
     setPrimaryColor("#57bc74");
+    setBrandLogoType("text");
+    setBrandLogoValue("29sFORMULA");
     setShowTicker(true);
     setShowAnnouncement(true);
     setShowVideo(true);
@@ -4418,22 +4465,88 @@ export default function AdminDashboard() {
                               </div>
                             </div>
 
-                            <div className={styles.inputGroup} style={{ marginTop: "20px" }}>
-                              <label className={styles.inputLabel}>Google Sign-In OAuth Client ID</label>
-                              <input
-                                type="text"
-                                value={googleClientId}
-                                onChange={(e) => setGoogleClientId(e.target.value)}
-                                placeholder="753896502014-yourmockclientid.apps.googleusercontent.com"
-                                className={styles.textInput}
-                                style={{ width: "100%", marginTop: "8px" }}
-                              />
-                              <p style={{ fontSize: "0.72rem", color: "#6b7280", marginTop: "5px", lineHeight: "1.4" }}>
-                                Must match your Google Cloud Console OAuth 2.0 Credentials client ID. Be sure to authorize JavaScript origins for your domain (e.g. <code>http://localhost:3000</code>).
-                              </p>
+                            <div className={styles.inputGroup} style={{ marginTop: "25px", borderTop: "1px solid #e5e7eb", paddingTop: "25px" }}>
+                              <label className={styles.inputLabel}>Brand Logo Format</label>
+                              <div style={{ display: "flex", gap: "20px", marginTop: "10px" }}>
+                                <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "0.95rem" }}>
+                                  <input 
+                                    type="radio" 
+                                    name="brandLogoType"
+                                    value="text" 
+                                    checked={brandLogoType === "text"}
+                                    onChange={(e) => setBrandLogoType(e.target.value)}
+                                    style={{ width: "16px", height: "16px", accentColor: "#4f46e5" }}
+                                  />
+                                  Text Logo
+                                </label>
+                                <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "0.95rem" }}>
+                                  <input 
+                                    type="radio" 
+                                    name="brandLogoType"
+                                    value="image" 
+                                    checked={brandLogoType === "image"}
+                                    onChange={(e) => setBrandLogoType(e.target.value)}
+                                    style={{ width: "16px", height: "16px", accentColor: "#4f46e5" }}
+                                  />
+                                  Image Logo
+                                </label>
+                              </div>
                             </div>
 
-                            <button
+                            <div className={styles.inputGroup} style={{ marginTop: "20px" }}>
+                              <label className={styles.inputLabel}>
+                                {brandLogoType === "text" ? "Brand Logo Text" : "Brand Logo Image"}
+                              </label>
+                              
+                              {brandLogoType === "text" ? (
+                                <input
+                                  type="text"
+                                  value={brandLogoValue}
+                                  onChange={(e) => setBrandLogoValue(e.target.value)}
+                                  placeholder="29sFORMULA"
+                                  className={styles.textInput}
+                                  style={{ marginTop: "8px" }}
+                                />
+                              ) : (
+                                <div style={{ marginTop: "8px" }}>
+                                  {brandLogoValue && brandLogoValue.startsWith("http") && (
+                                    <div style={{ marginBottom: "15px", border: "1px solid #e5e7eb", borderRadius: "8px", padding: "10px", backgroundColor: "#f9fafb", display: "inline-block" }}>
+                                      <img 
+                                        src={brandLogoValue} 
+                                        alt="Brand Logo Preview" 
+                                        style={{ maxHeight: "60px", objectFit: "contain", display: "block" }} 
+                                      />
+                                    </div>
+                                  )}
+                                  <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                                    <label style={{ display: "inline-flex", alignItems: "center", gap: "8px", backgroundColor: "#f3f4f6", border: "1px solid #d1d5db", padding: "10px 16px", borderRadius: "6px", cursor: "pointer", fontSize: "0.9rem", color: "#374151", fontWeight: 500, transition: "all 0.2s ease" }}>
+                                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" width="18" height="18">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                                      </svg>
+                                      {uploadingLogo ? "Uploading..." : "Upload Logo Image"}
+                                      <input 
+                                        type="file" 
+                                        accept="image/png, image/jpeg, image/webp, image/svg+xml" 
+                                        style={{ display: "none" }}
+                                        onChange={handleBrandLogoUpload}
+                                        disabled={uploadingLogo}
+                                      />
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={brandLogoValue}
+                                      onChange={(e) => setBrandLogoValue(e.target.value)}
+                                      placeholder="Or paste an image URL..."
+                                      className={styles.textInput}
+                                      style={{ flex: 1 }}
+                                    />
+                                  </div>
+                                  <p style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "8px" }}>
+                                    Recommended: Transparent PNG or SVG, max height 60px.
+                                  </p>
+                                </div>
+                              )}
+                            </div>                            <button
                               type="button"
                               onClick={() => {
                                 setPrimaryColor("#57bc74");
@@ -5078,11 +5191,11 @@ export default function AdminDashboard() {
           {/* Redesigned Discount Coupons & Promo Codes Tab */}
           {activeTab === "discounts" && (
             <div className={styles.viewContainer}>
-              <div style={{ marginBottom: "20px" }}>
+              <div style={{ marginBottom: "5px" }}>
                 <h1 className={styles.pageHeading} style={{ margin: 0 }}>Discount Coupons & Promotion Codes</h1>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "25px", marginTop: "20px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "25px", marginTop: "10px" }}>
                 {/* Form to create discount */}
                 <div className={styles.dashboardCard} style={{ padding: "25px", height: "fit-content", background: "linear-gradient(145deg, #ffffff, #f8fafc)", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "25px" }}>

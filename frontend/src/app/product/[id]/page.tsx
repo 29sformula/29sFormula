@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import confetti from "canvas-confetti";
 import { useParams } from "next/navigation";
 import styles from "./page.module.css";
 import Footer from "@/components/Footer";
@@ -80,6 +81,12 @@ export default function ProductDetailPage() {
         const discount = await res.json();
         setAppliedDiscount(discount);
         setCouponMessage(`Coupon ${discount.code} applied successfully!`);
+        confetti({
+          particleCount: 150,
+          spread: 80,
+          origin: { y: 0.6 },
+          zIndex: 10000
+        });
       } else {
         const errData = await res.json().catch(() => null);
         setAppliedDiscount(null);

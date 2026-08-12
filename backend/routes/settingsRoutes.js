@@ -105,7 +105,9 @@ router.post("/api/settings", async (req, res) => {
     if (videoFallbackColor !== undefined) settings.videoFallbackColor = videoFallbackColor;
     if (lifestyleText !== undefined) settings.lifestyleText = lifestyleText;
     if (lifestyleImage !== undefined) settings.lifestyleImage = lifestyleImage;
-    if (primaryColor !== undefined) settings.primaryColor = primaryColor;
+    if (req.body.primaryColor !== undefined) settings.primaryColor = req.body.primaryColor;
+    if (req.body.brandLogoType !== undefined) settings.brandLogoType = req.body.brandLogoType;
+    if (req.body.brandLogoValue !== undefined) settings.brandLogoValue = req.body.brandLogoValue;
     if (showTicker !== undefined) settings.showTicker = showTicker;
     if (showAnnouncement !== undefined) settings.showAnnouncement = showAnnouncement;
     if (showVideo !== undefined) settings.showVideo = showVideo;
