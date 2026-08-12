@@ -83,15 +83,21 @@ router.post("/api/settings", async (req, res) => {
     if (req.body.heroBgColor !== undefined) settings.heroBgColor = req.body.heroBgColor;
     if (req.body.heroBgImage !== undefined) settings.heroBgImage = req.body.heroBgImage;
     if (req.body.heroBgVideo !== undefined) settings.heroBgVideo = req.body.heroBgVideo;
+    if (req.body.heroTemplate !== undefined) settings.heroTemplate = req.body.heroTemplate;
+    if (req.body.showHeroTitle !== undefined) settings.showHeroTitle = req.body.showHeroTitle;
+    if (req.body.showHeroManifesto !== undefined) settings.showHeroManifesto = req.body.showHeroManifesto;
+    if (req.body.showHeroButton !== undefined) settings.showHeroButton = req.body.showHeroButton;
+    if (req.body.heroButtonText !== undefined) settings.heroButtonText = req.body.heroButtonText;
+    if (req.body.heroButtonStyle !== undefined) settings.heroButtonStyle = req.body.heroButtonStyle;
+    if (req.body.heroButtonSize !== undefined) settings.heroButtonSize = req.body.heroButtonSize;
+    if (req.body.heroButtonColor !== undefined) settings.heroButtonColor = req.body.heroButtonColor;
+    if (req.body.heroButtonTextColor !== undefined) settings.heroButtonTextColor = req.body.heroButtonTextColor;
+    if (req.body.heroManifestoFontType !== undefined) settings.heroManifestoFontType = req.body.heroManifestoFontType;
+    if (req.body.heroManifestoFontColor !== undefined) settings.heroManifestoFontColor = req.body.heroManifestoFontColor;
     if (req.body.heroManifestoFontSize !== undefined) settings.heroManifestoFontSize = req.body.heroManifestoFontSize;
     if (req.body.heroManifestoFontAlignment !== undefined) settings.heroManifestoFontAlignment = req.body.heroManifestoFontAlignment;
     if (req.body.heroManifestoFontWeight !== undefined) settings.heroManifestoFontWeight = req.body.heroManifestoFontWeight;
-    if (req.body.heroManifestoFontVerticalAlignment !== undefined) settings.heroManifestoFontVerticalAlignment = req.body.heroManifestoFontVerticalAlignment;
-    if (req.body.heroManifestoPositionX !== undefined) settings.heroManifestoPositionX = req.body.heroManifestoPositionX;
-    if (req.body.heroManifestoPositionY !== undefined) settings.heroManifestoPositionY = req.body.heroManifestoPositionY;
-    if (req.body.heroManifestoMaxWidth !== undefined) settings.heroManifestoMaxWidth = req.body.heroManifestoMaxWidth;
-    if (req.body.heroManifestoMinHeight !== undefined) settings.heroManifestoMinHeight = req.body.heroManifestoMinHeight;
-    
+                        
     // Product Preview Page settings
     if (req.body.showProductReviews !== undefined) settings.showProductReviews = req.body.showProductReviews;
     if (req.body.showProductExploreMore !== undefined) settings.showProductExploreMore = req.body.showProductExploreMore;

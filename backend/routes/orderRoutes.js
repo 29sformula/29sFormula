@@ -9,6 +9,86 @@ import nodemailer from "nodemailer";
 
 const router = express.Router();
 
+const sendOrderUpdateEmail = async (order, customerEmail, customerName) => {
+  const emailUser = process.env.EMAIL_USER;
+  const emailPass = process.env.EMAIL_PASS;
+
+  if (!emailUser || !emailPass) {
+    console.warn("Skipping order update email: EMAIL_USER or EMAIL_PASS not configured.");
+    return;
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: emailUser,
+        pass: emailPass,
+      },
+    });
+
+    let subject = `Order Update - ${order.orderId}`;
+    let heading = "An Update on Your Order";
+    let message = `The status of your order is now: <strong style="font-weight: 600; color: #111;">${order.status}</strong>`;
+
+    if (order.status === "Shipped") {
+      subject = `Your 29sFORMULA Order is on its way - ${order.orderId}`;
+      heading = "Your fragrance is en route.";
+      message = "Your artisanal perfume has been carefully packaged and handed over to our shipping partners. It is currently making its way to you.";
+    } else if (order.status === "Delivered") {
+      subject = `Your 29sFORMULA Order has arrived - ${order.orderId}`;
+      heading = "Your fragrance has been delivered.";
+      message = "Your order has been successfully delivered. We hope you enjoy the exquisite scent and the journey it takes you on.";
+    } else if (order.status === "Cancelled") {
+      subject = `Order Cancelled - ${order.orderId}`;
+      heading = "Your order has been cancelled";
+      message = "Your recent order has been cancelled. If this was a mistake or you require assistance, our concierge is here to help.";
+    }
+
+    const mailOptions = {
+      from: `"29sFORMULA" <${emailUser}>`,
+      to: customerEmail,
+      subject: `Order Confirmation - ${order.orderId}`,
+      html: `
+        <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a; padding: 40px 30px; border: 1px solid #e5e5e5; border-radius: 4px; background-color: #fafafa;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="letter-spacing: 2px; font-weight: 300; margin: 0; color: #000;">29sFORMULA</h1>
+            <p style="text-transform: uppercase; letter-spacing: 1.5px; font-size: 11px; color: #666; margin-top: 5px;">Fine Artisan Perfumery</p>
+          </div>
+          <hr style="border: none; border-top: 1px solid #eaeaea; margin-bottom: 30px;" />
+          
+          <h2 style="color: #222; text-align: center; font-weight: 400; letter-spacing: 1px;">Thank You for Your Order</h2>
+          <p style="font-size: 15px; line-height: 1.6; color: #444;">Dear ${customerName},</p>
+          <p style="font-size: 15px; line-height: 1.6; color: #444;">We have successfully received your order <strong>${order.orderId}</strong>. Our artisans will now begin preparing your exquisite fragrances with the utmost care.</p>
+          
+          <div style="margin-top: 30px; border: 1px solid #eee; border-radius: 4px; background-color: #fff; padding: 20px;">
+            <h3 style="margin-top: 0; color: #333; font-weight: 500; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 10px;">Order Summary</h3>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px;">
+              ${itemsHtml}
+            </table>
+            <div style="margin-top: 15px; text-align: right; font-size: 16px;">
+              <strong>Total Paid: ₹${order.totalAmount}</strong>
+            </div>
+          </div>
+          
+          <div style="text-align: center; margin: 40px 0;">
+            <a href="http://localhost:3000/track?order_id=${order.orderId}" style="display: inline-block; padding: 14px 35px; background-color: #000; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase;">Track Your Order</a>
+          </div>
+          
+          <hr style="border: none; border-top: 1px solid #eaeaea; margin-top: 40px; margin-bottom: 30px;" />
+          <p style="font-size: 13px; line-height: 1.6; color: #888; text-align: center;">We will notify you again once your package has been shipped.</p>
+        </div>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`Order update email sent for ${order.orderId}`);
+  } catch (error) {
+    console.error("Error sending order update email:", error);
+  }
+};
+
+
 const sendOrderConfirmationEmail = async (order, customerEmail, customerName) => {
   const emailUser = process.env.EMAIL_USER;
   const emailPass = process.env.EMAIL_PASS;
@@ -250,6 +330,11 @@ router.put("/api/orders/:id", async (req, res) => {
       customerPhone: customer ? customer.phone : (updatedOrder.customerPhone || ""),
       shippingAddress: customer ? customer.address : (updatedOrder.shippingAddress || "")
     };
+
+    // Send update email
+    if (mappedOrder.customerEmail) {
+      sendOrderUpdateEmail(updatedOrder, mappedOrder.customerEmail, mappedOrder.customerName);
+    }
 
     res.json(mappedOrder);
   } catch (error) {

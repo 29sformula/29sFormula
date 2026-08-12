@@ -45,6 +45,7 @@ export default function TrackOrderPage() {
 
   // Session is now handled by Navbar
   const resultsRef = useRef<HTMLDivElement>(null);
+  const [showCartDrawer, setShowCartDrawer] = useState(false);
 
   useEffect(() => {
     fetch("http://127.0.0.1:5001/api/settings", { cache: "no-store" })

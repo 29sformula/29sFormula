@@ -15,6 +15,7 @@ export default function Navbar({ onCartClick }: NavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [brandLogoType, setBrandLogoType] = useState<string>("text");
   const [brandLogoValue, setBrandLogoValue] = useState<string>("29sFORMULA");
+  const [imageError, setImageError] = useState<boolean>(false);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -121,14 +122,15 @@ export default function Navbar({ onCartClick }: NavbarProps) {
               }}
               title={currentUser.name}
             >
-              {currentUser.profilePicture ? (
+              {currentUser.profilePicture && !imageError ? (
                 <img 
                   src={currentUser.profilePicture} 
                   alt={currentUser.name} 
                   style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} 
+                  onError={() => setImageError(true)}
                 />
               ) : (
-                currentUser.name.charAt(0)
+                (currentUser.email || currentUser.name || "U").charAt(0)
               )}
             </button>
             

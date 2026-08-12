@@ -163,15 +163,15 @@ const getFontFamilyStack = (fontName: string) => {
 };
 
 const generateChartPath = (
-  data: { date: string; sales: number; orders: number }[],
-  key: "sales" | "orders",
+  data: { date: string; sales: number; orders: number; profit?: number }[],
+  key: "sales" | "orders" | "profit",
   maxX: number,
   minX: number,
   maxY: number,
   minY: number
 ) => {
   if (!data || data.length === 0) return `M ${minX} ${minY} L ${maxX} ${minY}`;
-  const maxValue = Math.max(...data.map(d => d[key]), 1);
+  const maxValue = Math.max(...data.map(d => d[key] || 0), 1);
   const width = maxX - minX;
   const height = minY - maxY;
   const step = width / Math.max(data.length - 1, 1);
@@ -179,7 +179,7 @@ const generateChartPath = (
   let path = "";
   data.forEach((d, i) => {
     const x = minX + i * step;
-    const y = minY - (d[key] / maxValue) * height;
+    const y = minY - ((d[key] || 0) / maxValue) * height;
     if (i === 0) path += `M ${x} ${y} `;
     else path += `L ${x} ${y} `;
   });
@@ -340,7 +340,7 @@ export default function AdminDashboard() {
   const [images, setImages] = useState<string[]>([]);
   const [sizes, setSizes] = useState<string[]>(["50ml", "100ml", "150ml"]);
   const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({});
-  const [options, setOptions] = useState<{ size: string; quantity: number | ""; price: number | ""; makingPrice: number | ""; category: string[] }>([{ size: "", quantity: "", price: "", makingPrice: "", category: [] }]);
+  const [options, setOptions] = useState<{ size: string; quantity: number | ""; price: number | ""; makingPrice: number | ""; category: string[] }[]>([{ size: "", quantity: "", price: "", makingPrice: "", category: [] }]);
   const [openCategoryIndex, setOpenCategoryIndex] = useState<number | null>(null);
   const [faqs, setFaqs] = useState<FaqItem[]>([]);
   const [newSizeInput, setNewSizeInput] = useState<string>("");
@@ -357,44 +357,41 @@ export default function AdminDashboard() {
   const [heroTitleFontColor, setHeroTitleFontColor] = useState<string>("#111827");
   const [heroTitleFontSize, setHeroTitleFontSize] = useState<string>("4.5rem");
   const [heroTitleFontAlignment, setHeroTitleFontAlignment] = useState<string>("center");
-  const [heroTitleFontVerticalAlignment, setHeroTitleFontVerticalAlignment] = useState<string>("bottom");
   const [heroTitleFontWeight, setHeroTitleFontWeight] = useState<string>("700");
-  const [heroTitlePositionX, setHeroTitlePositionX] = useState<number>(0);
-  const [heroTitlePositionY, setHeroTitlePositionY] = useState<number>(0);
-  const [heroTitleMaxWidth, setHeroTitleMaxWidth] = useState<number>(100);
 
+  const [heroTemplate, setHeroTemplate] = useState<string>("center");
+  const [showHeroTitle, setShowHeroTitle] = useState<boolean>(true);
+  const [showHeroManifesto, setShowHeroManifesto] = useState<boolean>(true);
+  const [showHeroButton, setShowHeroButton] = useState<boolean>(true);
+  const [heroButtonText, setHeroButtonText] = useState<string>("Shop Now");
+  const [heroButtonStyle, setHeroButtonStyle] = useState<string>("solid");
+  const [heroButtonSize, setHeroButtonSize] = useState<string>("md");
+  const [heroButtonColor, setHeroButtonColor] = useState<string>("");
+  const [heroButtonTextColor, setHeroButtonTextColor] = useState<string>("#ffffff");
   const [heroManifesto, setHeroManifesto] = useState<string>("");
   const [heroManifestoFontType, setHeroManifestoFontType] = useState<string>("Outfit");
   const [heroManifestoFontColor, setHeroManifestoFontColor] = useState<string>("#ffffff");
   const [heroManifestoFontSize, setHeroManifestoFontSize] = useState<string>("0.72rem");
   const [heroManifestoFontAlignment, setHeroManifestoFontAlignment] = useState<string>("left");
   const [heroManifestoFontWeight, setHeroManifestoFontWeight] = useState<string>("500");
-  const [heroManifestoFontVerticalAlignment, setHeroManifestoFontVerticalAlignment] = useState<string>("top");
-  const [heroManifestoPositionX, setHeroManifestoPositionX] = useState<number>(0);
-  const [heroManifestoPositionY, setHeroManifestoPositionY] = useState<number>(0);
-  const [heroManifestoMaxWidth, setHeroManifestoMaxWidth] = useState<number>(100);
 
-  const [selectedElement, setSelectedElement] = useState<"title" | "manifesto" | null>("title");
+  const [selectedElement, setSelectedElement] = useState<"title" | "manifesto" | "button" | null>("title");
+  const [heroBackup, setHeroBackup] = useState<any | null>(null);
 
-  const [drafts, setDrafts] = useState({
+  const [drafts, setDrafts] = useState<any>({
     title: { fontType: "Outfit", fontSize: "4.5rem", fontColor: "#111827", fontAlignment: "center", fontWeight: "700", fontVerticalAlignment: "bottom", positionX: 0, positionY: 0, maxWidth: 100, minHeight: 0 },
-    manifesto: { fontType: "Outfit", fontSize: "0.72rem", fontColor: "#ffffff", fontAlignment: "left", fontWeight: "500", fontVerticalAlignment: "top", positionX: 0, positionY: 0, maxWidth: 100, minHeight: 0 }
+    manifesto: { fontType: "Outfit", fontSize: "0.72rem", fontColor: "#ffffff", fontAlignment: "left", fontWeight: "500", fontVerticalAlignment: "top", positionX: 0, positionY: 0, maxWidth: 100, minHeight: 0 },
+    button: { fontType: "Outfit", fontSize: "0.85rem", fontColor: "#ffffff", fontAlignment: "center", fontWeight: "700", fontVerticalAlignment: "middle", positionX: 0, positionY: 0, maxWidth: 100, minHeight: 0 }
   });
 
   const updateDraft = (key: string, value: any) => {
     if (!selectedElement) return;
-    setDrafts(prev => ({ ...prev, [selectedElement]: { ...prev[selectedElement], [key]: value } }));
+    setDrafts((prev: any) => ({ ...prev, [selectedElement]: { ...prev[selectedElement], [key]: value } }));
 
     // Sync sidebar state
     if (selectedElement === "title") {
-      if (key === 'positionX') setHeroTitlePositionX(value);
-      if (key === 'positionY') setHeroTitlePositionY(value);
-      if (key === 'maxWidth') setHeroTitleMaxWidth(value);
-    } else if (selectedElement === "manifesto") {
-      if (key === 'positionX') setHeroManifestoPositionX(value);
-      if (key === 'positionY') setHeroManifestoPositionY(value);
-      if (key === 'maxWidth') setHeroManifestoMaxWidth(value);
-    }
+          } else if (selectedElement === "manifesto") {
+          }
   };
 
   const [isDraggingTitle, setIsDraggingTitle] = useState<boolean>(false);
@@ -411,7 +408,7 @@ export default function AdminDashboard() {
 
   // Dynamically load Google Font for Realtime Preview
   useEffect(() => {
-    const fontToLoad = hoveredFontType || (selectedElement ? drafts[selectedElement].fontType : null);
+    const fontToLoad = hoveredFontType || (selectedElement && drafts[selectedElement] ? drafts[selectedElement].fontType : null);
     if (!fontToLoad) return;
     const systemFonts = ["SF Pro", "New York", "SF Mono", "Segoe UI", "Helvetica Neue", "Georgia", "Garamond"];
     if (systemFonts.includes(fontToLoad)) return;
@@ -475,7 +472,7 @@ export default function AdminDashboard() {
           else if (verticalAlign === "top") newPosY = resizeStartCoords.startY - actualDeltaY;
         }
 
-        setDrafts(prev => {
+        setDrafts((prev: any) => {
           if (!selectedElement) return prev;
           const updates: any = { maxWidth: newWidth, positionX: newPosX };
           if (isResizing.includes("n") || isResizing.includes("s")) {
@@ -493,16 +490,10 @@ export default function AdminDashboard() {
 
         // Sync sidebar state for smooth visual feedback
         if (selectedElement === "title") {
-          setHeroTitleMaxWidth(newWidth);
-          setHeroTitlePositionX(newPosX);
           if (isResizing.includes("n") || isResizing.includes("s")) {
-            setHeroTitlePositionY(newPosY);
           }
         } else if (selectedElement === "manifesto") {
-          setHeroManifestoMaxWidth(newWidth);
-          setHeroManifestoPositionX(newPosX);
           if (isResizing.includes("n") || isResizing.includes("s")) {
-            setHeroManifestoPositionY(newPosY);
           }
         }
       }
@@ -603,11 +594,25 @@ export default function AdminDashboard() {
     heroTitleFontColor !== (originalSettings.heroTitleFontColor || "#111827") ||
     heroTitleFontSize !== (originalSettings.heroTitleFontSize || "4.5rem") ||
     heroTitleFontAlignment !== (originalSettings.heroTitleFontAlignment || "center") ||
-    heroTitleFontVerticalAlignment !== (originalSettings.heroTitleFontVerticalAlignment || "bottom") ||
+    
     heroTitleFontWeight !== (originalSettings.heroTitleFontWeight || "700") ||
-    heroTitlePositionX !== (originalSettings.heroTitlePositionX || 0) ||
-    heroTitlePositionY !== (originalSettings.heroTitlePositionY || 0) ||
+    
+    
     heroManifesto !== (originalSettings.heroManifesto || "") ||
+    heroManifestoFontType !== (originalSettings.heroManifestoFontType || "Outfit") ||
+    heroManifestoFontColor !== (originalSettings.heroManifestoFontColor || "#ffffff") ||
+    heroManifestoFontSize !== (originalSettings.heroManifestoFontSize || "0.72rem") ||
+    heroManifestoFontAlignment !== (originalSettings.heroManifestoFontAlignment || "left") ||
+    heroManifestoFontWeight !== (originalSettings.heroManifestoFontWeight || "500") ||
+    heroTemplate !== (originalSettings.heroTemplate || "center") ||
+    showHeroTitle !== (originalSettings.showHeroTitle !== false) ||
+    showHeroManifesto !== (originalSettings.showHeroManifesto !== false) ||
+    showHeroButton !== (originalSettings.showHeroButton !== false) ||
+    heroButtonText !== (originalSettings.heroButtonText || "Shop Now") ||
+    heroButtonStyle !== (originalSettings.heroButtonStyle || "solid") ||
+    heroButtonSize !== (originalSettings.heroButtonSize || "md") ||
+    heroButtonColor !== (originalSettings.heroButtonColor || "") ||
+    heroButtonTextColor !== (originalSettings.heroButtonTextColor || "#ffffff") ||
     videoTitle !== (originalSettings.videoTitle || "") ||
     videoSubtitle !== (originalSettings.videoSubtitle || "") ||
     videoUrl !== (originalSettings.videoUrl || "") ||
@@ -655,11 +660,22 @@ export default function AdminDashboard() {
     if (heroTitleFontColor !== (originalSettings.heroTitleFontColor || "#111827")) changes.push("Hero title font color");
     if (heroTitleFontSize !== (originalSettings.heroTitleFontSize || "4.5rem")) changes.push("Hero title font size");
     if (heroTitleFontAlignment !== (originalSettings.heroTitleFontAlignment || "center")) changes.push("Hero title font alignment");
-    if (heroTitleFontVerticalAlignment !== (originalSettings.heroTitleFontVerticalAlignment || "bottom")) changes.push("Hero title font vertical alignment");
-    if (heroTitleFontWeight !== (originalSettings.heroTitleFontWeight || "700")) changes.push("Hero title font weight");
-    if (heroTitlePositionX !== (originalSettings.heroTitlePositionX || 0)) changes.push("Hero title horizontal position");
-    if (heroTitlePositionY !== (originalSettings.heroTitlePositionY || 0)) changes.push("Hero title vertical position");
+        if (heroTitleFontWeight !== (originalSettings.heroTitleFontWeight || "700")) changes.push("Hero title font weight");
     if (heroManifesto !== (originalSettings.heroManifesto || "")) changes.push("Hero brand manifesto subtext");
+    if (heroManifestoFontType !== (originalSettings.heroManifestoFontType || "Outfit")) changes.push("Hero manifesto font type");
+    if (heroManifestoFontColor !== (originalSettings.heroManifestoFontColor || "#ffffff")) changes.push("Hero manifesto font color");
+    if (heroManifestoFontSize !== (originalSettings.heroManifestoFontSize || "0.72rem")) changes.push("Hero manifesto font size");
+    if (heroManifestoFontAlignment !== (originalSettings.heroManifestoFontAlignment || "left")) changes.push("Hero manifesto font alignment");
+    if (heroManifestoFontWeight !== (originalSettings.heroManifestoFontWeight || "500")) changes.push("Hero manifesto font weight");
+    if (heroTemplate !== (originalSettings.heroTemplate || "center")) changes.push("Hero layout templates");
+    if (showHeroTitle !== (originalSettings.showHeroTitle !== false)) changes.push("Hero Title toggle");
+    if (showHeroManifesto !== (originalSettings.showHeroManifesto !== false)) changes.push("Hero Manifesto toggle");
+    if (showHeroButton !== (originalSettings.showHeroButton !== false)) changes.push("Hero Button toggle");
+    if (heroButtonText !== (originalSettings.heroButtonText || "Shop Now")) changes.push("Hero CTA Button text");
+    if (heroButtonStyle !== (originalSettings.heroButtonStyle || "solid")) changes.push("Hero CTA Button style");
+    if (heroButtonSize !== (originalSettings.heroButtonSize || "md")) changes.push("Hero CTA Button size");
+    if (heroButtonColor !== (originalSettings.heroButtonColor || "")) changes.push("Hero CTA Button color");
+    if (heroButtonTextColor !== (originalSettings.heroButtonTextColor || "#ffffff")) changes.push("Hero CTA Button text color");
     if (videoTitle !== (originalSettings.videoTitle || "")) changes.push("Video banner headline title");
     if (videoSubtitle !== (originalSettings.videoSubtitle || "")) changes.push("Video banner description");
     if (videoUrl !== (originalSettings.videoUrl || "")) changes.push("Background MP4 video URL");
@@ -826,21 +842,22 @@ export default function AdminDashboard() {
         setHeroTitleFontColor(data.heroTitleFontColor || "#111827");
         setHeroTitleFontSize(data.heroTitleFontSize || "4.5rem");
         setHeroTitleFontAlignment(data.heroTitleFontAlignment || "center");
-        setHeroTitleFontVerticalAlignment(data.heroTitleFontVerticalAlignment || "bottom");
         setHeroTitleFontWeight(data.heroTitleFontWeight || "700");
-        setHeroTitlePositionX(data.heroTitlePositionX || 0);
-        setHeroTitlePositionY(data.heroTitlePositionY || 0);
-        setHeroTitleMaxWidth(data.heroTitleMaxWidth !== undefined ? data.heroTitleMaxWidth : 100);
         if (data.heroManifestoFontType) setHeroManifestoFontType(data.heroManifestoFontType);
         if (data.heroManifestoFontColor) setHeroManifestoFontColor(data.heroManifestoFontColor);
         if (data.heroManifestoFontSize) setHeroManifestoFontSize(data.heroManifestoFontSize);
         if (data.heroManifestoFontAlignment) setHeroManifestoFontAlignment(data.heroManifestoFontAlignment);
         if (data.heroManifestoFontWeight) setHeroManifestoFontWeight(data.heroManifestoFontWeight);
-        if (data.heroManifestoFontVerticalAlignment) setHeroManifestoFontVerticalAlignment(data.heroManifestoFontVerticalAlignment);
-        setHeroManifestoPositionX(data.heroManifestoPositionX || 0);
-        setHeroManifestoPositionY(data.heroManifestoPositionY || 0);
-        setHeroManifestoMaxWidth(data.heroManifestoMaxWidth !== undefined ? data.heroManifestoMaxWidth : 100);
         setHeroManifesto(data.heroManifesto || "");
+        setHeroTemplate(data.heroTemplate || "center");
+        setShowHeroTitle(data.showHeroTitle !== false);
+        setShowHeroManifesto(data.showHeroManifesto !== false);
+        setShowHeroButton(data.showHeroButton !== false);
+        setHeroButtonText(data.heroButtonText || "Shop Now");
+        setHeroButtonStyle(data.heroButtonStyle || "solid");
+        setHeroButtonSize(data.heroButtonSize || "md");
+        setHeroButtonColor(data.heroButtonColor || "");
+        setHeroButtonTextColor(data.heroButtonTextColor || "#ffffff");
         setVideoTitle(data.videoTitle || "");
         setVideoSubtitle(data.videoSubtitle || "");
         setVideoUrl(data.videoUrl || "");
@@ -888,21 +905,22 @@ export default function AdminDashboard() {
           heroTitleFontColor: data.heroTitleFontColor || "#111827",
           heroTitleFontSize: data.heroTitleFontSize || "4.5rem",
           heroTitleFontAlignment: data.heroTitleFontAlignment || "center",
-          heroTitleFontVerticalAlignment: data.heroTitleFontVerticalAlignment || "bottom",
           heroTitleFontWeight: data.heroTitleFontWeight || "700",
-          heroTitlePositionX: data.heroTitlePositionX || 0,
-          heroTitlePositionY: data.heroTitlePositionY || 0,
-          heroTitleMaxWidth: data.heroTitleMaxWidth !== undefined ? data.heroTitleMaxWidth : 100,
           heroManifestoFontType: data.heroManifestoFontType || "Outfit",
           heroManifestoFontColor: data.heroManifestoFontColor || "#ffffff",
           heroManifestoFontSize: data.heroManifestoFontSize || "0.72rem",
           heroManifestoFontAlignment: data.heroManifestoFontAlignment || "left",
           heroManifestoFontWeight: data.heroManifestoFontWeight || "500",
-          heroManifestoFontVerticalAlignment: data.heroManifestoFontVerticalAlignment || "top",
-          heroManifestoPositionX: data.heroManifestoPositionX || 0,
-          heroManifestoPositionY: data.heroManifestoPositionY || 0,
-          heroManifestoMaxWidth: data.heroManifestoMaxWidth !== undefined ? data.heroManifestoMaxWidth : 100,
           heroManifesto: data.heroManifesto || "",
+          heroTemplate: data.heroTemplate || "center",
+          showHeroTitle: data.showHeroTitle !== false,
+          showHeroManifesto: data.showHeroManifesto !== false,
+          showHeroButton: data.showHeroButton !== false,
+          heroButtonText: data.heroButtonText || "Shop Now",
+          heroButtonStyle: data.heroButtonStyle || "solid",
+          heroButtonSize: data.heroButtonSize || "md",
+          heroButtonColor: data.heroButtonColor || "",
+          heroButtonTextColor: data.heroButtonTextColor || "#ffffff",
           videoTitle: data.videoTitle || "",
           videoSubtitle: data.videoSubtitle || "",
           videoUrl: data.videoUrl || "",
@@ -1146,21 +1164,22 @@ export default function AdminDashboard() {
           heroTitleFontColor,
           heroTitleFontSize,
           heroTitleFontAlignment,
-          heroTitleFontVerticalAlignment,
           heroTitleFontWeight,
-          heroTitlePositionX,
-          heroTitlePositionY,
-          heroTitleMaxWidth,
           heroManifesto,
+          heroTemplate,
+          showHeroTitle,
+          showHeroManifesto,
+          showHeroButton,
+          heroButtonText,
+          heroButtonStyle,
+          heroButtonSize,
+          heroButtonColor,
+          heroButtonTextColor,
           heroManifestoFontType,
           heroManifestoFontColor,
           heroManifestoFontSize,
           heroManifestoFontAlignment,
           heroManifestoFontWeight,
-          heroManifestoFontVerticalAlignment,
-          heroManifestoPositionX,
-          heroManifestoPositionY,
-          heroManifestoMaxWidth,
           videoTitle,
           videoSubtitle,
           videoUrl,
@@ -1197,11 +1216,22 @@ export default function AdminDashboard() {
         heroTitleFontColor,
         heroTitleFontSize,
         heroTitleFontAlignment,
-        heroTitleFontVerticalAlignment,
         heroTitleFontWeight,
-        heroTitlePositionX,
-        heroTitlePositionY,
         heroManifesto,
+          heroTemplate,
+          showHeroTitle,
+          showHeroManifesto,
+          showHeroButton,
+          heroButtonText,
+          heroButtonStyle,
+          heroButtonSize,
+          heroButtonColor,
+          heroButtonTextColor,
+          heroManifestoFontType,
+          heroManifestoFontColor,
+          heroManifestoFontSize,
+          heroManifestoFontAlignment,
+          heroManifestoFontWeight,
         videoTitle,
         videoSubtitle,
         videoUrl,
@@ -1241,9 +1271,17 @@ export default function AdminDashboard() {
       setHeroTitleFontColor(originalSettings.heroTitleFontColor || "#111827");
       setHeroTitleFontSize(originalSettings.heroTitleFontSize || "4.5rem");
       setHeroTitleFontAlignment(originalSettings.heroTitleFontAlignment || "center");
-      setHeroTitleFontVerticalAlignment(originalSettings.heroTitleFontVerticalAlignment || "bottom");
       setHeroTitleFontWeight(originalSettings.heroTitleFontWeight || "700");
       setHeroManifesto(originalSettings.heroManifesto || "");
+      setHeroTemplate(originalSettings.heroTemplate || "center");
+      setShowHeroTitle(originalSettings.showHeroTitle !== false);
+      setShowHeroManifesto(originalSettings.showHeroManifesto !== false);
+      setShowHeroButton(originalSettings.showHeroButton !== false);
+      setHeroButtonText(originalSettings.heroButtonText || "Shop Now");
+      setHeroButtonStyle(originalSettings.heroButtonStyle || "solid");
+      setHeroButtonSize(originalSettings.heroButtonSize || "md");
+      setHeroButtonColor(originalSettings.heroButtonColor || "");
+      setHeroButtonTextColor(originalSettings.heroButtonTextColor || "#ffffff");
       setVideoTitle(originalSettings.videoTitle || "");
       setVideoSubtitle(originalSettings.videoSubtitle || "");
       setVideoUrl(originalSettings.videoUrl || "");
@@ -1316,11 +1354,22 @@ export default function AdminDashboard() {
           heroTitleFontColor,
           heroTitleFontSize,
           heroTitleFontAlignment,
-          heroTitleFontVerticalAlignment,
           heroTitleFontWeight,
-          heroTitlePositionX,
-          heroTitlePositionY,
           heroManifesto,
+          heroTemplate,
+          showHeroTitle,
+          showHeroManifesto,
+          showHeroButton,
+          heroButtonText,
+          heroButtonStyle,
+          heroButtonSize,
+          heroButtonColor,
+          heroButtonTextColor,
+          heroManifestoFontType,
+          heroManifestoFontColor,
+          heroManifestoFontSize,
+          heroManifestoFontAlignment,
+          heroManifestoFontWeight,
           videoTitle,
           videoSubtitle,
           videoUrl,
@@ -1364,11 +1413,13 @@ export default function AdminDashboard() {
         heroTitleFontColor,
         heroTitleFontSize,
         heroTitleFontAlignment,
-        heroTitleFontVerticalAlignment,
         heroTitleFontWeight,
-        heroTitlePositionX,
-        heroTitlePositionY,
         heroManifesto,
+          heroTemplate,
+          showHeroTitle,
+          showHeroManifesto,
+          showHeroButton,
+          heroButtonText,
         videoTitle,
         videoSubtitle,
         videoUrl,
@@ -1853,10 +1904,10 @@ export default function AdminDashboard() {
     // Load variants/options with legacy fallback
     if (product.variants && product.variants.length > 0) {
       const mappedVariants = product.variants.map(opt => ({ ...opt, category: Array.isArray(opt.category) ? opt.category : (opt.category ? [opt.category as unknown as string] : []) }));
-      setOptions(mappedVariants);
+      setOptions(mappedVariants as any);
     } else if (product.options && product.options.length > 0) {
       const mappedOptions = product.options.map(opt => ({ ...opt, category: Array.isArray(opt.category) ? opt.category : (opt.category ? [opt.category] : []) }));
-      setOptions(mappedOptions);
+      setOptions(mappedOptions as any);
     } else {
       const legacyOptions = (product.sizes || []).map(sz => ({
         size: sz,
@@ -3859,9 +3910,33 @@ export default function AdminDashboard() {
                                 <button
                                   type="button"
                                   onClick={() => {
+                                    setHeroBackup({
+                                      heroTitle,
+                                      heroManifesto,
+                                      heroTemplate,
+                                      showHeroTitle,
+                                      showHeroManifesto,
+                                      showHeroButton,
+                                      heroButtonText,
+                                      heroButtonStyle,
+                                      heroButtonSize,
+                                      heroButtonColor,
+                                      heroButtonTextColor,
+                                      heroTitleFontType,
+                                      heroTitleFontColor,
+                                      heroTitleFontSize,
+                                      heroTitleFontAlignment,
+                                      heroTitleFontWeight,
+                                      heroManifestoFontType,
+                                      heroManifestoFontColor,
+                                      heroManifestoFontSize,
+                                      heroManifestoFontAlignment,
+                                      heroManifestoFontWeight,
+                                    });
                                     setDrafts({
-                                      title: { fontType: heroTitleFontType, fontSize: heroTitleFontSize, fontColor: heroTitleFontColor, fontAlignment: heroTitleFontAlignment, fontWeight: heroTitleFontWeight, fontVerticalAlignment: heroTitleFontVerticalAlignment, positionX: heroTitlePositionX, positionY: heroTitlePositionY, maxWidth: heroTitleMaxWidth, minHeight: 0 },
-                                      manifesto: { fontType: heroManifestoFontType, fontSize: heroManifestoFontSize, fontColor: heroManifestoFontColor, fontAlignment: heroManifestoFontAlignment, fontWeight: heroManifestoFontWeight, fontVerticalAlignment: heroManifestoFontVerticalAlignment, positionX: heroManifestoPositionX, positionY: heroManifestoPositionY, maxWidth: heroManifestoMaxWidth, minHeight: 0 }
+                                      title: { fontType: heroTitleFontType, fontSize: selectedElement === "title" && hoveredFontSize ? hoveredFontSize : heroTitleFontSize, fontColor: heroTitleFontColor, fontAlignment: heroTitleFontAlignment, fontWeight: heroTitleFontWeight, fontVerticalAlignment: 'bottom', positionX: 0, positionY: 0, maxWidth: 100, minHeight: 0 },
+                                      manifesto: { fontType: heroManifestoFontType, fontSize: selectedElement === "manifesto" && hoveredFontSize ? hoveredFontSize : heroManifestoFontSize, fontColor: heroManifestoFontColor, fontAlignment: heroManifestoFontAlignment, fontWeight: heroManifestoFontWeight, fontVerticalAlignment: 'top', positionX: 0, positionY: 0, maxWidth: 100, minHeight: 0 },
+                                      button: { fontType: "Outfit", fontSize: "0.85rem", fontColor: "#ffffff", fontAlignment: "center", fontWeight: "700", fontVerticalAlignment: "middle", positionX: 0, positionY: 0, maxWidth: 100, minHeight: 0 }
                                     });
                                     setSelectedElement("title");
                                     setShowHeroTitleFontOptions(true);
@@ -3887,7 +3962,7 @@ export default function AdminDashboard() {
                                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "14px", height: "14px" }}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.83 21.75a.75.75 0 0 1-.322.206l-4 1a.75.75 0 0 1-.905-.905l1-4a.75.75 0 0 1 .206-.322l15.118-15.118L16.863 4.487Zm0 0L19.5 7.125" />
                                   </svg>
-                                  <span>Customize Font</span>
+                                  <span>Customize Layout & Styling</span>
                                 </button>
                               </div>
                               <div style={{ display: "flex", gap: "8px", position: "relative" }}>
@@ -3921,6 +3996,8 @@ export default function AdminDashboard() {
                               flexDirection: "column",
                               gap: "12px"
                             }}>
+
+
                               <label className={styles.inputLabel} style={{ fontWeight: 700 }}>Hero Background Customization</label>
 
                               {/* Background Type Selection */}
@@ -6607,29 +6684,56 @@ export default function AdminDashboard() {
         </div>
       )}
 
+
       {/* Brand Header Title Font Customizer Pop-up Modal */}
       {showHeroTitleFontOptions && (
         <div
           style={{
             position: "fixed",
             inset: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            backdropFilter: "blur(4px)",
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
+            backdropFilter: "blur(8px)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             zIndex: 15000,
             padding: "20px"
           }}
-          onClick={() => setShowHeroTitleFontOptions(false)}
+          onClick={() => {
+            // Restore from backup on clicking backdrop
+            if (heroBackup) {
+              setHeroTitle(heroBackup.heroTitle);
+              setHeroManifesto(heroBackup.heroManifesto);
+              setHeroTemplate(heroBackup.heroTemplate);
+              setShowHeroTitle(heroBackup.showHeroTitle);
+              setShowHeroManifesto(heroBackup.showHeroManifesto);
+              setShowHeroButton(heroBackup.showHeroButton);
+              setHeroButtonText(heroBackup.heroButtonText);
+              setHeroButtonStyle(heroBackup.heroButtonStyle);
+              setHeroButtonSize(heroBackup.heroButtonSize);
+              setHeroButtonColor(heroBackup.heroButtonColor);
+              setHeroButtonTextColor(heroBackup.heroButtonTextColor);
+              setHeroTitleFontType(heroBackup.heroTitleFontType);
+              setHeroTitleFontColor(heroBackup.heroTitleFontColor);
+              setHeroTitleFontSize(heroBackup.heroTitleFontSize);
+              setHeroTitleFontAlignment(heroBackup.heroTitleFontAlignment);
+              setHeroTitleFontWeight(heroBackup.heroTitleFontWeight);
+              setHeroManifestoFontType(heroBackup.heroManifestoFontType);
+              setHeroManifestoFontColor(heroBackup.heroManifestoFontColor);
+              setHeroManifestoFontSize(heroBackup.heroManifestoFontSize);
+              setHeroManifestoFontAlignment(heroBackup.heroManifestoFontAlignment);
+              setHeroManifestoFontWeight(heroBackup.heroManifestoFontWeight);
+            }
+            setShowHeroTitleFontOptions(false);
+          }}
         >
           <div
             style={{
               backgroundColor: "#ffffff",
-              borderRadius: "12px",
+              borderRadius: "16px",
               width: "95vw",
-              maxWidth: "1150px",
-              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+              maxWidth: "1280px",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
               display: "flex",
               flexDirection: "column",
               maxHeight: "95vh",
@@ -6642,663 +6746,1030 @@ export default function AdminDashboard() {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              padding: "20px 24px",
-              borderBottom: "1px solid #e5e7eb"
+              padding: "20px 30px",
+              borderBottom: "1px solid #f3f4f6",
+              backgroundColor: "#fafafa"
             }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="#111827" style={{ width: "20px", height: "20px" }}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.83 21.75a.75.75 0 0 1-.322.206l-4 1a.75.75 0 0 1-.905-.905l1-4a.75.75 0 0 1 .206-.322l15.118-15.118L16.863 4.487Zm0 0L19.5 7.125" />
-                </svg>
-                <h3 style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0, color: "#111827", fontFamily: "Outfit, sans-serif" }}>
-                  Customize Hero Section
+              <div>
+                <h3 style={{ fontSize: "1.25rem", fontWeight: 800, margin: 0, color: "#111827", fontFamily: "Outfit, sans-serif" }}>
+                  Customize Landing Page Hero Section
                 </h3>
+                <p style={{ margin: "4px 0 0 0", fontSize: "0.85rem", color: "#6b7280" }}>
+                  Select a layout template structure, and click on any text box or button in the live preview to edit its content or toggle its visibility.
+                </p>
               </div>
               <button
-                onClick={() => setShowHeroTitleFontOptions(false)}
+                onClick={() => {
+                  // Restore from backup on click close
+                  if (heroBackup) {
+                    setHeroTitle(heroBackup.heroTitle);
+                    setHeroManifesto(heroBackup.heroManifesto);
+                    setHeroTemplate(heroBackup.heroTemplate);
+                    setShowHeroTitle(heroBackup.showHeroTitle);
+                    setShowHeroManifesto(heroBackup.showHeroManifesto);
+                    setShowHeroButton(heroBackup.showHeroButton);
+                    setHeroButtonText(heroBackup.heroButtonText);
+                    setHeroButtonStyle(heroBackup.heroButtonStyle);
+                    setHeroButtonSize(heroBackup.heroButtonSize);
+                    setHeroButtonColor(heroBackup.heroButtonColor);
+                    setHeroButtonTextColor(heroBackup.heroButtonTextColor);
+                    setHeroTitleFontType(heroBackup.heroTitleFontType);
+                    setHeroTitleFontColor(heroBackup.heroTitleFontColor);
+                    setHeroTitleFontSize(heroBackup.heroTitleFontSize);
+                    setHeroTitleFontAlignment(heroBackup.heroTitleFontAlignment);
+                    setHeroTitleFontWeight(heroBackup.heroTitleFontWeight);
+                    setHeroManifestoFontType(heroBackup.heroManifestoFontType);
+                    setHeroManifestoFontColor(heroBackup.heroManifestoFontColor);
+                    setHeroManifestoFontSize(heroBackup.heroManifestoFontSize);
+                    setHeroManifestoFontAlignment(heroBackup.heroManifestoFontAlignment);
+                    setHeroManifestoFontWeight(heroBackup.heroManifestoFontWeight);
+                  }
+                  setShowHeroTitleFontOptions(false);
+                }}
                 style={{
                   background: "none",
                   border: "none",
                   fontSize: "1.25rem",
                   cursor: "pointer",
                   color: "#9ca3af",
-                  lineHeight: 1
+                  lineHeight: 1,
+                  padding: "8px"
                 }}
               >
                 ✕
               </button>
             </div>
 
-            {/* Controls Panel (Top) */}
-            {selectedElement ? (
+            {/* Split layout for settings and preview */}
+            <div style={{ display: "flex", flex: 1, overflow: "hidden", minHeight: "65vh" }}>
+              
+              {/* Left sidebar: Templates and Active component settings */}
               <div style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(5, 1fr)",
-                gap: "16px",
-                padding: "20px 24px",
-                borderBottom: "1px solid #e5e7eb",
-                backgroundColor: "#f9fafb"
+                width: "420px",
+                borderRight: "1px solid #e5e7eb",
+                display: "flex",
+                flexDirection: "column",
+                overflowY: "auto",
+                backgroundColor: "#ffffff",
+                padding: "24px",
+                boxSizing: "border-box"
               }}>
-                {/* Font Type (Custom Hover-Interactive Dropdown) */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "6px", position: "relative" }}>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, color: "#374151" }}>Font Type</label>
+                {/* 1. Visual Layout Templates Selector */}
+                <h4 style={{ fontSize: "0.88rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#374151", margin: "0 0 12px 0" }}>
+                  1. Page Structure Layout Template
+                </h4>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px", marginBottom: "30px" }}>
+                  {[
+                    {
+                      id: "center",
+                      label: "Classic Center",
+                      icon: (
+                        <svg width="100%" height="45" viewBox="0 0 100 50">
+                          <rect width="100%" height="50" fill="#f8fafc" rx="4" stroke="#e2e8f0" />
+                          <line x1="25" y1="15" x2="75" y2="15" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
+                          <line x1="35" y1="23" x2="65" y2="23" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
+                          <rect x="40" y="32" width="20" height="6" fill="#3b82f6" rx="2" />
+                        </svg>
+                      )
+                    },
+                    {
+                      id: "top-center",
+                      label: "Top Center",
+                      icon: (
+                        <svg width="100%" height="45" viewBox="0 0 100 50">
+                          <rect width="100%" height="50" fill="#f8fafc" rx="4" stroke="#e2e8f0" />
+                          <line x1="25" y1="10" x2="75" y2="10" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
+                          <line x1="35" y1="17" x2="65" y2="17" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
+                          <rect x="40" y="24" width="20" height="6" fill="#3b82f6" rx="2" />
+                        </svg>
+                      )
+                    },
+                    {
+                      id: "bottom-center",
+                      label: "Bottom Center",
+                      icon: (
+                        <svg width="100%" height="45" viewBox="0 0 100 50">
+                          <rect width="100%" height="50" fill="#f8fafc" rx="4" stroke="#e2e8f0" />
+                          <line x1="25" y1="22" x2="75" y2="22" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
+                          <line x1="35" y1="29" x2="65" y2="29" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
+                          <rect x="40" y="36" width="20" height="6" fill="#3b82f6" rx="2" />
+                        </svg>
+                      )
+                    },
+                    {
+                      id: "left",
+                      label: "Left Centered",
+                      icon: (
+                        <svg width="100%" height="45" viewBox="0 0 100 50">
+                          <rect width="100%" height="50" fill="#f8fafc" rx="4" stroke="#e2e8f0" />
+                          <line x1="12" y1="15" x2="55" y2="15" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
+                          <line x1="12" y1="23" x2="60" y2="23" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
+                          <rect x="12" y="32" width="20" height="6" fill="#3b82f6" rx="2" />
+                        </svg>
+                      )
+                    },
+                    {
+                      id: "bottom-left",
+                      label: "Bottom Left",
+                      icon: (
+                        <svg width="100%" height="45" viewBox="0 0 100 50">
+                          <rect width="100%" height="50" fill="#f8fafc" rx="4" stroke="#e2e8f0" />
+                          <line x1="12" y1="23" x2="50" y2="23" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
+                          <line x1="12" y1="31" x2="60" y2="31" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
+                          <rect x="12" y="38" width="20" height="6" fill="#3b82f6" rx="2" />
+                        </svg>
+                      )
+                    },
+                    {
+                      id: "top-left",
+                      label: "Top Left",
+                      icon: (
+                        <svg width="100%" height="45" viewBox="0 0 100 50">
+                          <rect width="100%" height="50" fill="#f8fafc" rx="4" stroke="#e2e8f0" />
+                          <line x1="12" y1="12" x2="50" y2="12" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
+                          <line x1="12" y1="20" x2="60" y2="20" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
+                          <rect x="12" y="28" width="20" height="6" fill="#3b82f6" rx="2" />
+                        </svg>
+                      )
+                    },
+                    {
+                      id: "right",
+                      label: "Right Centered",
+                      icon: (
+                        <svg width="100%" height="45" viewBox="0 0 100 50">
+                          <rect width="100%" height="50" fill="#f8fafc" rx="4" stroke="#e2e8f0" />
+                          <line x1="45" y1="15" x2="88" y2="15" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
+                          <line x1="40" y1="23" x2="88" y2="23" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
+                          <rect x="68" y="32" width="20" height="6" fill="#3b82f6" rx="2" />
+                        </svg>
+                      )
+                    },
+                    {
+                      id: "right-top",
+                      label: "Right Top",
+                      icon: (
+                        <svg width="100%" height="45" viewBox="0 0 100 50">
+                          <rect width="100%" height="50" fill="#f8fafc" rx="4" stroke="#e2e8f0" />
+                          <line x1="45" y1="12" x2="88" y2="12" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
+                          <line x1="40" y1="20" x2="88" y2="20" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
+                          <rect x="68" y="28" width="20" height="6" fill="#3b82f6" rx="2" />
+                        </svg>
+                      )
+                    },
+                    {
+                      id: "right-bottom",
+                      label: "Right Bottom",
+                      icon: (
+                        <svg width="100%" height="45" viewBox="0 0 100 50">
+                          <rect width="100%" height="50" fill="#f8fafc" rx="4" stroke="#e2e8f0" />
+                          <line x1="45" y1="23" x2="88" y2="23" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
+                          <line x1="40" y1="31" x2="88" y2="31" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
+                          <rect x="68" y="38" width="20" height="6" fill="#3b82f6" rx="2" />
+                        </svg>
+                      )
+                    }
+                  ].map((t) => {
+                    const isSelected = heroTemplate === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setHeroTemplate(t.id)}
+                        style={{
+                          flex: 1,
+                          background: "none",
+                          border: isSelected ? "2px solid #3b82f6" : "1px solid #e2e8f0",
+                          borderRadius: "8px",
+                          padding: "8px",
+                          cursor: "pointer",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "6px",
+                          alignItems: "center",
+                          outline: "none",
+                          transition: "all 0.2s"
+                        }}
+                      >
+                        {t.icon}
+                        <span style={{ fontSize: "0.75rem", fontWeight: 700, color: isSelected ? "#3b82f6" : "#475569" }}>
+                          {t.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
 
-                  {/* Select Box Trigger */}
-                  <div
-                    onClick={() => setIsFontDropdownOpen(!isFontDropdownOpen)}
-                    style={{
-                      padding: "10px",
-                      borderRadius: "8px",
-                      border: "1px solid #d1d5db",
-                      fontSize: "0.88rem",
-                      backgroundColor: "#ffffff",
-                      cursor: "pointer",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      userSelect: "none",
-                      fontFamily: `"${hoveredFontType || drafts[selectedElement].fontType}", sans-serif`,
-                      minHeight: "41px",
-                      boxSizing: "border-box",
-                      color: "#000000"
-                    }}
-                  >
-                    <span style={{ fontWeight: 600 }}>{hoveredFontType || drafts[selectedElement].fontType}</span>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={2}
-                      stroke="#6b7280"
-                      style={{
-                        width: "14px",
-                        height: "14px",
-                        transform: isFontDropdownOpen ? "rotate(180deg)" : "none",
-                        transition: "transform 0.2s"
-                      }}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                    </svg>
-                  </div>
+                {/* 2. Component Customizer */}
+                <h4 style={{ fontSize: "0.88rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#374151", margin: "0 0 12px 0" }}>
+                  2. Component Editor
+                </h4>
 
-                  {/* Custom List Panel Dropdown Popover */}
-                  {isFontDropdownOpen && (
-                    <>
-                      {/* Click backdrop helper to close */}
-                      <div
-                        style={{ position: "fixed", inset: 0, zIndex: 15500 }}
-                        onClick={() => setIsFontDropdownOpen(false)}
+                {selectedElement ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "20px", flex: 1 }}>
+                    <div style={{ backgroundColor: "#f8fafc", padding: "12px 16px", borderRadius: "8px", border: "1px solid #eff6ff" }}>
+                      <span style={{ fontSize: "0.75rem", fontWeight: 800, textTransform: "uppercase", color: "#2563eb" }}>
+                        Selected Element
+                      </span>
+                      <h5 style={{ fontSize: "1.05rem", fontWeight: 700, margin: "2px 0 0 0", color: "#0f172a", textTransform: "capitalize" }}>
+                        {selectedElement === "title" ? "Hero Title" : selectedElement === "manifesto" ? "Hero Manifesto" : "CTA Button"}
+                      </h5>
+                    </div>
+
+                    {/* Visibility Switch */}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "0.88rem", fontWeight: 600, color: "#334155" }}>
+                        Enable Element Visibility
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={
+                          selectedElement === "title" ? showHeroTitle :
+                          selectedElement === "manifesto" ? showHeroManifesto :
+                          showHeroButton
+                        }
+                        onChange={(e) => {
+                          const val = e.target.checked;
+                          if (selectedElement === "title") setShowHeroTitle(val);
+                          else if (selectedElement === "manifesto") setShowHeroManifesto(val);
+                          else setShowHeroButton(val);
+                        }}
+                        style={{ width: "20px", height: "20px", cursor: "pointer" }}
                       />
-                      <div style={{
-                        position: "absolute",
-                        top: "65px",
-                        left: 0,
-                        width: "280px",
-                        maxHeight: "320px",
-                        overflowY: "auto",
-                        backgroundColor: "#ffffff",
-                        border: "1px solid #d1d5db",
-                        borderRadius: "8px",
-                        boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)",
-                        zIndex: 15600,
-                        padding: "8px 0",
-                        boxSizing: "border-box"
-                      }}>
-                        {fontCategories.map((cat, catIdx) => (
-                          <div key={catIdx}>
-                            {/* Optgroup label mock */}
+                    </div>
+
+                    {/* Text Field Inputs */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <label style={{ fontSize: "0.82rem", fontWeight: 700, color: "#475569" }}>
+                        Content / Label Text
+                      </label>
+                      {selectedElement === "manifesto" ? (
+                        <textarea
+                          value={heroManifesto}
+                          onChange={(e) => setHeroManifesto(e.target.value)}
+                          disabled={!showHeroManifesto}
+                          rows={4}
+                          style={{
+                            padding: "10px",
+                            borderRadius: "8px",
+                            border: "1px solid #cbd5e1",
+                            fontSize: "0.88rem",
+                            width: "100%",
+                            resize: "vertical",
+                            boxSizing: "border-box",
+                            color: "#000",
+                            opacity: showHeroManifesto ? 1 : 0.5
+                          }}
+                        />
+                      ) : (
+                        <input
+                          type="text"
+                          value={selectedElement === "title" ? heroTitle : heroButtonText}
+                          onChange={(e) => {
+                            if (selectedElement === "title") setHeroTitle(e.target.value);
+                            else setHeroButtonText(e.target.value);
+                          }}
+                          disabled={selectedElement === "title" ? !showHeroTitle : !showHeroButton}
+                          style={{
+                            padding: "10px",
+                            borderRadius: "8px",
+                            border: "1px solid #cbd5e1",
+                            fontSize: "0.88rem",
+                            width: "100%",
+                            boxSizing: "border-box",
+                            color: "#000",
+                            opacity: (selectedElement === "title" ? showHeroTitle : showHeroButton) ? 1 : 0.5
+                          }}
+                        />
+                      )}
+                    </div>
+
+                    {/* Font & Style options - Only for text elements */}
+                    {selectedElement !== "button" && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "16px", borderTop: "1px solid #f1f5f9", paddingTop: "16px" }}>
+                        
+                        {/* Font Type Selection (Custom Dropdown with hover preview) */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px", position: "relative" }}>
+                          <label style={{ fontSize: "0.82rem", fontWeight: 700, color: "#475569" }}>Font Family</label>
+                          
+                          {/* Trigger element */}
+                          <div
+                            onClick={() => setIsFontDropdownOpen(!isFontDropdownOpen)}
+                            style={{
+                              padding: "10px 14px",
+                              borderRadius: "8px",
+                              border: "1px solid #cbd5e1",
+                              fontSize: "0.88rem",
+                              backgroundColor: "#ffffff",
+                              color: "#000000",
+                              cursor: "pointer",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              fontWeight: 600,
+                              fontFamily: selectedElement === "title" ? `"${heroTitleFontType}", sans-serif` : `"${heroManifestoFontType}", sans-serif`
+                            }}
+                          >
+                            <span>
+                              {selectedElement === "title" ? heroTitleFontType : heroManifestoFontType}
+                            </span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="#64748b" style={{ width: "12px", height: "12px", transform: isFontDropdownOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                            </svg>
+                          </div>
+
+                          {/* Popover overlay */}
+                          {isFontDropdownOpen && (
+                            <>
+                              <div style={{ position: "fixed", inset: 0, zIndex: 16000 }} onClick={() => { setIsFontDropdownOpen(false); setHoveredFontType(null); }} />
+                              <div style={{
+                                position: "absolute",
+                                top: "68px",
+                                left: 0,
+                                width: "100%",
+                                minWidth: "280px",
+                                maxHeight: "320px",
+                                overflowY: "auto",
+                                backgroundColor: "#ffffff",
+                                border: "1px solid #cbd5e1",
+                                borderRadius: "8px",
+                                boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)",
+                                zIndex: 16100,
+                                boxSizing: "border-box"
+                              }}>
+                                {[
+                                  { category: "Elegant Serif (Luxury & Heritage)", fonts: [
+                                    { name: "Cinzel", label: "Cinzel (Luxury Capital)" },
+                                    { name: "Cinzel Decorative", label: "Cinzel Decorative (Ornate)" },
+                                    { name: "Cormorant Garamond", label: "Cormorant Garamond (Editorial)" },
+                                    { name: "Playfair Display", label: "Playfair Display (Classic)" },
+                                    { name: "Prata", label: "Prata (High-Contrast)" },
+                                    { name: "Italiana", label: "Italiana (Minimalist)" },
+                                    { name: "Bodoni Moda", label: "Bodoni Moda (Modern)" },
+                                    { name: "DM Serif Display", label: "DM Serif (Bold Editorial)" },
+                                    { name: "EB Garamond", label: "EB Garamond (Luxury Antique)" },
+                                    { name: "Spectral", label: "Spectral (Editorial Serif)" },
+                                    { name: "Fraunces", label: "Fraunces (Warm & Organic)" }
+                                  ]},
+                                  { category: "Modern Sans-Serif (Clean & Premium)", fonts: [
+                                    { name: "Outfit", label: "Outfit (Modern & Trendy)" },
+                                    { name: "Montserrat", label: "Montserrat (Geometric)" },
+                                    { name: "Inter", label: "Inter (Technical)" },
+                                    { name: "Tenor Sans", label: "Tenor Sans (Clean Chic)" },
+                                    { name: "Space Grotesk", label: "Space Grotesk (Tech)" },
+                                    { name: "Lora", label: "Lora (Contemporary)" },
+                                    { name: "Cabinet Grotesk", label: "Cabinet Grotesk (Luxury Geometric)" }
+                                  ]}
+                                ].map((cat, catIdx) => (
+                                  <div key={catIdx}>
+                                    <div style={{
+                                      padding: "6px 12px",
+                                      fontSize: "0.68rem",
+                                      fontWeight: 800,
+                                      color: "#94a3b8",
+                                      backgroundColor: "#f8fafc",
+                                      textTransform: "uppercase",
+                                      letterSpacing: "0.05em",
+                                      borderBottom: "1px solid #f1f5f9"
+                                    }}>
+                                      {cat.category}
+                                    </div>
+                                    {cat.fonts.map((f) => {
+                                      const isSelected = (selectedElement === "title" ? heroTitleFontType : heroManifestoFontType) === f.name;
+                                      return (
+                                        <div
+                                          key={f.name}
+                                          onClick={() => {
+                                            if (selectedElement === "title") setHeroTitleFontType(f.name);
+                                            else setHeroManifestoFontType(f.name);
+                                            setIsFontDropdownOpen(false);
+                                            setHoveredFontType(null);
+                                          }}
+                                          onMouseEnter={(e) => {
+                                            e.currentTarget.style.backgroundColor = '#f1f5f9';
+                                            setHoveredFontType(f.name);
+                                          }}
+                                          onMouseLeave={(e) => {
+                                            e.currentTarget.style.backgroundColor = isSelected ? '#eff6ff' : 'transparent';
+                                            setHoveredFontType(null);
+                                          }}
+                                          style={{
+                                            padding: "8px 12px",
+                                            fontSize: "0.85rem",
+                                            cursor: "pointer",
+                                            fontFamily: `"${f.name}", sans-serif`,
+                                            backgroundColor: isSelected ? "#eff6ff" : "transparent",
+                                            color: isSelected ? "#2563eb" : "#334155",
+                                            fontWeight: isSelected ? 700 : 500,
+                                            borderBottom: "1px solid #f8fafc",
+                                            transition: "background-color 0.15s"
+                                          }}
+                                        >
+                                          {f.label}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Font Size Selection (Custom Popover with hover preview) */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px", position: "relative" }}>
+                          <label style={{ fontSize: "0.82rem", fontWeight: 700, color: "#475569" }}>Font Size</label>
+                          
+                          {/* Trigger */}
+                          <div
+                            onClick={() => setIsFontSizeDropdownOpen(!isFontSizeDropdownOpen)}
+                            style={{
+                              padding: "10px 14px",
+                              borderRadius: "8px",
+                              border: "1px solid #cbd5e1",
+                              fontSize: "0.88rem",
+                              backgroundColor: "#ffffff",
+                              color: "#000000",
+                              cursor: "pointer",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              fontWeight: 600
+                            }}
+                          >
+                            <span>
+                              {selectedElement === "title" ? heroTitleFontSize : heroManifestoFontSize}
+                            </span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="#64748b" style={{ width: "12px", height: "12px", transform: isFontSizeDropdownOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                            </svg>
+                          </div>
+
+                          {/* Popover list */}
+                          {isFontSizeDropdownOpen && (
+                            <>
+                              <div style={{ position: "fixed", inset: 0, zIndex: 16000 }} onClick={() => { setIsFontSizeDropdownOpen(false); setHoveredFontSize(null); }} />
+                              <div style={{
+                                position: "absolute",
+                                top: "68px",
+                                left: 0,
+                                width: "100%",
+                                minWidth: "200px",
+                                maxHeight: "280px",
+                                overflowY: "auto",
+                                backgroundColor: "#ffffff",
+                                border: "1px solid #cbd5e1",
+                                borderRadius: "8px",
+                                boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)",
+                                zIndex: 16100,
+                                boxSizing: "border-box"
+                              }}>
+                                {(selectedElement === "title"
+                                  ? ["1.5rem", "2.0rem", "2.5rem", "3.0rem", "3.5rem", "4.0rem", "4.5rem", "5.0rem", "5.5rem", "6.0rem", "6.5rem", "7.0rem", "7.5rem", "8.0rem", "9.0rem", "10.0rem"]
+                                  : ["0.6rem", "0.7rem", "0.8rem", "0.9rem", "1.0rem", "1.1rem", "1.2rem", "1.3rem", "1.4rem", "1.5rem", "1.6rem", "1.8rem", "2.0rem"]
+                                ).map((size) => {
+                                  const isSelected = (selectedElement === "title" ? heroTitleFontSize : heroManifestoFontSize) === size;
+                                  return (
+                                    <div
+                                      key={size}
+                                      onClick={() => {
+                                        if (selectedElement === "title") setHeroTitleFontSize(size);
+                                        else setHeroManifestoFontSize(size);
+                                        setIsFontSizeDropdownOpen(false);
+                                        setHoveredFontSize(null);
+                                      }}
+                                      onMouseEnter={() => setHoveredFontSize(size)}
+                                      onMouseLeave={() => setHoveredFontSize(null)}
+                                      style={{
+                                        padding: "8px 12px",
+                                        fontSize: "0.85rem",
+                                        cursor: "pointer",
+                                        backgroundColor: isSelected ? "#eff6ff" : "transparent",
+                                        color: isSelected ? "#2563eb" : "#334155",
+                                        fontWeight: isSelected ? 700 : 500,
+                                        borderBottom: "1px solid #f8fafc",
+                                        transition: "background-color 0.15s"
+                                      }}
+                                    >
+                                      {size}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Font Color Picker */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                          <label style={{ fontSize: "0.82rem", fontWeight: 700, color: "#475569" }}>Font Color</label>
+                          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                            <input
+                              type="color"
+                              value={selectedElement === "title" ? heroTitleFontColor : heroManifestoFontColor}
+                              onChange={(e) => {
+                                if (selectedElement === "title") setHeroTitleFontColor(e.target.value);
+                                else setHeroManifestoFontColor(e.target.value);
+                              }}
+                              style={{
+                                border: "1px solid #cbd5e1",
+                                borderRadius: "6px",
+                                width: "40px",
+                                height: "40px",
+                                padding: 0,
+                                cursor: "pointer",
+                                backgroundColor: "transparent"
+                              }}
+                            />
+                            <input
+                              type="text"
+                              value={selectedElement === "title" ? heroTitleFontColor : heroManifestoFontColor}
+                              onChange={(e) => {
+                                if (selectedElement === "title") setHeroTitleFontColor(e.target.value);
+                                else setHeroManifestoFontColor(e.target.value);
+                              }}
+                              style={{
+                                padding: "10px",
+                                borderRadius: "8px",
+                                border: "1px solid #cbd5e1",
+                                fontSize: "0.88rem",
+                                width: "100%",
+                                color: "#000",
+                                fontFamily: "monospace"
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Font Weight (Custom Popover with hover preview) */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px", position: "relative" }}>
+                          <label style={{ fontSize: "0.82rem", fontWeight: 700, color: "#475569" }}>Font Weight</label>
+                          
+                          {/* Trigger */}
+                          <div
+                            onClick={() => setIsFontWeightDropdownOpen(!isFontWeightDropdownOpen)}
+                            style={{
+                              padding: "10px 14px",
+                              borderRadius: "8px",
+                              border: "1px solid #cbd5e1",
+                              fontSize: "0.88rem",
+                              backgroundColor: "#ffffff",
+                              color: "#000000",
+                              cursor: "pointer",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              fontWeight: 600
+                            }}
+                          >
+                            <span>
+                              {selectedElement === "title" 
+                                ? { "300": "Light (300)", "400": "Regular (400)", "500": "Medium (500)", "600": "Semi Bold (600)", "700": "Bold (700)", "800": "Extra Bold (800)", "900": "Black (900)" }[heroTitleFontWeight] || heroTitleFontWeight
+                                : { "300": "Light (300)", "400": "Regular (400)", "500": "Medium (500)", "600": "Semi Bold (600)", "700": "Bold (700)", "800": "Extra Bold (800)", "900": "Black (900)" }[heroManifestoFontWeight] || heroManifestoFontWeight
+                              }
+                            </span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="#64748b" style={{ width: "12px", height: "12px", transform: isFontWeightDropdownOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                            </svg>
+                          </div>
+
+                          {/* Popover list */}
+                          {isFontWeightDropdownOpen && (
+                            <>
+                              <div style={{ position: "fixed", inset: 0, zIndex: 16000 }} onClick={() => { setIsFontWeightDropdownOpen(false); setHoveredFontWeight(null); }} />
+                              <div style={{
+                                position: "absolute",
+                                top: "68px",
+                                left: 0,
+                                width: "100%",
+                                minWidth: "200px",
+                                maxHeight: "280px",
+                                overflowY: "auto",
+                                backgroundColor: "#ffffff",
+                                border: "1px solid #cbd5e1",
+                                borderRadius: "8px",
+                                boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)",
+                                zIndex: 16100,
+                                boxSizing: "border-box"
+                              }}>
+                                {[
+                                  { value: "300", label: "Light (300)" },
+                                  { value: "400", label: "Regular (400)" },
+                                  { value: "500", label: "Medium (500)" },
+                                  { value: "600", label: "Semi Bold (600)" },
+                                  { value: "700", label: "Bold (700)" },
+                                  { value: "800", label: "Extra Bold (800)" },
+                                  { value: "900", label: "Black (900)" }
+                                ].map((w) => {
+                                  const isSelected = (selectedElement === "title" ? heroTitleFontWeight : heroManifestoFontWeight) === w.value;
+                                  return (
+                                    <div
+                                      key={w.value}
+                                      onClick={() => {
+                                        if (selectedElement === "title") setHeroTitleFontWeight(w.value);
+                                        else setHeroManifestoFontWeight(w.value);
+                                        setIsFontWeightDropdownOpen(false);
+                                        setHoveredFontWeight(null);
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.backgroundColor = '#f1f5f9';
+                                        setHoveredFontWeight(w.value);
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.backgroundColor = isSelected ? '#eff6ff' : 'transparent';
+                                        setHoveredFontWeight(null);
+                                      }}
+                                      style={{
+                                        padding: "8px 12px",
+                                        fontSize: "0.85rem",
+                                        cursor: "pointer",
+                                        backgroundColor: isSelected ? "#eff6ff" : "transparent",
+                                        color: isSelected ? "#2563eb" : "#334155",
+                                        fontWeight: isSelected ? 700 : 500,
+                                        borderBottom: "1px solid #f8fafc",
+                                        transition: "background-color 0.15s"
+                                      }}
+                                    >
+                                      {w.label}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </>
+                          )}
+                        </div>
+
+                      </div>
+                    )}
+
+                    {/* Button Styling Options - Only for button element */}
+                    {selectedElement === "button" && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "16px", borderTop: "1px solid #f1f5f9", paddingTop: "16px" }}>
+                        
+                        {/* Button Style selector */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                          <label style={{ fontSize: "0.82rem", fontWeight: 700, color: "#475569" }}>Button Style</label>
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            {["solid", "outline", "minimal"].map((style) => (
+                              <button
+                                key={style}
+                                type="button"
+                                onClick={() => setHeroButtonStyle(style)}
+                                style={{
+                                  flex: 1,
+                                  padding: "8px 12px",
+                                  borderRadius: "6px",
+                                  border: "1px solid #cbd5e1",
+                                  backgroundColor: heroButtonStyle === style ? "#111827" : "#ffffff",
+                                  color: heroButtonStyle === style ? "#ffffff" : "#374151",
+                                  fontSize: "0.8rem",
+                                  fontWeight: 600,
+                                  cursor: "pointer",
+                                  textTransform: "capitalize"
+                                }}
+                              >
+                                {style}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Button Size selector */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                          <label style={{ fontSize: "0.82rem", fontWeight: 700, color: "#475569" }}>Button Size</label>
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            {["sm", "md", "lg"].map((size) => (
+                              <button
+                                key={size}
+                                type="button"
+                                onClick={() => setHeroButtonSize(size)}
+                                style={{
+                                  flex: 1,
+                                  padding: "8px 12px",
+                                  borderRadius: "6px",
+                                  border: "1px solid #cbd5e1",
+                                  backgroundColor: heroButtonSize === size ? "#111827" : "#ffffff",
+                                  color: heroButtonSize === size ? "#ffffff" : "#374151",
+                                  fontSize: "0.8rem",
+                                  fontWeight: 600,
+                                  cursor: "pointer",
+                                  textTransform: "uppercase"
+                                }}
+                              >
+                                {size}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Button Color selector */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                          <label style={{ fontSize: "0.82rem", fontWeight: 700, color: "#475569" }}>Button Theme Color</label>
+                          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                            <input
+                              type="color"
+                              value={heroButtonColor || "#000000"}
+                              onChange={(e) => setHeroButtonColor(e.target.value)}
+                              style={{
+                                border: "1px solid #cbd5e1",
+                                borderRadius: "6px",
+                                width: "40px",
+                                height: "40px",
+                                padding: 0,
+                                cursor: "pointer",
+                                backgroundColor: "transparent"
+                              }}
+                            />
+                            <input
+                              type="text"
+                              placeholder="e.g. #ff0000 (falls back to brand primary color if empty)"
+                              value={heroButtonColor}
+                              onChange={(e) => setHeroButtonColor(e.target.value)}
+                              style={{
+                                padding: "10px",
+                                borderRadius: "8px",
+                                border: "1px solid #cbd5e1",
+                                fontSize: "0.88rem",
+                                width: "100%",
+                                boxSizing: "border-box",
+                                color: "#000",
+                                fontFamily: "monospace"
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Button Text Color selector */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                          <label style={{ fontSize: "0.82rem", fontWeight: 700, color: "#475569" }}>Button Text Color</label>
+                          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                            <input
+                              type="color"
+                              value={heroButtonTextColor || "#ffffff"}
+                              onChange={(e) => setHeroButtonTextColor(e.target.value)}
+                              style={{
+                                border: "1px solid #cbd5e1",
+                                borderRadius: "6px",
+                                width: "40px",
+                                height: "40px",
+                                padding: 0,
+                                cursor: "pointer",
+                                backgroundColor: "transparent"
+                              }}
+                            />
+                            <input
+                              type="text"
+                              value={heroButtonTextColor}
+                              onChange={(e) => setHeroButtonTextColor(e.target.value)}
+                              style={{
+                                padding: "10px",
+                                borderRadius: "8px",
+                                border: "1px solid #cbd5e1",
+                                fontSize: "0.88rem",
+                                width: "100%",
+                                boxSizing: "border-box",
+                                color: "#000",
+                                fontFamily: "monospace"
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ padding: "30px 10px", textAlign: "center", color: "#64748b", border: "1px dashed #e2e8f0", borderRadius: "8px" }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="#94a3b8" style={{ width: "32px", height: "32px", margin: "0 auto 8px auto" }}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.042 9.152c.582.448 1.148.89 1.676 1.345m-1.676-1.345c-.528-.407-1.094-.82-1.676-1.228m1.676 1.228a17.382 17.382 0 0 0-3.352-2.528m3.352 2.528c.582.448 1.148.89 1.676 1.345M12 3v18M3 12h18" />
+                    </svg>
+                    <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>
+                      Select a component on the live preview to begin customizing it.
+                    </span>
+                  </div>
+                )}
+
+              </div>
+
+
+              {/* Right panel: Live Interactive Preview */}
+              <div style={{
+                flex: 1,
+                backgroundColor: "#f1f5f9",
+                padding: "30px",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+                boxSizing: "border-box",
+                position: "relative"
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", zIndex: 10 }}>
+                  <span style={{ fontSize: "0.75rem", fontWeight: 800, textTransform: "uppercase", color: "#64748b", letterSpacing: "0.1em" }}>
+                    Live Preview Screen (Visual Layout & Toggles)
+                  </span>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <span style={{ fontSize: "0.7rem", color: "#2563eb", backgroundColor: "#dbeafe", padding: "4px 8px", borderRadius: "4px", fontWeight: 700 }}>
+                      Interactive Elements Enable Click to Select
+                    </span>
+                  </div>
+                </div>
+
+                {/* Scaled Desktop Mock Canvas Wrapper */}
+                <div style={{ 
+                  width: "100%", 
+                  height: "100%", 
+                  position: "relative", 
+                  overflow: "hidden", 
+                  backgroundColor: "#e2e8f0", 
+                  borderRadius: "12px",
+                  border: "1px solid #cbd5e1"
+                }}>
+                  {/* Styled Desktop Viewport Scaled Down */}
+                  <div
+                    onClick={() => setSelectedElement(null)}
+                    style={{
+                      position: "absolute",
+                      top: "50%",
+                      left: "50%",
+                      width: "1280px",
+                      height: "800px",
+                      transform: "translate(-50%, -50%) scale(0.55)",
+                      transformOrigin: "center center",
+                      backgroundColor: heroBgType === "color" ? (heroBgColor || "var(--primary-brand-color, #57bc74)") : "#121212",
+                      backgroundImage: heroBgType === "image" && heroBgImage ? `url("${heroBgImage}")` : "none",
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                      overflow: "hidden",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: 
+                        heroTemplate === "top-left" || heroTemplate === "right-top" || heroTemplate === "top-center" ? "flex-start" : 
+                        heroTemplate === "bottom-left" || heroTemplate === "right-bottom" || heroTemplate === "bottom-center" ? "flex-end" : "center",
+                      alignItems: 
+                        heroTemplate === "center" || heroTemplate.endsWith("center") ? "center" : 
+                        heroTemplate.startsWith("right") ? "flex-end" : "flex-start",
+                      padding: 
+                        heroTemplate === "bottom-left" || heroTemplate === "right-bottom" || heroTemplate === "bottom-center" ? "80px 5%" : 
+                        heroTemplate === "top-left" || heroTemplate === "right-top" || heroTemplate === "top-center" ? "80px 5%" : "0 5%",
+                      textAlign: 
+                        heroTemplate === "center" || heroTemplate.endsWith("center") ? "center" : 
+                        heroTemplate.startsWith("right") ? "right" : "left",
+                      transition: "all 0.3s ease",
+                      boxSizing: "border-box"
+                    }}
+                  >
+                    {heroBgType === "video" && heroBgVideo && (
+                      <video src={heroBgVideo} autoPlay muted loop playsInline style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", zIndex: 1 }} />
+                    )}
+                    {heroBgType !== "color" && <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0, 0, 0, 0.45)", zIndex: 1 }} />}
+
+                    <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", gap: "20px", maxWidth: "800px", width: "100%" }}>
+                      
+                      {/* 1. Hero Title Element */}
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedElement("title");
+                        }}
+                        style={{
+                          cursor: "pointer",
+                          border: selectedElement === "title" ? "2px dashed #2563eb" : "1px dashed transparent",
+                          padding: "8px",
+                          borderRadius: "6px",
+                          transition: "all 0.2s",
+                          opacity: showHeroTitle ? 1 : 0.45,
+                          backgroundColor: selectedElement === "title" ? "rgba(37, 99, 235, 0.08)" : "transparent",
+                          position: "relative"
+                        }}
+                      >
+                        {selectedElement === "title" && (
+                          <div style={{ position: "absolute", top: "-18px", left: "0", fontSize: "0.6rem", fontWeight: 800, backgroundColor: "#2563eb", color: "#fff", padding: "2px 6px", borderRadius: "3px", textTransform: "uppercase" }}>
+                            Active Title
+                          </div>
+                        )}
+                        {showHeroTitle ? (
+                          <h1 style={{
+                            fontFamily: selectedElement === "title" && hoveredFontType ? `"${hoveredFontType}", sans-serif` : `"${heroTitleFontType}", sans-serif`,
+                            color: heroTitleFontColor,
+                            fontSize: selectedElement === "title" && hoveredFontSize ? hoveredFontSize : heroTitleFontSize,
+                            fontWeight: Number(selectedElement === "title" && hoveredFontWeight ? hoveredFontWeight : heroTitleFontWeight),
+                            margin: 0,
+                            lineHeight: "1.1"
+                          }}>
+                            {heroTitle || ""}
+                          </h1>
+                        ) : (
+                          <span style={{ fontSize: "0.95rem", color: "#94a3b8", fontStyle: "italic", fontWeight: 600 }}>
+                            [Title Element Hidden - Click to edit & enable]
+                          </span>
+                        )}
+                      </div>
+
+                      {/* 2. Hero Manifesto Element */}
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedElement("manifesto");
+                        }}
+                        style={{
+                          cursor: "pointer",
+                          border: selectedElement === "manifesto" ? "2px dashed #2563eb" : "1px dashed transparent",
+                          padding: "8px",
+                          borderRadius: "6px",
+                          transition: "all 0.2s",
+                          opacity: showHeroManifesto ? 1 : 0.45,
+                          backgroundColor: selectedElement === "manifesto" ? "rgba(37, 99, 235, 0.08)" : "transparent",
+                          position: "relative"
+                        }}
+                      >
+                        {selectedElement === "manifesto" && (
+                          <div style={{ position: "absolute", top: "-18px", left: "0", fontSize: "0.6rem", fontWeight: 800, backgroundColor: "#2563eb", color: "#fff", padding: "2px 6px", borderRadius: "3px", textTransform: "uppercase" }}>
+                            Active Manifesto
+                          </div>
+                        )}
+                        {showHeroManifesto ? (
+                          <p style={{
+                            fontFamily: selectedElement === "manifesto" && hoveredFontType ? `"${hoveredFontType}", sans-serif` : `"${heroManifestoFontType}", sans-serif`,
+                            color: heroManifestoFontColor,
+                            fontSize: selectedElement === "manifesto" && hoveredFontSize ? hoveredFontSize : heroManifestoFontSize,
+                            fontWeight: Number(selectedElement === "manifesto" && hoveredFontWeight ? hoveredFontWeight : heroManifestoFontWeight),
+                            margin: 0,
+                            lineHeight: "1.6",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.03em"
+                          }}>
+                            {heroManifesto || ""}
+                          </p>
+                        ) : (
+                          <span style={{ fontSize: "0.85rem", color: "#94a3b8", fontStyle: "italic", fontWeight: 600 }}>
+                            [Manifesto Element Hidden - Click to edit & enable]
+                          </span>
+                        )}
+                      </div>
+
+                      {/* 3. Hero Button Element */}
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedElement("button");
+                        }}
+                        style={{
+                          cursor: "pointer",
+                          border: selectedElement === "button" ? "2px dashed #2563eb" : "1px dashed transparent",
+                          padding: "8px",
+                          borderRadius: "6px",
+                          transition: "all 0.2s",
+                          opacity: showHeroButton ? 1 : 0.45,
+                          backgroundColor: selectedElement === "button" ? "rgba(37, 99, 235, 0.08)" : "transparent",
+                          position: "relative",
+                          display: "inline-block",
+                          alignSelf: 
+                            heroTemplate === "center" || heroTemplate.endsWith("center") ? "center" : 
+                            heroTemplate.startsWith("right") ? "flex-end" : "flex-start"
+                        }}
+                      >
+                        {selectedElement === "button" && (
+                          <div style={{ position: "absolute", top: "-18px", left: "0", fontSize: "0.6rem", fontWeight: 800, backgroundColor: "#2563eb", color: "#fff", padding: "2px 6px", borderRadius: "3px", textTransform: "uppercase" }}>
+                            Active Button
+                          </div>
+                        )}
+                        {showHeroButton ? (() => {
+                          const btnColor = heroButtonColor ? heroButtonColor : (primaryColor || "#000");
+                          const isSolid = heroButtonStyle === "solid";
+                          const isOutline = heroButtonStyle === "outline";
+                          
+                          const paddings: Record<string, string> = { sm: "10px 24px", md: "14px 36px", lg: "18px 48px" };
+                          const fontSizes: Record<string, string> = { sm: "0.75rem", md: "0.85rem", lg: "0.95rem" };
+                          
+                          return (
                             <div style={{
-                              padding: "8px 12px 4px 12px",
-                              fontSize: "0.7rem",
-                              fontWeight: 800,
-                              color: "#9ca3af",
-                              backgroundColor: "#f9fafb",
+                              display: "inline-block",
+                              padding: paddings[heroButtonSize] || paddings.md,
+                              fontSize: fontSizes[heroButtonSize] || fontSizes.md,
+                              backgroundColor: isSolid ? btnColor : "transparent",
+                              color: isSolid ? (heroButtonTextColor || "#ffffff") : (heroButtonTextColor || btnColor),
+                              border: isSolid || isOutline ? `2px solid ${btnColor}` : "none",
+                              textDecoration: heroButtonStyle === "minimal" ? "underline" : "none",
+                              fontWeight: 700,
                               textTransform: "uppercase",
-                              letterSpacing: "0.05em",
-                              borderBottom: "1px solid #f3f4f6",
-                              borderTop: catIdx > 0 ? "1px solid #f3f4f6" : "none"
+                              letterSpacing: "0.1em",
+                              textAlign: "center"
                             }}>
-                              {cat.category}
+                              {heroButtonText || "Shop Now"}
                             </div>
-
-                            {/* Font items */}
-                            {cat.fonts.map((font) => {
-                              const isSelected = drafts[selectedElement].fontType === font.name;
-                              return (
-                                <div
-                                  key={font.name}
-                                  onClick={() => {
-                                    updateDraft('fontType', font.name);
-                                    setIsFontDropdownOpen(false);
-                                    setHoveredFontType(null);
-                                  }}
-                                  style={{
-                                    padding: "10px 14px",
-                                    fontSize: "0.88rem",
-                                    cursor: "pointer",
-                                    backgroundColor: isSelected ? "#eff6ff" : "transparent",
-                                    color: isSelected ? "#2563eb" : "#374151",
-                                    fontWeight: isSelected ? 700 : 500,
-                                    fontFamily: `"${font.name}", sans-serif`,
-                                    transition: "background 0.15s, color 0.15s",
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    setHoveredFontType(font.name);
-                                    e.currentTarget.style.backgroundColor = "#f3f4f6";
-                                    e.currentTarget.style.color = "#111827";
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    setHoveredFontType(null);
-                                    e.currentTarget.style.backgroundColor = isSelected ? "#eff6ff" : "transparent";
-                                    e.currentTarget.style.color = isSelected ? "#2563eb" : "#374151";
-                                  }}
-                                >
-                                  {font.label}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ))}
+                          );
+                        })()
+                        : (
+                          <span style={{ fontSize: "0.85rem", color: "#94a3b8", fontStyle: "italic", fontWeight: 600 }}>
+                            [CTA Button Element Hidden - Click to edit & enable]
+                          </span>
+                        )}
                       </div>
-                    </>
-                  )}
-                </div>
 
-                {/* Font Color */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, color: "#374151" }}>Font Color</label>
-                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                    <input
-                      type="color"
-                      value={drafts[selectedElement].fontColor}
-                      onChange={(e) => updateDraft('fontColor', e.target.value)}
-                      style={{
-                        border: "1px solid #d1d5db",
-                        borderRadius: "6px",
-                        width: "40px",
-                        height: "40px",
-                        padding: 0,
-                        cursor: "pointer",
-                        backgroundColor: "transparent"
-                      }}
-                    />
-                    <input
-                      type="text"
-                      value={drafts[selectedElement].fontColor}
-                      onChange={(e) => updateDraft('fontColor', e.target.value)}
-                      placeholder="#111827"
-                      style={{
-                        padding: "10px",
-                        borderRadius: "8px",
-                        border: "1px solid #d1d5db",
-                        fontSize: "0.88rem",
-                        width: "100%",
-                        fontFamily: "monospace"
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* Font Size (Custom Hover-Interactive Dropdown) */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "6px", position: "relative" }}>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, color: "#374151" }}>Font Size</label>
-
-                  {/* Select Box Trigger */}
-                  <div
-                    onClick={() => setIsFontSizeDropdownOpen(!isFontSizeDropdownOpen)}
-                    style={{
-                      padding: "10px",
-                      borderRadius: "8px",
-                      border: "1px solid #d1d5db",
-                      fontSize: "0.88rem",
-                      backgroundColor: "#ffffff",
-                      cursor: "pointer",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      userSelect: "none",
-                      minHeight: "41px",
-                      boxSizing: "border-box",
-                      color: "#000000"
-                    }}
-                  >
-                    <span style={{ fontWeight: 600 }}>
-                      {[
-                        { value: "1.5rem", label: "Extra Extra Small (1.5rem / 24px)" },
-                        { value: "2.0rem", label: "Extra Small (2.0rem / 32px)" },
-                        { value: "2.5rem", label: "Small (2.5rem / 40px)" },
-                        { value: "3.0rem", label: "Medium-Small (3.0rem / 48px)" },
-                        { value: "3.5rem", label: "Medium (3.5rem / 56px)" },
-                        { value: "4.0rem", label: "Medium-Large (4.0rem / 64px)" },
-                        { value: "4.5rem", label: "Normal / Default (4.5rem / 72px)" },
-                        { value: "5.0rem", label: "Large (5.0rem / 80px)" },
-                        { value: "5.5rem", label: "Extra Large (5.5rem / 88px)" },
-                        { value: "6.0rem", label: "Huge (6.0rem / 96px)" },
-                        { value: "6.5rem", label: "Massive (6.5rem / 104px)" },
-                        { value: "7.0rem", label: "Giant (7.0rem / 112px)" },
-                        { value: "8.0rem", label: "Colossal (8.0rem / 128px)" },
-                        { value: "10.0rem", label: "Mega Display (10.0rem / 160px)" }
-                      ].find(o => o.value === drafts[selectedElement].fontSize)?.label || drafts[selectedElement].fontSize}
-                    </span>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="#6b7280" style={{ width: "14px", height: "14px", transform: isFontSizeDropdownOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                    </svg>
-                  </div>
-
-                  {/* Dropdown Popover */}
-                  {isFontSizeDropdownOpen && (
-                    <>
-                      <div style={{ position: "fixed", inset: 0, zIndex: 15500 }} onClick={() => setIsFontSizeDropdownOpen(false)} />
-                      <div style={{
-                        position: "absolute",
-                        top: "65px",
-                        left: 0,
-                        width: "100%",
-                        maxHeight: "240px",
-                        overflowY: "auto",
-                        backgroundColor: "#ffffff",
-                        border: "1px solid #d1d5db",
-                        borderRadius: "8px",
-                        boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)",
-                        zIndex: 15600,
-                        padding: "8px 0",
-                        boxSizing: "border-box"
-                      }}>
-                        {[
-                          { value: "1.5rem", label: "Extra Extra Small (1.5rem / 24px)" },
-                          { value: "2.0rem", label: "Extra Small (2.0rem / 32px)" },
-                          { value: "2.5rem", label: "Small (2.5rem / 40px)" },
-                          { value: "3.0rem", label: "Medium-Small (3.0rem / 48px)" },
-                          { value: "3.5rem", label: "Medium (3.5rem / 56px)" },
-                          { value: "4.0rem", label: "Medium-Large (4.0rem / 64px)" },
-                          { value: "4.5rem", label: "Normal / Default (4.5rem / 72px)" },
-                          { value: "5.0rem", label: "Large (5.0rem / 80px)" },
-                          { value: "5.5rem", label: "Extra Large (5.5rem / 88px)" },
-                          { value: "6.0rem", label: "Huge (6.0rem / 96px)" },
-                          { value: "6.5rem", label: "Massive (6.5rem / 104px)" },
-                          { value: "7.0rem", label: "Giant (7.0rem / 112px)" },
-                          { value: "8.0rem", label: "Colossal (8.0rem / 128px)" },
-                          { value: "10.0rem", label: "Mega Display (10.0rem / 160px)" }
-                        ].map((opt) => (
-                          <div
-                            key={opt.value}
-                            onMouseEnter={() => setHoveredFontSize(opt.value)}
-                            onMouseLeave={() => setHoveredFontSize(null)}
-                            onClick={() => {
-                              updateDraft('fontSize', opt.value);
-                              setHoveredFontSize(null);
-                              setIsFontSizeDropdownOpen(false);
-                            }}
-                            style={{
-                              padding: "10px 16px",
-                              cursor: "pointer",
-                              fontSize: "0.85rem",
-                              backgroundColor: drafts[selectedElement].fontSize === opt.value ? "#eff6ff" : (hoveredFontSize === opt.value ? "#f3f4f6" : "transparent"),
-                              color: drafts[selectedElement].fontSize === opt.value ? "#2563eb" : "#374151",
-                              fontWeight: drafts[selectedElement].fontSize === opt.value ? 600 : 400
-                            }}
-                          >
-                            {opt.label}
-                          </div>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {/* Font Alignment */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, color: "#374151" }}>Alignment</label>
-
-                  <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                    {/* Horizontal Alignment */}
-                    <div style={{ display: "flex", border: "1px solid #d1d5db", borderRadius: "6px", overflow: "hidden" }}>
-                      {[
-                        { id: "left", path: "M4 6h16 M4 10h10 M4 14h16 M4 18h10" },
-                        { id: "center", path: "M4 6h16 M7 10h10 M4 14h16 M7 18h10" },
-                        { id: "right", path: "M4 6h16 M10 10h10 M4 14h16 M10 18h10" }
-                      ].map((align) => (
-                        <button
-                          key={align.id}
-                          type="button"
-                          title={`Horizontal: ${align.id}`}
-                          onClick={() => {
-                            updateDraft('fontAlignment', align.id);
-                            updateDraft('positionX', 0);
-                          }}
-                          style={{
-                            padding: "8px 12px",
-                            border: "none",
-                            borderRight: align.id !== "right" ? "1px solid #e5e7eb" : "none",
-                            backgroundColor: drafts[selectedElement].fontAlignment === align.id ? "#eff6ff" : "#ffffff",
-                            color: drafts[selectedElement].fontAlignment === align.id ? "#2563eb" : "#6b7280",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            transition: "all 0.2s"
-                          }}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "18px", height: "18px" }}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d={align.path} />
-                          </svg>
-                        </button>
-                      ))}
-                    </div>
-
-                    <div style={{ width: "1px", height: "24px", backgroundColor: "#d1d5db" }} />
-
-                    {/* Vertical Alignment */}
-                    <div style={{ display: "flex", border: "1px solid #d1d5db", borderRadius: "6px", overflow: "hidden" }}>
-                      {[
-                        { id: "top", path: "M4 4h16 M8 8h8v6H8z" },
-                        { id: "middle", path: "M4 12h16 M8 9h8v6H8z" },
-                        { id: "bottom", path: "M4 20h16 M8 10h8v6H8z" }
-                      ].map((align) => (
-                        <button
-                          key={align.id}
-                          type="button"
-                          title={`Vertical: ${align.id}`}
-                          onClick={() => {
-                            updateDraft('fontVerticalAlignment', align.id);
-                            updateDraft('positionY', 0);
-                          }}
-                          style={{
-                            padding: "8px 12px",
-                            border: "none",
-                            borderRight: align.id !== "bottom" ? "1px solid #e5e7eb" : "none",
-                            backgroundColor: drafts[selectedElement].fontVerticalAlignment === align.id ? "#eff6ff" : "#ffffff",
-                            color: drafts[selectedElement].fontVerticalAlignment === align.id ? "#2563eb" : "#6b7280",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            transition: "all 0.2s"
-                          }}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: "18px", height: "18px" }}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d={align.path} />
-                          </svg>
-                        </button>
-                      ))}
                     </div>
                   </div>
                 </div>
-
-                {/* Font Weight (Custom Hover-Interactive Dropdown) */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "6px", position: "relative" }}>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, color: "#374151" }}>Font Weight</label>
-
-                  {/* Select Box Trigger */}
-                  <div
-                    onClick={() => setIsFontWeightDropdownOpen(!isFontWeightDropdownOpen)}
-                    style={{
-                      padding: "10px",
-                      borderRadius: "8px",
-                      border: "1px solid #d1d5db",
-                      fontSize: "0.88rem",
-                      backgroundColor: "#ffffff",
-                      cursor: "pointer",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      userSelect: "none",
-                      minHeight: "41px",
-                      boxSizing: "border-box",
-                      color: "#000000"
-                    }}
-                  >
-                    <span style={{ fontWeight: 600 }}>
-                      {[
-                        { value: "100", label: "Hairline / Thin (100)" },
-                        { value: "200", label: "Extra Light (200)" },
-                        { value: "300", label: "Light (300)" },
-                        { value: "400", label: "Regular (400)" },
-                        { value: "500", label: "Medium (500)" },
-                        { value: "600", label: "Semi Bold (600)" },
-                        { value: "700", label: "Bold (700)" },
-                        { value: "800", label: "Extra Bold (800)" },
-                        { value: "900", label: "Black / Heavy (900)" }
-                      ].find(o => o.value === drafts[selectedElement].fontWeight)?.label || drafts[selectedElement].fontWeight}
-                    </span>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="#6b7280" style={{ width: "14px", height: "14px", transform: isFontWeightDropdownOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                    </svg>
-                  </div>
-
-                  {/* Dropdown Popover */}
-                  {isFontWeightDropdownOpen && (
-                    <>
-                      <div style={{ position: "fixed", inset: 0, zIndex: 15500 }} onClick={() => setIsFontWeightDropdownOpen(false)} />
-                      <div style={{
-                        position: "absolute",
-                        top: "65px",
-                        left: 0,
-                        width: "100%",
-                        maxHeight: "240px",
-                        overflowY: "auto",
-                        backgroundColor: "#ffffff",
-                        border: "1px solid #d1d5db",
-                        borderRadius: "8px",
-                        boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)",
-                        zIndex: 15600,
-                        padding: "8px 0",
-                        boxSizing: "border-box"
-                      }}>
-                        {[
-                          { value: "100", label: "Hairline / Thin (100)" },
-                          { value: "200", label: "Extra Light (200)" },
-                          { value: "300", label: "Light (300)" },
-                          { value: "400", label: "Regular (400)" },
-                          { value: "500", label: "Medium (500)" },
-                          { value: "600", label: "Semi Bold (600)" },
-                          { value: "700", label: "Bold (700)" },
-                          { value: "800", label: "Extra Bold (800)" },
-                          { value: "900", label: "Black / Heavy (900)" }
-                        ].map((opt) => (
-                          <div
-                            key={opt.value}
-                            onMouseEnter={() => setHoveredFontWeight(opt.value)}
-                            onMouseLeave={() => setHoveredFontWeight(null)}
-                            onClick={() => {
-                              updateDraft('fontWeight', opt.value);
-                              setHoveredFontWeight(null);
-                              setIsFontWeightDropdownOpen(false);
-                            }}
-                            style={{
-                              padding: "10px 16px",
-                              cursor: "pointer",
-                              fontSize: "0.85rem",
-                              backgroundColor: drafts[selectedElement].fontWeight === opt.value ? "#eff6ff" : (hoveredFontWeight === opt.value ? "#f3f4f6" : "transparent"),
-                              color: drafts[selectedElement].fontWeight === opt.value ? "#2563eb" : "#374151",
-                              fontWeight: drafts[selectedElement].fontWeight === opt.value ? 600 : 400
-                            }}
-                          >
-                            {opt.label}
-                          </div>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </div>
               </div>
-            ) : (
-              <div style={{ padding: "24px", textAlign: "center", color: "#6b7280", borderBottom: "1px solid #e5e7eb", backgroundColor: "#f9fafb" }}>
-                Select an item in the preview below to edit its properties.
-              </div>
-            )}
 
-            {/* Preview Section (Bottom - full width desktop mock) */}
-            <div style={{
-              padding: "24px",
-              overflowY: "auto",
-              boxSizing: "border-box",
-              backgroundColor: "#f3f4f6",
-              flex: 1
-            }}>
-              <div
-                id="hero-preview-container"
-                onClick={() => setSelectedElement(null)}
-                style={{
-                  position: "relative",
-                  minHeight: "520px",
-                  padding: "10px 40px 10px 40px",
-                  display: "flex",
-                  flexDirection: "column",
-                  boxSizing: "border-box",
-                }}
-              >
-                {/* Background Layer with Overflow Hidden for Border Radius */}
-                <div style={{
-                  position: "absolute",
-                  inset: 0,
-                  borderRadius: "8px",
-                  border: "1px solid #e5e7eb",
-                  backgroundColor: heroBgType === "color" ? (heroBgColor || "var(--primary-brand-color, #57bc74)") : "#121212",
-                  backgroundImage: heroBgType === "image" && heroBgImage ? `url("${heroBgImage}")` : "none",
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                  overflow: "hidden",
-                  zIndex: 0
-                }}>
-                  {/* Background Video for Preview */}
-                  {heroBgType === "video" && heroBgVideo && (
-                    <video
-                      src={heroBgVideo}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        zIndex: 1
-                      }}
-                    />
-                  )}
-                  {/* Dark overlay for text readability when using image or video */}
-                  {heroBgType !== "color" && (
-                    <div style={{
-                      position: "absolute",
-                      inset: 0,
-                      backgroundColor: "rgba(0, 0, 0, 0.45)",
-                      zIndex: 1
-                    }} />
-                  )}
-                </div>
-                <span style={{
-                  position: "absolute",
-                  top: "16px",
-                  right: "16px",
-                  fontSize: "0.65rem",
-                  fontWeight: 800,
-                  color: "rgba(255, 255, 255, 0.7)",
-                  backgroundColor: "rgba(0, 0, 0, 0.2)",
-                  padding: "4px 8px",
-                  borderRadius: "4px",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.15em",
-                  pointerEvents: "none",
-                  zIndex: 2
-                }}>
-                  Storefront Live Desktop Preview (Exact Display Size)
-                </span>
-
-                <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", height: "100%", flex: 1, position: "relative", zIndex: 2 }}>
-                  {/* Brand Manifesto Block */}
-                  <div
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedElement("manifesto");
-                    }}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setSelectedElement("manifesto");
-                      setIsDraggingTitle(true); // Reusing this for simplicity, handles generic drag
-                      setDragStartCoords({
-                        x: e.clientX - drafts.manifesto.positionX,
-                        y: e.clientY - drafts.manifesto.positionY
-                      });
-                    }}
-                    style={{
-                      position: "absolute",
-                      top: drafts.manifesto.fontVerticalAlignment === "top" ? "0" : (drafts.manifesto.fontVerticalAlignment === "middle" ? "50%" : "auto"),
-                      bottom: drafts.manifesto.fontVerticalAlignment === "bottom" ? "0" : "auto",
-                      left: `calc(50% - (${drafts.manifesto.maxWidth}% / 2) + ${drafts.manifesto.positionX}px)`,
-                      width: `${drafts.manifesto.maxWidth}%`,
-                      minHeight: drafts.manifesto.minHeight ? `${drafts.manifesto.minHeight}px` : "auto",
-                      textAlign: drafts.manifesto.fontAlignment as any,
-                      fontFamily: getFontFamilyStack(selectedElement === "manifesto" && hoveredFontType ? hoveredFontType : drafts.manifesto.fontType),
-                      fontWeight: Number(selectedElement === "manifesto" && hoveredFontWeight ? hoveredFontWeight : drafts.manifesto.fontWeight),
-                      color: drafts.manifesto.fontColor,
-                      fontSize: selectedElement === "manifesto" && hoveredFontSize ? hoveredFontSize : drafts.manifesto.fontSize,
-                      lineHeight: "1.6",
-                      letterSpacing: "0.03em",
-                      textTransform: "uppercase",
-                      transform: `translateY(${drafts.manifesto.fontVerticalAlignment === "middle" ? "-50%" : "0"}) translateY(${drafts.manifesto.positionY}px)`,
-                      cursor: selectedElement === "manifesto" ? (isDraggingTitle ? "grabbing" : "grab") : "pointer",
-                      userSelect: "none",
-                      zIndex: selectedElement === "manifesto" ? 3 : 2,
-                      border: selectedElement === "manifesto" ? "2px dashed #3b82f6" : "2px dashed transparent",
-                      padding: "8px",
-                      boxSizing: "border-box",
-                      transition: "border 0.2s"
-                    }}
-                  >
-                    {renderResizeHandles("manifesto")}
-                    <strong style={{ fontWeight: 800 }}>RAW & HONEST</strong>{" "}
-                    {heroManifesto || "SCENT IS THE DIFFERENCE YOU FEEL AND NEVER FAKE. EVERY 29S FORMULA BOTTLE IS CRAFTED BY HANDS THAT CARE, NOT MACHINES THAT RUSH."}
-                  </div>
-
-                  {/* Brand Title Block */}
-                  <div
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedElement("title");
-                    }}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setSelectedElement("title");
-                      setIsDraggingTitle(true);
-                      setDragStartCoords({
-                        x: e.clientX - drafts.title.positionX,
-                        y: e.clientY - drafts.title.positionY
-                      });
-                    }}
-                    style={{
-                      position: "absolute",
-                      top: drafts.title.fontVerticalAlignment === "top" ? "0" : (drafts.title.fontVerticalAlignment === "middle" ? "50%" : "auto"),
-                      bottom: drafts.title.fontVerticalAlignment === "bottom" ? "0" : "auto",
-                      left: `calc(50% - (${drafts.title.maxWidth}% / 2) + ${drafts.title.positionX}px)`,
-                      width: `${drafts.title.maxWidth}%`,
-                      minHeight: drafts.title.minHeight ? `${drafts.title.minHeight}px` : "auto",
-                      textAlign: drafts.title.fontAlignment as any,
-                      fontFamily: getFontFamilyStack(selectedElement === "title" && hoveredFontType ? hoveredFontType : drafts.title.fontType),
-                      fontWeight: Number(selectedElement === "title" && hoveredFontWeight ? hoveredFontWeight : drafts.title.fontWeight),
-                      color: drafts.title.fontColor,
-                      fontSize: selectedElement === "title" && hoveredFontSize ? hoveredFontSize : drafts.title.fontSize,
-                      lineHeight: "0.85",
-                      wordBreak: "break-word",
-                      letterSpacing: "0.02em",
-                      transform: `translateY(${drafts.title.fontVerticalAlignment === "middle" ? "-50%" : "0"}) translateY(${drafts.title.positionY}px) scaleY(1.05)`,
-                      cursor: selectedElement === "title" ? (isDraggingTitle ? "grabbing" : "grab") : "pointer",
-                      userSelect: "none",
-                      zIndex: selectedElement === "title" ? 3 : 2,
-                      border: selectedElement === "title" ? "2px dashed #3b82f6" : "2px dashed transparent",
-                      padding: "8px",
-                      boxSizing: "border-box",
-                      transition: "border 0.2s"
-                    }}
-                  >
-                    {renderResizeHandles("title")}
-                    {heroTitle || "29sFORMULA"}
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Modal Footer Actions */}
@@ -7306,53 +7777,59 @@ export default function AdminDashboard() {
               display: "flex",
               justifyContent: "flex-end",
               gap: "12px",
-              padding: "16px 24px",
+              padding: "16px 30px",
               borderTop: "1px solid #e5e7eb",
-              backgroundColor: "#f9fafb"
+              backgroundColor: "#fafafa"
             }}>
               <button
                 type="button"
-                onClick={() => setShowHeroTitleFontOptions(false)}
+                onClick={() => {
+                  // Restore from backup on click cancel
+                  if (heroBackup) {
+                    setHeroTitle(heroBackup.heroTitle);
+                    setHeroManifesto(heroBackup.heroManifesto);
+                    setHeroTemplate(heroBackup.heroTemplate);
+                    setShowHeroTitle(heroBackup.showHeroTitle);
+                    setShowHeroManifesto(heroBackup.showHeroManifesto);
+                    setShowHeroButton(heroBackup.showHeroButton);
+                    setHeroButtonText(heroBackup.heroButtonText);
+                    setHeroButtonStyle(heroBackup.heroButtonStyle);
+                    setHeroButtonSize(heroBackup.heroButtonSize);
+                    setHeroButtonColor(heroBackup.heroButtonColor);
+                    setHeroButtonTextColor(heroBackup.heroButtonTextColor);
+                    setHeroTitleFontType(heroBackup.heroTitleFontType);
+                    setHeroTitleFontColor(heroBackup.heroTitleFontColor);
+                    setHeroTitleFontSize(heroBackup.heroTitleFontSize);
+                    setHeroTitleFontAlignment(heroBackup.heroTitleFontAlignment);
+                    setHeroTitleFontWeight(heroBackup.heroTitleFontWeight);
+                    setHeroManifestoFontType(heroBackup.heroManifestoFontType);
+                    setHeroManifestoFontColor(heroBackup.heroManifestoFontColor);
+                    setHeroManifestoFontSize(heroBackup.heroManifestoFontSize);
+                    setHeroManifestoFontAlignment(heroBackup.heroManifestoFontAlignment);
+                    setHeroManifestoFontWeight(heroBackup.heroManifestoFontWeight);
+                  }
+                  setShowHeroTitleFontOptions(false);
+                }}
                 className={styles.secondaryActionBtn}
-                style={{ padding: "10px 18px", fontSize: "0.88rem" }}
+                style={{ padding: "10px 24px", fontSize: "0.88rem", fontWeight: 600 }}
               >
-                Cancel
+                Discard Changes
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setHeroTitleFontType(drafts.title.fontType);
-                  setHeroTitleFontColor(drafts.title.fontColor);
-                  setHeroTitleFontSize(drafts.title.fontSize);
-                  setHeroTitleFontAlignment(drafts.title.fontAlignment);
-                  setHeroTitleFontWeight(drafts.title.fontWeight);
-                  setHeroTitleFontVerticalAlignment(drafts.title.fontVerticalAlignment);
-                  setHeroTitlePositionX(drafts.title.positionX);
-                  setHeroTitlePositionY(drafts.title.positionY);
-                  setHeroTitleMaxWidth(drafts.title.maxWidth);
-
-                  setHeroManifestoFontType(drafts.manifesto.fontType);
-                  setHeroManifestoFontColor(drafts.manifesto.fontColor);
-                  setHeroManifestoFontSize(drafts.manifesto.fontSize);
-                  setHeroManifestoFontAlignment(drafts.manifesto.fontAlignment);
-                  setHeroManifestoFontWeight(drafts.manifesto.fontWeight);
-                  setHeroManifestoFontVerticalAlignment(drafts.manifesto.fontVerticalAlignment);
-                  setHeroManifestoPositionX(drafts.manifesto.positionX);
-                  setHeroManifestoPositionY(drafts.manifesto.positionY);
-                  setHeroManifestoMaxWidth(drafts.manifesto.maxWidth);
-
+                onClick={async () => {
+                  await saveSettingsSilent();
                   setShowHeroTitleFontOptions(false);
                 }}
                 className={styles.primaryActionBtn}
-                style={{ padding: "10px 18px", fontSize: "0.88rem" }}
+                style={{ padding: "10px 24px", fontSize: "0.88rem", fontWeight: 600 }}
               >
-                Apply Styles
+                Apply Customization
               </button>
             </div>
           </div>
         </div>
       )}
-
       {/* Rename Category Modal */}
       {renameCategoryTarget && (
         <div className={styles.modalOverlay}>

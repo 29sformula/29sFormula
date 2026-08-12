@@ -120,8 +120,8 @@ export default function Collections() {
       if (existingIdx > -1) {
         itemsList[existingIdx].quantity += 1;
       } else {
-        const variantPrice = (product.options && product.options.find((o: any) => o.size === size)?.price) 
-                          || (product.variants && product.variants.find((v: any) => v.size === size)?.price)
+        const variantPrice = ((product as any).options && (product as any).options.find((o: any) => o.size === size)?.price) 
+                          || ((product as any).variants && (product as any).variants.find((v: any) => v.size === size)?.price)
                           || product.price;
 
         itemsList.push({

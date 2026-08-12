@@ -376,8 +376,8 @@ export default function ProductDetailPage() {
 
   const handleBuyNow = () => {
     if (!product) return;
-    const variantPrice = (product.options && product.options.find((o: any) => o.size === selectedVolume)?.price) 
-                      || (product.variants && product.variants.find((v: any) => v.size === selectedVolume)?.price)
+    const variantPrice = ((product as any).options && (product as any).options.find((o: any) => o.size === selectedVolume)?.price) 
+                      || ((product as any).variants && (product as any).variants.find((v: any) => v.size === selectedVolume)?.price)
                       || product.price;
 
     const buyNowItem = {
@@ -478,14 +478,6 @@ export default function ProductDetailPage() {
   };
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const session = localStorage.getItem("userSession");
-      if (session) {
-        try {
-          setCurrentUser(JSON.parse(session));
-        } catch (e) {}
-      }
-    }
 
     // Get primary color and Product Page CMS settings from backend
     fetch("http://127.0.0.1:5001/api/settings", { cache: "no-store" })
@@ -690,8 +682,8 @@ export default function ProductDetailPage() {
             <div className={styles.priceRow}>
               <span className={styles.priceVal}>
                 Rs. {(
-                  product.variants?.find((v: any) => v.size === selectedVolume)?.price || 
-                  product.options?.find((v: any) => v.size === selectedVolume)?.price || 
+                  (product as any).variants?.find((v: any) => v.size === selectedVolume)?.price || 
+                  (product as any).options?.find((v: any) => v.size === selectedVolume)?.price || 
                   product.price
                 ).toLocaleString("en-IN")}.00
               </span>
@@ -722,8 +714,8 @@ export default function ProductDetailPage() {
                 {(product.sizes && product.sizes.length > 0 ? product.sizes : ["50ml", "100ml", "150ml"]).map((size) => {
                   const displaySize = size.toLowerCase().endsWith("ml") ? size : `${size}ml`;
                   const variantPrice = 
-                    product.variants?.find((v: any) => v.size === size)?.price || 
-                    product.options?.find((v: any) => v.size === size)?.price || 
+                    (product as any).variants?.find((v: any) => v.size === size)?.price || 
+                    (product as any).options?.find((v: any) => v.size === size)?.price || 
                     product.price;
                     
                   return (

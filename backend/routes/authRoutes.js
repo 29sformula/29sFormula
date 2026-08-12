@@ -1,7 +1,65 @@
 import express from "express";
+import nodemailer from "nodemailer";
 import User from "../models/User.js";
 
 const router = express.Router();
+
+const sendWelcomeEmail = async (userEmail, userName) => {
+  const emailUser = process.env.EMAIL_USER;
+  const emailPass = process.env.EMAIL_PASS;
+
+  if (!emailUser || !emailPass) {
+    console.warn("Skipping welcome email: EMAIL_USER or EMAIL_PASS not configured.");
+    return;
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: emailUser,
+        pass: emailPass,
+      },
+    });
+
+    const mailOptions = {
+      from: `"29sFORMULA" <${emailUser}>`,
+      to: userEmail,
+      subject: "Welcome to 29sFORMULA! 🎉",
+      html: `
+        <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a; padding: 40px 30px; border: 1px solid #e5e5e5; border-radius: 4px; background-color: #fafafa;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="letter-spacing: 2px; font-weight: 300; margin: 0; color: #000;">29sFORMULA</h1>
+            <p style="text-transform: uppercase; letter-spacing: 1.5px; font-size: 11px; color: #666; margin-top: 5px;">Fine Artisan Perfumery</p>
+          </div>
+          <hr style="border: none; border-top: 1px solid #eaeaea; margin-bottom: 30px;" />
+          <h2 style="color: #222; text-align: center; font-weight: 400; letter-spacing: 1px;">Welcome to Our World of Fragrance</h2>
+          <p style="font-size: 15px; line-height: 1.6; color: #444;">Dear ${userName},</p>
+          <p style="font-size: 15px; line-height: 1.6; color: #444;">We are delighted to welcome you to the inner circle of <strong>29sFORMULA</strong>. Our philosophy is rooted in crafting exquisite, long-lasting perfumes that leave an unforgettable impression.</p>
+          <p style="font-size: 15px; line-height: 1.6; color: #444;">As a member, you now have exclusive access to our luxury collections, new signature scent drops, and personalized fragrance recommendations.</p>
+          <p style="font-size: 15px; line-height: 1.6; color: #444;">Here’s where your fragrance journey begins:</p>
+          <ul style="font-size: 15px; line-height: 1.6; color: #444; padding-left: 20px;">
+            <li style="margin-bottom: 10px;">Discover our artisanal Extrait de Parfums.</li>
+            <li style="margin-bottom: 10px;">Find the perfect signature scent for every occasion.</li>
+            <li style="margin-bottom: 10px;">Enjoy seamless luxury shopping and fast delivery.</li>
+          </ul>
+          <div style="text-align: center; margin: 40px 0;">
+            <a href="http://localhost:3000/shop" style="display: inline-block; padding: 14px 35px; background-color: #000; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase;">Discover the Collection</a>
+          </div>
+          <p style="font-size: 15px; line-height: 1.6; color: #444;">Should you need assistance selecting a scent or tracking a package, simply reply to this email. Our fragrance concierges are always at your service.</p>
+          <br>
+          <p style="font-size: 15px; line-height: 1.6; color: #444;">Warm regards,<br><strong>The 29sFORMULA Team</strong></p>
+        </div>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`Welcome email sent to ${userEmail}`);
+  } catch (error) {
+    console.error("Error sending welcome email:", error);
+  }
+};
+
 
 router.post("/api/auth/register", async (req, res) => {
   try {
@@ -24,6 +82,9 @@ router.post("/api/auth/register", async (req, res) => {
     });
 
     await newUser.save();
+    
+    // Send welcome email asynchronously
+    sendWelcomeEmail(trimmedEmail, newUser.name);
     
     res.status(201).json({
       _id: newUser._id,
@@ -105,6 +166,9 @@ router.post("/api/auth/google", async (req, res) => {
         profilePicture: picture
       });
       await user.save();
+      
+      // Send welcome email asynchronously
+      sendWelcomeEmail(trimmedEmail, user.name);
     } else {
       if (!user.isGoogleUser) {
         user.isGoogleUser = true;
