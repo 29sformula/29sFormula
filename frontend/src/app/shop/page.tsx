@@ -36,7 +36,7 @@ export default function Shop() {
   const [categoryFilter, setCategoryFilter] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [primaryColor, setPrimaryColor] = useState<string>(
-    typeof window !== 'undefined' ? (localStorage.getItem("settings_primaryColor") || "#57bc74") : "#57bc74"
+    "#57bc74"
   );
 
   // Filtering & Sorting State

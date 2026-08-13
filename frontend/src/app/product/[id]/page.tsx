@@ -32,7 +32,7 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [primaryColor, setPrimaryColor] = useState<string>(
-    typeof window !== 'undefined' ? (localStorage.getItem("settings_primaryColor") || "#57bc74") : "#57bc74"
+    "#57bc74"
   );
   const [allProducts, setAllProducts] = useState<Product[]>(defaultProducts);
   

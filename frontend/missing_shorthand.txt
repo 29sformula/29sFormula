@@ -1,0 +1,4 @@
+heroButtonSize
+heroButtonStyle
+heroButtonText
+heroButtonTextColor

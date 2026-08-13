@@ -27,6 +27,12 @@ interface Order {
   status: string;
   refundStatus?: string;
   createdAt: string;
+  returnRequest?: {
+    status: string;
+    reason: string;
+    images: string[];
+    adminNotes?: string;
+  } | null;
 }
 
 export default function TrackOrderPage() {
@@ -39,8 +45,13 @@ export default function TrackOrderPage() {
   const [isCancelling, setIsCancelling] = useState(false);
   const [isReturning, setIsReturning] = useState(false);
   const [returnSuccess, setReturnSuccess] = useState(false);
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const [returnReason, setReturnReason] = useState("");
+  const [proofImages, setProofImages] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [modalOrderId, setModalOrderId] = useState<string | null>(null);
   const [primaryColor, setPrimaryColor] = useState<string>(
-    typeof window !== 'undefined' ? (localStorage.getItem("settings_primaryColor") || "#57bc74") : "#57bc74"
+    "#57bc74"
   );
 
   // Session is now handled by Navbar
@@ -153,39 +164,84 @@ export default function TrackOrderPage() {
     }
   };
 
-  const handleReturnOrder = async (orderId: string) => {
-    const confirmReturn = window.confirm("Are you sure you want to request a return for this order?");
-    if (!confirmReturn) return;
+  const handleReturnImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    
+    setIsUploading(true);
+    setError(null);
+    
+    const formData = new FormData();
+    formData.append("file", file);
+    
+    try {
+      const res = await fetch("http://127.0.0.1:5001/api/upload", {
+        method: "POST",
+        body: formData
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to upload image");
+      
+      setProofImages(prev => [...prev, data.url]);
+    } catch (err: any) {
+      setError(err.message || "Failed to upload image.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleRemoveProofImage = (indexToRemove: number) => {
+    setProofImages(prev => prev.filter((_, idx) => idx !== indexToRemove));
+  };
+
+  const handleSubmitReturnRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!modalOrderId) return;
+    if (!returnReason.trim()) {
+      alert("Please state the reason for your return.");
+      return;
+    }
 
     setIsReturning(true);
     setError(null);
 
     try {
-      const res = await fetch(`http://127.0.0.1:5001/api/orders/${orderId}/return`, {
-        method: "POST"
+      const res = await fetch(`http://127.0.0.1:5001/api/orders/${modalOrderId}/return`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reason: returnReason,
+          images: proofImages
+        })
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Order return request failed.");
+        throw new Error(data.error || "Failed to submit return request.");
       }
-      
-      if (currentOrder && currentOrder._id === orderId) {
+
+      if (currentOrder && currentOrder._id === modalOrderId) {
         setCurrentOrder(data);
       }
       
       setHistory(prevHistory => 
-        prevHistory.map(order => order._id === orderId ? data : order)
+        prevHistory.map(order => order._id === modalOrderId ? data : order)
       );
 
       setReturnSuccess(true);
+      setShowReturnModal(false);
+      setReturnReason("");
+      setProofImages([]);
+      setModalOrderId(null);
     } catch (err: any) {
-      setError(err.message || "Failed to request return.");
+      setError(err.message || "Failed to submit return request.");
     } finally {
       setIsReturning(false);
     }
   };
 
   const isReturnEligible = (order: any) => {
+    // If a request is already submitted, they are no longer eligible to create another one
+    if (order.returnRequest || order.status === "Return Requested" || order.status === "Return Approved" || order.status === "Return Rejected") return false;
     if (order.status !== "Delivered") return false;
     const orderDate = order.updatedAt ? new Date(order.updatedAt) : new Date(order.createdAt);
     const now = new Date();
@@ -283,15 +339,51 @@ export default function TrackOrderPage() {
                       <div className={`${styles.stepLine} ${order.status === "Delivered" ? styles.lineActive : ""}`} />
 
                       {/* Step 3: Delivered */}
-                      <div className={`${styles.timelineStep} ${order.status === "Delivered" ? styles.stepActive : ""}`}>
+                      <div className={`${styles.timelineStep} ${(["Delivered", "Return Requested", "Return Approved", "Return Rejected"].includes(order.status) || order.returnRequest) ? styles.stepActive : ""}`}>
                         <div className={styles.stepCircle}>
-                          {order.status === "Delivered" ? "✓" : "3"}
+                          {(["Delivered", "Return Requested", "Return Approved", "Return Rejected"].includes(order.status) || order.returnRequest) ? "✓" : "3"}
                         </div>
                         <div className={styles.stepInfo}>
                           <span className={styles.stepTitle}>Delivered</span>
                           <span className={styles.stepDesc}>Doorstep delivery completed.</span>
                         </div>
                       </div>
+
+                      {(order.returnRequest || ["Return Requested", "Return Approved", "Return Rejected"].includes(order.status)) && (
+                        <>
+                          <div className={`${styles.stepLine} ${styles.lineActive}`} />
+
+                          {/* Step 4: Return Requested */}
+                          <div className={`${styles.timelineStep} ${styles.stepActive}`}>
+                            <div className={styles.stepCircle}>✓</div>
+                            <div className={styles.stepInfo}>
+                              <span className={styles.stepTitle}>Return Requested</span>
+                              <span className={styles.stepDesc}>Damage report submitted.</span>
+                            </div>
+                          </div>
+                          
+                          <div className={`${styles.stepLine} ${["Return Approved", "Return Rejected"].includes(order.status) ? styles.lineActive : ""}`} />
+
+                          {/* Step 5: Return Decision */}
+                          <div className={`${styles.timelineStep} ${["Return Approved", "Return Rejected"].includes(order.status) ? (order.status === "Return Rejected" ? styles.stepActiveError : styles.stepActive) : ""}`}>
+                            <div className={styles.stepCircle} style={order.status === "Return Rejected" ? { backgroundColor: "#ef4444", color: "#fff", borderColor: "#ef4444" } : {}}>
+                              {order.status === "Return Approved" ? "✓" : order.status === "Return Rejected" ? "✕" : "5"}
+                            </div>
+                            <div className={styles.stepInfo}>
+                              <span className={styles.stepTitle} style={order.status === "Return Rejected" ? { color: "#ef4444" } : {}}>
+                                {order.status === "Return Approved" ? "Return Approved" : order.status === "Return Rejected" ? "Return Rejected" : "Under Review"}
+                              </span>
+                              <span className={styles.stepDesc}>
+                                {order.status === "Return Approved" 
+                                  ? "Your return request has been approved." 
+                                  : order.status === "Return Rejected" 
+                                    ? "Your return request was declined." 
+                                    : "Our team is reviewing your claim."}
+                              </span>
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </>
                   )}
                   {returnSuccess && (
@@ -303,6 +395,50 @@ export default function TrackOrderPage() {
                         <strong>Return Requested Successfully!</strong>
                         <p style={{ margin: "5px 0 0 0", fontSize: "0.85rem" }}>Our support team will review your request shortly.</p>
                       </div>
+                    </div>
+                  )}
+
+                  {/* Return Request Status details */}
+                  {order.returnRequest && (
+                    <div style={{
+                      marginTop: "20px",
+                      padding: "16px",
+                      borderRadius: "8px",
+                      borderLeft: "4px solid " + (
+                        order.returnRequest.status === "Approved" ? "#10b981" :
+                        order.returnRequest.status === "Rejected" ? "#ef4444" : "#f59e0b"
+                      ),
+                      backgroundColor: (
+                        order.returnRequest.status === "Approved" ? "#ecfdf5" :
+                        order.returnRequest.status === "Rejected" ? "#fef2f2" : "#fffbeb"
+                      ),
+                      color: (
+                        order.returnRequest.status === "Approved" ? "#065f46" :
+                        order.returnRequest.status === "Rejected" ? "#991b1b" : "#92400e"
+                      )
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <div style={{
+                          width: "8px",
+                          height: "8px",
+                          borderRadius: "50%",
+                          backgroundColor: (
+                            order.returnRequest.status === "Approved" ? "#10b981" :
+                            order.returnRequest.status === "Rejected" ? "#ef4444" : "#f59e0b"
+                          )
+                        }} />
+                        <strong style={{ fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                          Return Status: {order.returnRequest.status}
+                        </strong>
+                      </div>
+                      <p style={{ margin: "8px 0 0 0", fontSize: "0.85rem", opacity: 0.9 }}>
+                        <strong>Reason:</strong> {order.returnRequest.reason}
+                      </p>
+                      {order.returnRequest.adminNotes && (
+                        <p style={{ margin: "6px 0 0 0", fontSize: "0.85rem", fontStyle: "italic", borderTop: "1px dashed rgba(0,0,0,0.1)", paddingTop: "6px" }}>
+                          <strong>Note from support:</strong> {order.returnRequest.adminNotes}
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -330,12 +466,14 @@ export default function TrackOrderPage() {
                       Not satisfied? You can request a return for this delivered order.
                     </p>
                     <button 
-                      onClick={() => handleReturnOrder(order._id)} 
-                      disabled={isReturning} 
+                      onClick={() => {
+                        setModalOrderId(order._id);
+                        setShowReturnModal(true);
+                      }} 
                       className={styles.cancelBtn}
                       style={{ backgroundColor: "#f59e0b", borderColor: "#f59e0b", color: "#fff" }}
                     >
-                      {isReturning ? "Requesting..." : "Request Return"}
+                      Request Return (Damaged Product)
                     </button>
                   </div>
                 )}
@@ -452,6 +590,206 @@ export default function TrackOrderPage() {
           })()}
         </div>
       </main>
+
+      {/* Return Request Damage Popup Modal */}
+      {showReturnModal && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          backgroundColor: "rgba(0, 0, 0, 0.6)",
+          backdropFilter: "blur(8px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 99999,
+          padding: "20px"
+        }}>
+          <div style={{
+            backgroundColor: "#ffffff",
+            borderRadius: "16px",
+            width: "100%",
+            maxWidth: "500px",
+            boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column"
+          }}>
+            {/* Modal Header */}
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "20px 24px",
+              borderBottom: "1px solid #f1f5f9"
+            }}>
+              <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 800, color: "#1e293b" }}>
+                REQUEST RETURN FOR DAMAGE
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowReturnModal(false);
+                  setReturnReason("");
+                  setProofImages([]);
+                }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: "1.5rem",
+                  cursor: "pointer",
+                  color: "#94a3b8",
+                  padding: 0,
+                  lineHeight: 1
+                }}
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Modal Body Form */}
+            <form onSubmit={handleSubmitReturnRequest} style={{ display: "flex", flexDirection: "column", gap: "20px", padding: "24px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <label style={{ fontSize: "0.82rem", fontWeight: 700, color: "#475569" }}>
+                  Reason for Return (Explain transit damage)
+                </label>
+                <textarea
+                  required
+                  placeholder="e.g. Received bottle broken inside the package during transit..."
+                  value={returnReason}
+                  onChange={(e) => setReturnReason(e.target.value)}
+                  style={{
+                    padding: "12px",
+                    borderRadius: "8px",
+                    border: "1px solid #cbd5e1",
+                    fontSize: "0.88rem",
+                    color: "#0f172a",
+                    minHeight: "100px",
+                    resize: "vertical",
+                    boxSizing: "border-box"
+                  }}
+                />
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <label style={{ fontSize: "0.82rem", fontWeight: 700, color: "#475569" }}>
+                  Upload Proof Images of Damage
+                </label>
+                
+                {/* Upload Trigger button */}
+                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                  <label style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "10px 16px",
+                    borderRadius: "8px",
+                    backgroundColor: "#f1f5f9",
+                    border: "1px dashed #cbd5e1",
+                    fontSize: "0.82rem",
+                    fontWeight: 700,
+                    color: "#475569",
+                    cursor: isUploading ? "not-allowed" : "pointer",
+                    transition: "all 0.2s"
+                  }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "16px", height: "16px" }}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+                    </svg>
+                    {isUploading ? "Uploading..." : "Upload Photo"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={isUploading}
+                      onChange={handleReturnImageUpload}
+                      style={{ display: "none" }}
+                    />
+                  </label>
+                </div>
+
+                {/* Uploaded images display list */}
+                {proofImages.length > 0 && (
+                  <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "10px" }}>
+                    {proofImages.map((url, idx) => (
+                      <div key={idx} style={{ position: "relative", width: "70px", height: "70px", borderRadius: "6px", overflow: "hidden", border: "1px solid #cbd5e1" }}>
+                        <img src={url} alt="Proof" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveProofImage(idx)}
+                          style={{
+                            position: "absolute",
+                            top: "2px",
+                            right: "2px",
+                            backgroundColor: "rgba(0,0,0,0.6)",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "50%",
+                            width: "18px",
+                            height: "18px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "0.75rem",
+                            cursor: "pointer"
+                          }}
+                        >
+                          &times;
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Action buttons */}
+              <div style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "12px",
+                marginTop: "10px",
+                borderTop: "1px solid #f1f5f9",
+                paddingTop: "20px"
+              }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowReturnModal(false);
+                    setReturnReason("");
+                    setProofImages([]);
+                  }}
+                  style={{
+                    padding: "10px 20px",
+                    borderRadius: "8px",
+                    border: "1px solid #cbd5e1",
+                    fontSize: "0.85rem",
+                    fontWeight: 700,
+                    backgroundColor: "#ffffff",
+                    color: "#475569",
+                    cursor: "pointer"
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isReturning || isUploading}
+                  style={{
+                    padding: "10px 20px",
+                    borderRadius: "8px",
+                    border: "none",
+                    fontSize: "0.85rem",
+                    fontWeight: 700,
+                    backgroundColor: primaryColor,
+                    color: "#ffffff",
+                    cursor: (isReturning || isUploading) ? "not-allowed" : "pointer"
+                  }}
+                >
+                  {isReturning ? "Submitting..." : "Send Request"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

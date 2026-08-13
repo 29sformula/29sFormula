@@ -18,7 +18,7 @@ export default function LoginPage() {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [primaryColor, setPrimaryColor] = useState<string>(
-    typeof window !== 'undefined' ? (localStorage.getItem("settings_primaryColor") || "#57bc74") : "#57bc74"
+    "#57bc74"
   );
   const [sessionExpired, setSessionExpired] = useState<boolean>(false);
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";

@@ -2,12 +2,92 @@ import express from "express";
 import axios from "axios";
 import crypto from "crypto";
 import Order from "../models/Order.js";
+import ReturnRequest from "../models/ReturnRequest.js";
 import Customer from "../models/Customer.js";
 import { Product, ProductVariant } from "../models/Product.js";
 import { invalidateProductsCache } from "../utils/cache.js";
 import nodemailer from "nodemailer";
 
 const router = express.Router();
+
+const sendReturnUpdateEmail = async (order, customerEmail, customerName, returnStatus, adminNotes) => {
+  const emailUser = process.env.EMAIL_USER;
+  const emailPass = process.env.EMAIL_PASS;
+
+  if (!emailUser || !emailPass) {
+    console.warn("Skipping return update email: EMAIL_USER or EMAIL_PASS not configured.");
+    return;
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: emailUser,
+        pass: emailPass,
+      },
+    });
+
+    let subject = `Update on your Return Request - ${order.orderId}`;
+    let heading = "Return Request Update";
+    let message = "";
+
+    if (returnStatus === "Return Requested") {
+      subject = `Return Request Received - ${order.orderId}`;
+      heading = "We have received your return request";
+      message = "Your claim for a damaged product has been submitted and is currently under review by our team. We will notify you once a decision has been made.";
+    } else if (returnStatus === "Return Approved") {
+      subject = `Return Request Approved - ${order.orderId}`;
+      heading = "Your return request has been approved";
+      message = "Good news! Your return request has been approved. A refund will be initiated to your original payment method shortly.";
+      if (adminNotes) {
+        message += `<br><br><strong>Note from our team:</strong> ${adminNotes}`;
+      }
+    } else if (returnStatus === "Payment Refunded") {
+      subject = `Refund Processed - ${order.orderId}`;
+      heading = "Your refund has been successfully processed";
+      message = "We have completed the refund for your order. The funds have been sent back to your original payment method. Depending on your bank, it may take 3-5 business days to reflect on your statement.";
+    } else if (returnStatus === "Return Rejected") {
+      subject = `Return Request Declined - ${order.orderId}`;
+      heading = "Update on your return request";
+      message = "Unfortunately, after carefully reviewing your claim, we are unable to approve your return request at this time.";
+      if (adminNotes) {
+        message += `<br><br><strong>Reason:</strong> ${adminNotes}`;
+      }
+    }
+
+    const mailOptions = {
+      from: `"29sFORMULA" <${emailUser}>`,
+      to: customerEmail,
+      subject: subject,
+      html: `
+        <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a; padding: 40px 30px; border: 1px solid #e5e5e5; border-radius: 4px; background-color: #fafafa;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="letter-spacing: 2px; font-weight: 300; margin: 0; color: #000;">29sFORMULA</h1>
+            <p style="text-transform: uppercase; letter-spacing: 1.5px; font-size: 11px; color: #666; margin-top: 5px;">Fine Artisan Perfumery</p>
+          </div>
+          <hr style="border: none; border-top: 1px solid #eaeaea; margin-bottom: 30px;" />
+          
+          <h2 style="color: #222; text-align: center; font-weight: 400; letter-spacing: 1px;">${heading}</h2>
+          <p style="font-size: 15px; line-height: 1.6; color: #444;">Dear ${customerName},</p>
+          <p style="font-size: 15px; line-height: 1.6; color: #444;">${message}</p>
+          
+          <div style="text-align: center; margin: 40px 0;">
+            <a href="http://localhost:3000/track?order_id=${order.orderId}" style="display: inline-block; padding: 14px 35px; background-color: #000; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase;">Track Your Order</a>
+          </div>
+          
+          <hr style="border: none; border-top: 1px solid #eaeaea; margin-top: 40px; margin-bottom: 30px;" />
+          <p style="font-size: 13px; line-height: 1.6; color: #888; text-align: center;">If you have any further questions, please contact our support team.</p>
+        </div>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`Return update email sent for ${order.orderId}`);
+  } catch (error) {
+    console.error("Error sending return update email:", error);
+  }
+};
 
 const sendOrderUpdateEmail = async (order, customerEmail, customerName) => {
   const emailUser = process.env.EMAIL_USER;
@@ -284,6 +364,14 @@ router.post("/api/orders", async (req, res) => {
 router.get("/api/orders", async (req, res) => {
   try {
     const orders = await Order.find({}).populate("customerId").sort({ createdAt: -1 }).lean();
+    
+    const orderIds = orders.map(o => o._id);
+    const returnRequests = await ReturnRequest.find({ orderObjectId: { $in: orderIds } }).lean();
+    const returnRequestsMap = returnRequests.reduce((acc, r) => {
+      acc[r.orderObjectId.toString()] = r;
+      return acc;
+    }, {});
+
     const mappedOrders = orders.map(order => {
       const customer = order.customerId;
       return {
@@ -291,7 +379,8 @@ router.get("/api/orders", async (req, res) => {
         customerName: customer ? customer.name : (order.customerName || "Unknown Customer"),
         customerEmail: customer ? customer.email : (order.customerEmail || ""),
         customerPhone: customer ? customer.phone : (order.customerPhone || ""),
-        shippingAddress: customer ? customer.address : (order.shippingAddress || "")
+        shippingAddress: customer ? customer.address : (order.shippingAddress || ""),
+        returnRequest: returnRequestsMap[order._id.toString()] || null
       };
     });
     res.json(mappedOrders);
@@ -333,7 +422,11 @@ router.put("/api/orders/:id", async (req, res) => {
 
     // Send update email
     if (mappedOrder.customerEmail) {
-      sendOrderUpdateEmail(updatedOrder, mappedOrder.customerEmail, mappedOrder.customerName);
+      if (refundStatus === "Refunded") {
+        sendReturnUpdateEmail(updatedOrder, mappedOrder.customerEmail, mappedOrder.customerName, "Payment Refunded", "");
+      } else if (status !== undefined) {
+        sendOrderUpdateEmail(updatedOrder, mappedOrder.customerEmail, mappedOrder.customerName);
+      }
     }
 
     res.json(mappedOrder);
@@ -426,6 +519,10 @@ router.get("/api/orders/track", async (req, res) => {
       return res.status(404).json({ error: "No matching order found for this query." });
     }
 
+    // Fetch return request for currentOrder
+    const currentRetReq = await ReturnRequest.findOne({ orderObjectId: currentOrder._id }).lean();
+    currentOrder.returnRequest = currentRetReq || null;
+
     // Standardize currentOrder customer fields
     const activeCustomer = currentOrder.customerId || customer;
     currentOrder.customerName = activeCustomer ? activeCustomer.name : (currentOrder.customerName || "Unknown Customer");
@@ -449,6 +546,14 @@ router.get("/api/orders/track", async (req, res) => {
       }).sort({ createdAt: -1 }).lean();
     }
 
+    // Fetch return requests for history list
+    const historyOrderIds = history.map(h => h._id);
+    const historyRetReqs = await ReturnRequest.find({ orderObjectId: { $in: historyOrderIds } }).lean();
+    const historyRetReqsMap = historyRetReqs.reduce((acc, r) => {
+      acc[r.orderObjectId.toString()] = r;
+      return acc;
+    }, {});
+
     // Standardize history items too
     history = history.map(h => {
       const hCust = h.customerId || activeCustomer;
@@ -457,7 +562,8 @@ router.get("/api/orders/track", async (req, res) => {
         customerName: hCust ? hCust.name : (h.customerName || "Unknown Customer"),
         customerEmail: hCust ? hCust.email : (h.customerEmail || ""),
         customerPhone: hCust ? hCust.phone : (h.customerPhone || ""),
-        shippingAddress: hCust ? hCust.address : (h.shippingAddress || "")
+        shippingAddress: hCust ? hCust.address : (h.shippingAddress || ""),
+        returnRequest: historyRetReqsMap[h._id.toString()] || null
       };
     });
 
@@ -511,22 +617,111 @@ router.post("/api/orders/:id/cancel", async (req, res) => {
 });
 router.post("/api/orders/:id/return", async (req, res) => {
   try {
+    const { reason, images } = req.body;
+    if (!reason) {
+      return res.status(400).json({ error: "Reason for return is required." });
+    }
+
     const order = await Order.findById(req.params.id);
     if (!order) {
       return res.status(404).json({ error: "Order not found" });
     }
 
     if (order.status !== "Delivered") {
-      return res.status(400).json({ error: `Cannot return order. Status is currently '${order.status}' (must be Delivered)` });
+      return res.status(400).json({ error: `Cannot request return. Status is currently '${order.status}' (must be Delivered)` });
     }
 
+    // Check if return request already exists
+    let returnRequest = await ReturnRequest.findOne({ orderObjectId: order._id });
+    if (returnRequest) {
+      return res.status(400).json({ error: "A return request has already been submitted for this order." });
+    }
+
+    // Create the ReturnRequest
+    returnRequest = new ReturnRequest({
+      orderId: order.orderId,
+      orderObjectId: order._id,
+      reason,
+      images: images || [],
+      status: "Pending"
+    });
+    await returnRequest.save();
+
+    // Update order status
     order.status = "Return Requested";
     await order.save();
 
-    res.json(order);
+    const orderJson = order.toJSON();
+    orderJson.returnRequest = returnRequest;
+
+    // Trigger Return Requested Email asynchronously
+    let cEmail = order.customerEmail || "";
+    let cName = order.customerName || "";
+    if (order.customerId) {
+      const c = await Customer.findById(order.customerId);
+      if (c) {
+        cEmail = c.email || cEmail;
+        cName = c.name || cName;
+      }
+    }
+    if (cEmail) {
+      sendReturnUpdateEmail(order, cEmail, cName, "Return Requested", "");
+    }
+
+    res.json(orderJson);
   } catch (error) {
     console.error("Order return request failed:", error);
     res.status(500).json({ error: "Failed to request return" });
+  }
+});
+
+// 5. Add PUT /api/orders/:id/return-status for admin status updates
+router.put("/api/orders/:id/return-status", async (req, res) => {
+  try {
+    const { status, adminNotes } = req.body;
+    if (!status) {
+      return res.status(400).json({ error: "Status is required." });
+    }
+
+    const returnRequest = await ReturnRequest.findOne({ orderObjectId: req.params.id });
+    if (!returnRequest) {
+      return res.status(404).json({ error: "Return request not found." });
+    }
+
+    returnRequest.status = status;
+    if (adminNotes !== undefined) {
+      returnRequest.adminNotes = adminNotes;
+    }
+    await returnRequest.save();
+
+    const order = await Order.findById(req.params.id);
+    if (order) {
+      if (status === "Approved") {
+        order.status = "Return Approved";
+      } else if (status === "Rejected") {
+        order.status = "Return Rejected";
+      }
+      await order.save();
+
+      // Trigger Return Approved/Rejected Email asynchronously
+      let cEmail = order.customerEmail || "";
+      let cName = order.customerName || "";
+      if (order.customerId) {
+        const c = await Customer.findById(order.customerId);
+        if (c) {
+          cEmail = c.email || cEmail;
+          cName = c.name || cName;
+        }
+      }
+      if (cEmail) {
+        sendReturnUpdateEmail(order, cEmail, cName, order.status, adminNotes || "");
+      }
+    }
+
+    res.json(returnRequest);
+  } catch (error) {
+    console.error("Failed to update return request status:", error);
+    res.status(500).json({ error: "Failed to update return request status" });
   }
 });
 

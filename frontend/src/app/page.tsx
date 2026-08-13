@@ -152,7 +152,7 @@ export default function Home() {
   const [lifestyleText, setLifestyleText] = useState<string>("Intense notes, Raw elements. This is 29sFORMULA.");
   const [lifestyleImage, setLifestyleImage] = useState<string>("https://images.unsplash.com/photo-1615655096345-61a54750068d?auto=format&fit=crop&w=1800&q=80");
   const [primaryColor, setPrimaryColor] = useState<string>(
-    typeof window !== 'undefined' ? (localStorage.getItem("settings_primaryColor") || "#57bc74") : "#57bc74"
+    "#57bc74"
   );
   const [showVideo, setShowVideo] = useState<boolean>(true);
   const [showLifestyle, setShowLifestyle] = useState<boolean>(true);
@@ -278,6 +278,8 @@ export default function Home() {
   useEffect(() => {
     // Load cached settings immediately to prevent visual jumps during load
     try {
+      const cachedPrimaryColor = localStorage.getItem("settings_primaryColor");
+      if (cachedPrimaryColor) setPrimaryColor(cachedPrimaryColor);
       const cachedHeroTitle = localStorage.getItem("settings_heroTitle");
       if (cachedHeroTitle) setHeroTitle(cachedHeroTitle);
       const cachedHeroTitleFontType = localStorage.getItem("settings_heroTitleFontType");

@@ -27,12 +27,18 @@ router.get("/api/admin/dashboard-stats", async (req, res) => {
       })
     ]);
 
-    const activeOrders = orders.filter(o => !o.deletedByAdmin && o.status !== "Cancelled" && o.status !== "Delivered");
+    const activeOrders = orders.filter(o => 
+      !o.deletedByAdmin && 
+      !["Cancelled", "Delivered", "Return Requested", "Return Approved", "Return Rejected"].includes(o.status)
+    );
     const activeOrdersCount = activeOrders.length;
     
     const nonDeletedOrders = orders.filter(o => !o.deletedByAdmin);
-    const totalIncome = nonDeletedOrders.reduce((acc, o) => acc + (o.totalAmount || 0), 0);
-    const totalSalesCount = nonDeletedOrders.length;
+    
+    // Only count completed/valid orders for income
+    const revenueOrders = nonDeletedOrders.filter(o => o.status !== "Cancelled" && o.status !== "Return Approved");
+    const totalIncome = revenueOrders.reduce((acc, o) => acc + (o.totalAmount || 0), 0);
+    const totalSalesCount = revenueOrders.length;
 
     const historicalDataMap = {};
     const formatter = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short' });
