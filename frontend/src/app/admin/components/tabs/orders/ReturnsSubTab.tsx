@@ -245,6 +245,11 @@ export default function ReturnsSubTab({
                                     </td>
                                     <td>
                                       <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                                        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                                          <span style={{ fontSize: "0.7rem", fontWeight: 700, backgroundColor: "#f1f5f9", padding: "2px 6px", borderRadius: "4px", color: "#475569", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                                            {order.returnRequest?.returnType || "Unknown"}
+                                          </span>
+                                        </div>
                                         <p style={{ margin: 0, fontSize: "0.85rem", fontWeight: 600, color: "#1e293b", whiteSpace: "normal", maxWidth: "250px", lineHeight: "1.3" }}>
                                           {order.returnRequest?.reason || "Reason not provided"}
                                         </p>

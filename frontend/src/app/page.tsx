@@ -79,7 +79,7 @@ export default function Home() {
   const [heroBgImage, setHeroBgImage] = useState<string | null>(null);
   const [heroBgVideo, setHeroBgVideo] = useState<string | null>(null);
   
-  const [heroTitle, setHeroTitle] = useState<string>("THE 29S FORMULA");
+  const [heroTitle, setHeroTitle] = useState<string>("");
   const [heroTitleFontType, setHeroTitleFontType] = useState<string>("Outfit");
   
   const [allReviews, setAllReviews] = useState<any[]>([]);
@@ -120,7 +120,7 @@ export default function Home() {
   const [showHeroTitle, setShowHeroTitle] = useState<boolean>(true);
   const [showHeroManifesto, setShowHeroManifesto] = useState<boolean>(true);
   const [showHeroButton, setShowHeroButton] = useState<boolean>(true);
-  const [heroButtonText, setHeroButtonText] = useState<string>("Shop Now");
+  const [heroButtonText, setHeroButtonText] = useState<string>("");
   const [heroButtonStyle, setHeroButtonStyle] = useState<string>("solid");
   const [heroButtonSize, setHeroButtonSize] = useState<string>("md");
   const [heroButtonColor, setHeroButtonColor] = useState<string>("");
@@ -609,7 +609,7 @@ export default function Home() {
                   letterSpacing: "0.1em",
                   transition: "background 0.3s, transform 0.2s"
                 }}>
-                  {heroButtonText || "Shop Now"}
+                  {heroButtonText || ""}
                 </Link>
               </div>
             );

@@ -88,7 +88,7 @@ export default function AdminSidebar({
                         <path d="M 12 0 L 12 14 A 4 4 0 0 0 16 18 L 24 18" strokeLinecap="round" strokeLinejoin="round" />
                         <path d="M 20 14 L 24 18 L 20 22" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
-                    ) : activeTab === "orders" && (activeSubTab === "cancelled" || activeSubTab === "completed") ? (
+                    ) : activeTab === "orders" && (activeSubTab === "returns" || activeSubTab === "cancelled" || activeSubTab === "completed") ? (
                       <svg style={{ display: "block", minWidth: "28px", width: "28px", height: "36px", marginRight: "8px", color: "#d1d5db" }} viewBox="0 0 28 36" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M 12 0 L 12 36" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>

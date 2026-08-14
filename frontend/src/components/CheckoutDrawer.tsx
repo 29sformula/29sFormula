@@ -2,9 +2,25 @@
 
 import { useState, useEffect, useRef } from "react";
 import confetti from "canvas-confetti";
-// @ts-ignore
-import { load } from "@cashfreepayments/cashfree-js";
 import styles from "./CheckoutDrawer.module.css";
+
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if (typeof window !== "undefined" && (window as any).Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => {
+      resolve(true);
+    };
+    script.onerror = () => {
+      resolve(false);
+    };
+    document.body.appendChild(script);
+  });
+};
 
 interface CartItem {
   _id: string;
@@ -293,23 +309,118 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
     };
 
     try {
-      const res = await fetch("http://127.0.0.1:5001/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderPayload)
-      });
+      if (["Razorpay", "UPI", "Cards", "Net Banking"].includes(paymentMethod)) {
+        const isLoaded = await loadRazorpayScript();
+        if (!isLoaded) {
+          throw new Error("Razorpay SDK failed to load. Are you online?");
+        }
 
-      if (!res.ok) throw new Error("Failed to place order. Please try again.");
+        const initRes = await fetch("http://127.0.0.1:5001/api/orders/razorpay-init", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ totalAmount, cartItems: orderPayload.cartItems })
+        });
+        
+        if (!initRes.ok) throw new Error("Failed to initialize payment");
+        const initData = await initRes.json();
+        if (!initData.order_id) throw new Error("Invalid payment initialization");
 
-      const data = await res.json();
-      if (data && data.orderId) {
-        onOrderSuccess(data.orderId, data);
+        const options = {
+          key: "rzp_test_TPXyukl63mUehR", // Test API Key
+          amount: initData.amount,
+          currency: initData.currency,
+          name: "29sFORMULA",
+          description: "Fine Artisan Perfumery",
+          order_id: initData.order_id,
+          handler: async function (response: any) {
+            try {
+              const verifyRes = await fetch("http://127.0.0.1:5001/api/orders/razorpay-verify", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_signature: response.razorpay_signature,
+                  orderPayload
+                })
+              });
+
+              if (!verifyRes.ok) throw new Error("Payment verification failed");
+              const verifyData = await verifyRes.json();
+              if (verifyData.success && verifyData.orderId) {
+                onOrderSuccess(verifyData.orderId, { ...orderPayload, orderId: verifyData.orderId });
+              }
+            } catch (err: any) {
+              setError(err.message || "Payment verification failed.");
+              setIsSubmitting(false);
+            }
+          },
+          prefill: {
+            name: name,
+            email: email,
+            contact: phone
+          },
+          theme: {
+            color: primaryColor
+          },
+          config: {
+            display: {
+              blocks: {
+                upi: {
+                  name: "Pay via UPI",
+                  instruments: [
+                    { method: "upi" }
+                  ]
+                },
+                other: {
+                  name: "Other Payment Modes",
+                  instruments: [
+                    { method: "card" },
+                    { method: "netbanking" },
+                    { method: "wallet" }
+                  ]
+                }
+              },
+              sequence: ["block.upi", "block.other"],
+              preferences: {
+                show_default_blocks: false
+              }
+            }
+          },
+          modal: {
+            ondismiss: function() {
+              setIsSubmitting(false);
+            }
+          }
+        };
+
+        const rzp = new (window as any).Razorpay(options);
+        rzp.on("payment.failed", function (response: any) {
+          setError("Payment failed. Please try again.");
+          setIsSubmitting(false);
+        });
+        rzp.open();
+        // Do not set isSubmitting(false) here, it will be handled by the handler or error event
+
       } else {
-        throw new Error("Invalid order response from server.");
+        const res = await fetch("http://127.0.0.1:5001/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderPayload)
+        });
+
+        if (!res.ok) throw new Error("Failed to place order. Please try again.");
+
+        const data = await res.json();
+        if (data && data.orderId) {
+          onOrderSuccess(data.orderId, data);
+        } else {
+          throw new Error("Invalid order response from server.");
+        }
+        setIsSubmitting(false);
       }
     } catch (err: any) {
       setError(err.message || "Failed to submit checkout.");
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -513,8 +624,38 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
                     className={styles.radioInput}
                   />
                   <div className={styles.paymentInfo}>
-                    <span className={styles.paymentName}>UPI / Cards (Cashfree)</span>
-                    <span className={styles.paymentDesc}>Secure digital checkout via Cashfree Payments.</span>
+                    <span className={styles.paymentName}>UPI</span>
+                    <span className={styles.paymentDesc}>Pay instantly using UPI Apps.</span>
+                  </div>
+                </label>
+
+                <label className={`${styles.paymentLabel} ${paymentMethod === "Cards" ? styles.paymentLabelActive : ""}`}>
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="Cards"
+                    checked={paymentMethod === "Cards"}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className={styles.radioInput}
+                  />
+                  <div className={styles.paymentInfo}>
+                    <span className={styles.paymentName}>Credit / Debit Cards</span>
+                    <span className={styles.paymentDesc}>Pay securely with your card.</span>
+                  </div>
+                </label>
+
+                <label className={`${styles.paymentLabel} ${paymentMethod === "Net Banking" ? styles.paymentLabelActive : ""}`}>
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="Net Banking"
+                    checked={paymentMethod === "Net Banking"}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className={styles.radioInput}
+                  />
+                  <div className={styles.paymentInfo}>
+                    <span className={styles.paymentName}>Net Banking</span>
+                    <span className={styles.paymentDesc}>All major banks supported.</span>
                   </div>
                 </label>
               </div>

@@ -47,6 +47,7 @@ export default function TrackOrderPage() {
   const [returnSuccess, setReturnSuccess] = useState(false);
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [returnReason, setReturnReason] = useState("");
+  const [returnType, setReturnType] = useState("Replacement");
   const [proofImages, setProofImages] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [modalOrderId, setModalOrderId] = useState<string | null>(null);
@@ -211,6 +212,7 @@ export default function TrackOrderPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           reason: returnReason,
+          returnType: returnType,
           images: proofImages
         })
       });
@@ -230,6 +232,7 @@ export default function TrackOrderPage() {
       setReturnSuccess(true);
       setShowReturnModal(false);
       setReturnReason("");
+      setReturnType("Replacement");
       setProofImages([]);
       setModalOrderId(null);
     } catch (err: any) {
@@ -322,12 +325,12 @@ export default function TrackOrderPage() {
                       </div>
 
                       {/* Line connector */}
-                      <div className={`${styles.stepLine} ${["Shipped", "Delivered"].includes(order.status) ? styles.lineActive : ""}`} />
+                      <div className={`${styles.stepLine} ${["Shipped", "Delivered", "Return Requested", "Return Approved", "Return Rejected"].includes(order.status) ? styles.lineActive : ""}`} />
 
                       {/* Step 2: Shipped */}
-                      <div className={`${styles.timelineStep} ${["Shipped", "Delivered"].includes(order.status) ? styles.stepActive : ""}`}>
+                      <div className={`${styles.timelineStep} ${["Shipped", "Delivered", "Return Requested", "Return Approved", "Return Rejected"].includes(order.status) ? styles.stepActive : ""}`}>
                         <div className={styles.stepCircle}>
-                          {["Shipped", "Delivered"].includes(order.status) ? "✓" : "2"}
+                          {["Shipped", "Delivered", "Return Requested", "Return Approved", "Return Rejected"].includes(order.status) ? "✓" : "2"}
                         </div>
                         <div className={styles.stepInfo}>
                           <span className={styles.stepTitle}>Shipped</span>
@@ -336,7 +339,7 @@ export default function TrackOrderPage() {
                       </div>
 
                       {/* Line connector */}
-                      <div className={`${styles.stepLine} ${order.status === "Delivered" ? styles.lineActive : ""}`} />
+                      <div className={`${styles.stepLine} ${["Delivered", "Return Requested", "Return Approved", "Return Rejected"].includes(order.status) ? styles.lineActive : ""}`} />
 
                       {/* Step 3: Delivered */}
                       <div className={`${styles.timelineStep} ${(["Delivered", "Return Requested", "Return Approved", "Return Rejected"].includes(order.status) || order.returnRequest) ? styles.stepActive : ""}`}>
