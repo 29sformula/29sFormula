@@ -17,6 +17,7 @@ export default function LandingPageSubTab({
   handleSaveSettings,
   setActiveCustomizerSection,
   activeCustomizerSection,
+  setIsHeroCustomizerModalOpen,
   setHeroBackup,
   setDrafts,
   heroTitleFontType,
@@ -172,66 +173,38 @@ export default function LandingPageSubTab({
 
                         {activeCustomizerSection === "hero" && (
                           <div className={styles.accordionContent}>
+                            <div style={{ marginBottom: "20px", display: "flex", justifyContent: "flex-end" }}>
+                              <button
+                                type="button"
+                                onClick={() => setIsHeroCustomizerModalOpen(true)}
+                                style={{
+                                  backgroundColor: "#3b82f6",
+                                  border: "none",
+                                  cursor: "pointer",
+                                  color: "#ffffff",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "6px",
+                                  fontSize: "0.85rem",
+                                  fontWeight: 600,
+                                  padding: "8px 12px",
+                                  borderRadius: "6px",
+                                  boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                                  transition: "background 0.2s"
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#2563eb"}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#3b82f6"}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "16px", height: "16px" }}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.83 21.75a.75.75 0 0 1-.322.206l-4 1a.75.75 0 0 1-.905-.905l1-4a.75.75 0 0 1 .206-.322l15.118-15.118L16.863 4.487Zm0 0L19.5 7.125" />
+                                </svg>
+                                <span>Advanced Customizer</span>
+                              </button>
+                            </div>
                             <div className={styles.inputGroup} style={{ marginBottom: "15px" }}>
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                 <label className={styles.inputLabel}>Brand Header Title</label>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setHeroBackup({
-                                      heroTitle,
-                                      heroManifesto,
-                                      heroTemplate,
-                                      showHeroTitle,
-                                      showHeroManifesto,
-                                      showHeroButton,
-                                      heroButtonText,
-                                      heroButtonStyle,
-                                      heroButtonSize,
-                                      heroButtonColor,
-                                      heroButtonTextColor,
-                                      heroTitleFontType,
-                                      heroTitleFontColor,
-                                      heroTitleFontSize,
-                                      heroTitleFontAlignment,
-                                      heroTitleFontWeight,
-                                      heroManifestoFontType,
-                                      heroManifestoFontColor,
-                                      heroManifestoFontSize,
-                                      heroManifestoFontAlignment,
-                                      heroManifestoFontWeight,
-                                    });
-                                    setDrafts({
-                                      title: { fontType: heroTitleFontType, fontSize: selectedElement === "title" && hoveredFontSize ? hoveredFontSize : heroTitleFontSize, fontColor: heroTitleFontColor, fontAlignment: heroTitleFontAlignment, fontWeight: heroTitleFontWeight, fontVerticalAlignment: 'bottom', positionX: 0, positionY: 0, maxWidth: 100, minHeight: 0 },
-                                      manifesto: { fontType: heroManifestoFontType, fontSize: selectedElement === "manifesto" && hoveredFontSize ? hoveredFontSize : heroManifestoFontSize, fontColor: heroManifestoFontColor, fontAlignment: heroManifestoFontAlignment, fontWeight: heroManifestoFontWeight, fontVerticalAlignment: 'top', positionX: 0, positionY: 0, maxWidth: 100, minHeight: 0 },
-                                      button: { fontType: "Outfit", fontSize: "0.85rem", fontColor: "#ffffff", fontAlignment: "center", fontWeight: "700", fontVerticalAlignment: "middle", positionX: 0, positionY: 0, maxWidth: 100, minHeight: 0 }
-                                    });
-                                    setSelectedElement("title");
-                                    setShowHeroTitleFontOptions(true);
-                                  }}
-                                  style={{
-                                    background: "none",
-                                    border: "none",
-                                    cursor: "pointer",
-                                    color: "#3b82f6",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "4px",
-                                    fontSize: "0.82rem",
-                                    fontWeight: 600,
-                                    padding: "4px 8px",
-                                    borderRadius: "4px",
-                                    transition: "background 0.2s"
-                                  }}
-                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#eff6ff"}
-                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
-                                >
-                                  {/* Edit Pencil Icon */}
-                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "14px", height: "14px" }}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.83 21.75a.75.75 0 0 1-.322.206l-4 1a.75.75 0 0 1-.905-.905l1-4a.75.75 0 0 1 .206-.322l15.118-15.118L16.863 4.487Zm0 0L19.5 7.125" />
-                                  </svg>
-                                  <span>Customize Layout & Styling</span>
-                                </button>
+                                
                               </div>
                               <div style={{ display: "flex", gap: "8px", position: "relative" }}>
                                 <input

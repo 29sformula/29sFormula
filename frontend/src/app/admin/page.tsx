@@ -16,6 +16,7 @@ import { fontCategories, getFontFamilyStack } from "./constants/fonts";
 import { useAdminAuth } from "./hooks/useAdminAuth";
 import { useDashboardData } from "./hooks/useDashboardData";
 import AdminModals from "./components/modals/AdminModals";
+import CustomizeLayoutModal from "./components/modals/CustomizeLayoutModal";
 
 
 
@@ -215,148 +216,9 @@ export default function AdminDashboard() {
   const [heroManifestoFontAlignment, setHeroManifestoFontAlignment] = useState<string>("left");
   const [heroManifestoFontWeight, setHeroManifestoFontWeight] = useState<string>("500");
 
-  const [selectedElement, setSelectedElement] = useState<"title" | "manifesto" | "button" | null>("title");
-  const [heroBackup, setHeroBackup] = useState<any | null>(null);
+  
 
-  const [drafts, setDrafts] = useState<any>({
-    title: { fontType: "Outfit", fontSize: "4.5rem", fontColor: "#111827", fontAlignment: "center", fontWeight: "700", fontVerticalAlignment: "bottom", positionX: 0, positionY: 0, maxWidth: 100, minHeight: 0 },
-    manifesto: { fontType: "Outfit", fontSize: "0.72rem", fontColor: "#ffffff", fontAlignment: "left", fontWeight: "500", fontVerticalAlignment: "top", positionX: 0, positionY: 0, maxWidth: 100, minHeight: 0 },
-    button: { fontType: "Outfit", fontSize: "0.85rem", fontColor: "#ffffff", fontAlignment: "center", fontWeight: "700", fontVerticalAlignment: "middle", positionX: 0, positionY: 0, maxWidth: 100, minHeight: 0 }
-  });
-
-  const updateDraft = (key: string, value: any) => {
-    if (!selectedElement) return;
-    setDrafts((prev: any) => ({ ...prev, [selectedElement]: { ...prev[selectedElement], [key]: value } }));
-
-    // Sync sidebar state
-    if (selectedElement === "title") {
-          } else if (selectedElement === "manifesto") {
-          }
-  };
-
-  const [isDraggingTitle, setIsDraggingTitle] = useState<boolean>(false);
-  const [isResizing, setIsResizing] = useState<string | null>(null);
-  const [resizeStartCoords, setResizeStartCoords] = useState({ x: 0, y: 0, startWidth: 100, startHeight: 0, startX: 0, startY: 0 });
-  const [dragStartCoords, setDragStartCoords] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [showHeroTitleFontOptions, setShowHeroTitleFontOptions] = useState<boolean>(false);
-  const [hoveredFontType, setHoveredFontType] = useState<string | null>(null);
-  const [isFontDropdownOpen, setIsFontDropdownOpen] = useState<boolean>(false);
-  const [hoveredFontSize, setHoveredFontSize] = useState<string | null>(null);
-  const [isFontSizeDropdownOpen, setIsFontSizeDropdownOpen] = useState<boolean>(false);
-  const [hoveredFontWeight, setHoveredFontWeight] = useState<string | null>(null);
-  const [isFontWeightDropdownOpen, setIsFontWeightDropdownOpen] = useState<boolean>(false);
-
-  // Dynamically load Google Font for Realtime Preview
-  useEffect(() => {
-    const fontToLoad = hoveredFontType || (selectedElement && drafts[selectedElement] ? drafts[selectedElement].fontType : null);
-    if (!fontToLoad) return;
-    const systemFonts = ["SF Pro", "New York", "SF Mono", "Segoe UI", "Helvetica Neue", "Georgia", "Garamond"];
-    if (systemFonts.includes(fontToLoad)) return;
-    const fontId = "dynamic-font-admin-" + fontToLoad.replace(/\s+/g, "-").toLowerCase();
-    if (document.getElementById(fontId)) return;
-
-    const link = document.createElement("link");
-    link.id = fontId;
-    link.rel = "stylesheet";
-    link.href = `https://fonts.googleapis.com/css2?family=${fontToLoad.replace(/\s+/g, "+")}:wght@300;400;500;600;700;800;900&display=swap`;
-    document.head.appendChild(link);
-  }, [drafts, selectedElement, hoveredFontType]);
-
-  // Drag and drop event handlers for Title Typography Preview positioning
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (isDraggingTitle) {
-        updateDraft('positionX', e.clientX - dragStartCoords.x);
-        updateDraft('positionY', e.clientY - dragStartCoords.y);
-      } else if (isResizing) {
-        const deltaX = e.clientX - resizeStartCoords.x;
-        const deltaY = e.clientY - resizeStartCoords.y;
-
-        let newWidth = resizeStartCoords.startWidth;
-        let newPosX = resizeStartCoords.startX;
-        let newPosY = resizeStartCoords.startY;
-        let newHeight = resizeStartCoords.startHeight;
-
-        const containerElem = document.getElementById("hero-preview-container");
-        const containerWidth = containerElem ? containerElem.getBoundingClientRect().width : 1150;
-
-        if (isResizing.includes("e")) {
-          newWidth = resizeStartCoords.startWidth + (deltaX / containerWidth * 100);
-          if (newWidth > 400) newWidth = 400; // Allow massive expansion
-          if (newWidth < 5) newWidth = 5;
-
-          const actualDeltaX = (newWidth - resizeStartCoords.startWidth) / 100 * containerWidth;
-          newPosX = resizeStartCoords.startX + (actualDeltaX / 2);
-        } else if (isResizing.includes("w")) {
-          newWidth = resizeStartCoords.startWidth - (deltaX / containerWidth * 100);
-          if (newWidth > 400) newWidth = 400; // Allow massive expansion
-          if (newWidth < 5) newWidth = 5;
-
-          const actualDeltaX = -(newWidth - resizeStartCoords.startWidth) / 100 * containerWidth;
-          newPosX = resizeStartCoords.startX + (actualDeltaX / 2);
-        }
-
-        const verticalAlign = selectedElement ? drafts[selectedElement].fontVerticalAlignment : "top";
-
-        if (isResizing.includes("s")) {
-          newHeight = resizeStartCoords.startHeight + deltaY;
-          if (newHeight < 0) newHeight = 0;
-          const actualDeltaY = newHeight - resizeStartCoords.startHeight;
-          if (verticalAlign === "middle") newPosY = resizeStartCoords.startY + (actualDeltaY / 2);
-          else if (verticalAlign === "bottom") newPosY = resizeStartCoords.startY + actualDeltaY;
-        } else if (isResizing.includes("n")) {
-          newHeight = resizeStartCoords.startHeight - deltaY;
-          if (newHeight < 0) newHeight = 0;
-          const actualDeltaY = -(newHeight - resizeStartCoords.startHeight);
-          if (verticalAlign === "middle") newPosY = resizeStartCoords.startY + (actualDeltaY / 2);
-          else if (verticalAlign === "top") newPosY = resizeStartCoords.startY - actualDeltaY;
-        }
-
-        setDrafts((prev: any) => {
-          if (!selectedElement) return prev;
-          const updates: any = { maxWidth: newWidth, positionX: newPosX };
-          if (isResizing.includes("n") || isResizing.includes("s")) {
-            updates.minHeight = newHeight;
-            updates.positionY = newPosY;
-          }
-          return {
-            ...prev,
-            [selectedElement]: {
-              ...prev[selectedElement],
-              ...updates
-            }
-          };
-        });
-
-        // Sync sidebar state for smooth visual feedback
-        if (selectedElement === "title") {
-          if (isResizing.includes("n") || isResizing.includes("s")) {
-          }
-        } else if (selectedElement === "manifesto") {
-          if (isResizing.includes("n") || isResizing.includes("s")) {
-          }
-        }
-      }
-    };
-
-    const handleMouseUp = () => {
-      setIsDraggingTitle(false);
-      setIsResizing(null);
-    };
-
-    if (isDraggingTitle || isResizing) {
-      window.addEventListener("mousemove", handleMouseMove);
-      window.addEventListener("mouseup", handleMouseUp);
-    } else {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-    }
-
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [isDraggingTitle, dragStartCoords, isResizing, resizeStartCoords, selectedElement]);
+  
   const [videoTitle, setVideoTitle] = useState<string>("");
   const [videoSubtitle, setVideoSubtitle] = useState<string>("");
   const [videoUrl, setVideoUrl] = useState<string>("");
@@ -409,6 +271,7 @@ export default function AdminDashboard() {
 
   const [loadingSettings, setLoadingSettings] = useState<boolean>(false);
   const [activeCustomizerSection, setActiveCustomizerSection] = useState<string | null>(null);
+  const [isHeroCustomizerModalOpen, setIsHeroCustomizerModalOpen] = useState(false);
 
   // Navigation Guard & Unsaved Changes modal states
   const [originalSettings, setOriginalSettings] = useState<any>(null);
@@ -1979,52 +1842,7 @@ export default function AdminDashboard() {
     );
   }
 
-  const renderResizeHandles = (element: "title" | "manifesto") => {
-    if (selectedElement !== element) return null;
-    const handleStyle = {
-      position: "absolute",
-      width: "12px",
-      height: "12px",
-      backgroundColor: "#ffffff",
-      border: "2px solid #3b82f6",
-      zIndex: 10,
-      boxSizing: "border-box"
-    } as React.CSSProperties;
-
-    const handleProps = (dir: string) => ({
-      onMouseDown: (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsResizing(dir);
-
-        // Calculate the actual DOM height to prevent "dead zones" when minHeight is 0 (auto)
-        const parentElem = (e.target as HTMLElement).parentElement;
-        const currentHeight = parentElem ? parentElem.getBoundingClientRect().height : (drafts[element].minHeight || 0);
-
-        setResizeStartCoords({
-          x: e.clientX,
-          y: e.clientY,
-          startWidth: drafts[element].maxWidth,
-          startHeight: currentHeight,
-          startX: drafts[element].positionX,
-          startY: drafts[element].positionY
-        });
-      }
-    });
-
-    return (
-      <>
-        <div style={{ ...handleStyle, top: "-6px", left: "-6px", cursor: "nwse-resize" }} {...handleProps("nw")} />
-        <div style={{ ...handleStyle, top: "-6px", left: "calc(50% - 6px)", cursor: "ns-resize" }} {...handleProps("n")} />
-        <div style={{ ...handleStyle, top: "-6px", right: "-6px", cursor: "nesw-resize" }} {...handleProps("ne")} />
-        <div style={{ ...handleStyle, top: "calc(50% - 6px)", left: "-6px", cursor: "ew-resize" }} {...handleProps("w")} />
-        <div style={{ ...handleStyle, top: "calc(50% - 6px)", right: "-6px", cursor: "ew-resize" }} {...handleProps("e")} />
-        <div style={{ ...handleStyle, bottom: "-6px", left: "-6px", cursor: "nesw-resize" }} {...handleProps("sw")} />
-        <div style={{ ...handleStyle, bottom: "-6px", left: "calc(50% - 6px)", cursor: "ns-resize" }} {...handleProps("s")} />
-        <div style={{ ...handleStyle, bottom: "-6px", right: "-6px", cursor: "nwse-resize" }} {...handleProps("se")} />
-      </>
-    );
-  };
+  
 
   return (
     <div className={styles.adminPageWrapper}>
@@ -2164,12 +1982,9 @@ export default function AdminDashboard() {
               error={error}
               handleSaveSettings={handleSaveSettings}
               setActiveCustomizerSection={setActiveCustomizerSection}
+              setIsHeroCustomizerModalOpen={setIsHeroCustomizerModalOpen}
               activeCustomizerSection={activeCustomizerSection}
-              setHeroBackup={setHeroBackup}
-              setDrafts={setDrafts}
               heroTitleFontType={heroTitleFontType}
-              selectedElement={selectedElement}
-              hoveredFontSize={hoveredFontSize}
               heroTitleFontSize={heroTitleFontSize}
               heroTitleFontColor={heroTitleFontColor}
               heroTitleFontAlignment={heroTitleFontAlignment}
@@ -2179,8 +1994,6 @@ export default function AdminDashboard() {
               heroManifestoFontColor={heroManifestoFontColor}
               heroManifestoFontAlignment={heroManifestoFontAlignment}
               heroManifestoFontWeight={heroManifestoFontWeight}
-              setSelectedElement={setSelectedElement}
-              setShowHeroTitleFontOptions={setShowHeroTitleFontOptions}
               heroTitle={heroTitle}
               setHeroTitle={setHeroTitle}
               heroManifesto={heroManifesto}
@@ -2444,7 +2257,6 @@ export default function AdminDashboard() {
           handleSubmit={handleSubmit}
           handleUpdateOrderStatus={handleUpdateOrderStatus}
           handleUpdateRefundStatus={handleUpdateRefundStatus}
-          heroBackup={heroBackup}
           heroBgColor={heroBgColor}
           heroBgImage={heroBgImage}
           heroBgType={heroBgType}
@@ -2467,18 +2279,12 @@ export default function AdminDashboard() {
           heroTitleFontSize={heroTitleFontSize}
           heroTitleFontType={heroTitleFontType}
           heroTitleFontWeight={heroTitleFontWeight}
-          hoveredFontSize={hoveredFontSize}
-          hoveredFontType={hoveredFontType}
-          hoveredFontWeight={hoveredFontWeight}
           images={images}
           isDeletingCustomer={isDeletingCustomer}
           isDeletingProduct={isDeletingProduct}
           isDeletingReview={isDeletingReview}
           isEditing={isEditing}
           isEditingReview={isEditingReview}
-          isFontDropdownOpen={isFontDropdownOpen}
-          isFontSizeDropdownOpen={isFontSizeDropdownOpen}
-          isFontWeightDropdownOpen={isFontWeightDropdownOpen}
           isRenamingCategory={isRenamingCategory}
           name={name}
           newCategoryName={newCategoryName}
@@ -2497,7 +2303,6 @@ export default function AdminDashboard() {
           saveSettingsSilent={saveSettingsSilent}
           selectedCategoryView={selectedCategoryView}
           selectedCustomer={selectedCustomer}
-          selectedElement={selectedElement}
           selectedOrder={selectedOrder}
           selectedProductIds={selectedProductIds}
           setCategory={setCategory}
@@ -2527,15 +2332,9 @@ export default function AdminDashboard() {
           setHeroTitleFontSize={setHeroTitleFontSize}
           setHeroTitleFontType={setHeroTitleFontType}
           setHeroTitleFontWeight={setHeroTitleFontWeight}
-          setHoveredFontSize={setHoveredFontSize}
-          setHoveredFontType={setHoveredFontType}
-          setHoveredFontWeight={setHoveredFontWeight}
           setImageFront={setImageFront}
           setIsDeletingProduct={setIsDeletingProduct}
           setIsEditing={setIsEditing}
-          setIsFontDropdownOpen={setIsFontDropdownOpen}
-          setIsFontSizeDropdownOpen={setIsFontSizeDropdownOpen}
-          setIsFontWeightDropdownOpen={setIsFontWeightDropdownOpen}
           setName={setName}
           setNewCategoryName={setNewCategoryName}
           setOpenCategoryIndex={setOpenCategoryIndex}
@@ -2545,7 +2344,6 @@ export default function AdminDashboard() {
           setReturnStatusModalOpen={setReturnStatusModalOpen}
           setReturnStatusNotes={setReturnStatusNotes}
           setSelectedCustomer={setSelectedCustomer}
-          setSelectedElement={setSelectedElement}
           setSelectedOrder={setSelectedOrder}
           setSelectedProductIds={setSelectedProductIds}
           setShowAddCategoryModal={setShowAddCategoryModal}
@@ -2555,7 +2353,6 @@ export default function AdminDashboard() {
           setShowHeroButton={setShowHeroButton}
           setShowHeroManifesto={setShowHeroManifesto}
           setShowHeroTitle={setShowHeroTitle}
-          setShowHeroTitleFontOptions={setShowHeroTitleFontOptions}
           setShowResetConfirmModal={setShowResetConfirmModal}
           showAddCategoryModal={showAddCategoryModal}
           showAddExistingToCategoryModal={showAddExistingToCategoryModal}
@@ -2564,11 +2361,79 @@ export default function AdminDashboard() {
           showHeroButton={showHeroButton}
           showHeroManifesto={showHeroManifesto}
           showHeroTitle={showHeroTitle}
-          showHeroTitleFontOptions={showHeroTitleFontOptions}
           showResetConfirmModal={showResetConfirmModal}
           successMessage={successMessage}
           uploading={uploading}
         />
+        
+        {isHeroCustomizerModalOpen && (
+        <CustomizeLayoutModal 
+          isOpen={true} 
+          onClose={() => setIsHeroCustomizerModalOpen(false)} 
+          initialConfig={{
+            titleText: heroTitle,
+            titleFontType: heroTitleFontType,
+            titleFontColor: heroTitleFontColor,
+            titleFontSize: heroTitleFontSize,
+            titleFontAlignment: heroTitleFontAlignment,
+            titleFontWeight: heroTitleFontWeight,
+            showTitle: showHeroTitle,
+            
+            manifestoText: heroManifesto,
+            manifestoFontType: heroManifestoFontType,
+            manifestoFontColor: heroManifestoFontColor,
+            manifestoFontSize: heroManifestoFontSize,
+            manifestoFontAlignment: heroManifestoFontAlignment,
+            manifestoFontWeight: heroManifestoFontWeight,
+            showManifesto: showHeroManifesto,
+            
+            buttonText: heroButtonText,
+            buttonStyle: heroButtonStyle,
+            buttonSize: heroButtonSize,
+            buttonColor: heroButtonColor,
+            buttonTextColor: heroButtonTextColor,
+            showButton: showHeroButton,
+            
+            layoutTemplate: heroTemplate,
+            bgType: heroBgType,
+            bgColor: heroBgColor,
+            bgImage: heroBgImage,
+            bgVideo: heroBgVideo,
+          }}
+          onApply={(config) => {
+            setHeroTitle(config.titleText);
+            setHeroTitleFontType(config.titleFontType);
+            setHeroTitleFontColor(config.titleFontColor);
+            setHeroTitleFontSize(config.titleFontSize);
+            setHeroTitleFontAlignment(config.titleFontAlignment);
+            setHeroTitleFontWeight(config.titleFontWeight);
+            setShowHeroTitle(config.showTitle);
+            
+            setHeroManifesto(config.manifestoText);
+            setHeroManifestoFontType(config.manifestoFontType);
+            setHeroManifestoFontColor(config.manifestoFontColor);
+            setHeroManifestoFontSize(config.manifestoFontSize);
+            setHeroManifestoFontAlignment(config.manifestoFontAlignment);
+            setHeroManifestoFontWeight(config.manifestoFontWeight);
+            setShowHeroManifesto(config.showManifesto);
+            
+            setHeroButtonText(config.buttonText);
+            setHeroButtonStyle(config.buttonStyle);
+            setHeroButtonSize(config.buttonSize);
+            setHeroButtonColor(config.buttonColor);
+            setHeroButtonTextColor(config.buttonTextColor);
+            setShowHeroButton(config.showButton);
+            
+            setHeroTemplate(config.layoutTemplate);
+            setIsHeroCustomizerModalOpen(false);
+            setTimeout(() => {
+              saveSettingsSilent();
+            }, 100);
+          }}
+          sectionName="Hero Section"
+          primaryColor={primaryColor}
+        />
+        )}
     </div>
   );
 }

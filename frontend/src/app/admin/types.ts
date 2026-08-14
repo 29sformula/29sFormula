@@ -37,3 +37,34 @@ export interface Product {
   options?: { size: string; quantity: number; price: number; makingPrice?: number; category: string[] }[];
   variants?: { size: string; quantity: number; price: number; makingPrice?: number; category: string[] }[];
 }
+
+export interface LayoutCustomizationConfig {
+  titleText: string;
+  titleFontType: string;
+  titleFontColor: string;
+  titleFontSize: string;
+  titleFontAlignment: string;
+  titleFontWeight: string;
+  showTitle: boolean;
+  
+  manifestoText: string;
+  manifestoFontType: string;
+  manifestoFontColor: string;
+  manifestoFontSize: string;
+  manifestoFontAlignment: string;
+  manifestoFontWeight: string;
+  showManifesto: boolean;
+  
+  buttonText: string;
+  buttonStyle: string;
+  buttonSize: string;
+  buttonColor: string;
+  buttonTextColor: string;
+  showButton: boolean;
+  
+  layoutTemplate: string;
+  bgType?: string;
+  bgColor?: string;
+  bgImage?: string;
+  bgVideo?: string;
+}
