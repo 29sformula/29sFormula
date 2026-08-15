@@ -258,10 +258,13 @@ router.post("/api/orders", async (req, res) => {
       let actualPrice = product.price || 0;
       let actualMakingPrice = product.makingPrice || 0;
       const variant = await ProductVariant.findOne({ productId: item.productId, size: item.size });
+      let availableStock = product.quantity || 0;
       if (variant && variant.price) {
         actualPrice = variant.price;
         actualMakingPrice = variant.makingPrice || 0;
+        availableStock = variant.quantity || 0;
       } else {
+
         // Fallback to embedded options if variants aren't extracted
         const embeddedOpt = product.options?.find(o => o.size === item.size);
         if (embeddedOpt && embeddedOpt.price) {
@@ -270,6 +273,9 @@ router.post("/api/orders", async (req, res) => {
         }
       }
 
+      if (item.quantity > availableStock) {
+        return res.status(400).json({ error: `Not enough stock for ${product.name} (${item.size}). Only ${availableStock} available.` });
+      }
       resolvedCartItems.push({
         productId: item.productId,
         variantId: variant ? variant._id : null,
@@ -736,6 +742,23 @@ router.post("/api/orders/razorpay-init", async (req, res) => {
   try {
     const { totalAmount, cartItems } = req.body;
 
+    // Validate inventory before creating payment session
+    for (const item of cartItems) {
+      const product = await Product.findById(item.productId);
+      if (!product) continue;
+      
+      let availableStock = product.quantity || 0;
+      const variant = await ProductVariant.findOne({ productId: item.productId, size: item.size });
+      if (variant) {
+        availableStock = variant.quantity || 0;
+      }
+      
+      if (item.quantity > availableStock) {
+        return res.status(400).json({ error: `Not enough stock for ${product.name} (${item.size}). Only ${availableStock} available.` });
+      }
+    }
+
+
     if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
       return res.status(500).json({ error: "Razorpay credentials not configured" });
     }
@@ -827,19 +850,21 @@ router.post("/api/orders/razorpay-verify", async (req, res) => {
 
     // Deduct stock
     for (const item of newOrder.cartItems) {
-      const product = await Product.findById(item.productId);
-      if (product && product.variants) {
-        const variant = product.variants.find((v) => v.size === item.size);
-        if (variant && variant.quantity >= item.quantity) {
-          variant.quantity -= item.quantity;
-        }
-        await product.save();
+      if (item.productId) {
+        await ProductVariant.updateOne(
+          { productId: item.productId, size: item.size },
+          { $inc: { quantity: -item.quantity } }
+        );
+        await Product.updateOne(
+          { _id: item.productId },
+          { $inc: { quantity: -item.quantity } }
+        );
       }
     }
     invalidateProductsCache();
 
     // Send confirmation email
-    sendOrderConfirmationEmail(newOrder, newOrder.customerEmail, newOrder.customerName);
+    sendOrderConfirmationEmail(newOrder, orderPayload.customerEmail, orderPayload.customerName);
 
     res.json({ success: true, orderId });
   } catch (error) {

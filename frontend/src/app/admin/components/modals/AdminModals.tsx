@@ -1275,7 +1275,7 @@ export default function AdminModals(props: any) {
                 </div>
               </div>
 
-              {selectedOrder.paymentMethod !== "COD" && (
+              {selectedOrder.paymentMethod !== "COD" && ["Return Requested", "Returned", "Return Approved", "Return Rejected", "Cancelled"].includes(selectedOrder.status) && (
                 <div>
                   <h3 style={{ fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 8px 0", color: "#888" }}>Refund Status</h3>
                   <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
@@ -1309,7 +1309,12 @@ export default function AdminModals(props: any) {
                   {selectedOrder.cartItems.map((item: any, idx: number) => (
                     <div key={idx} style={{ display: "flex", alignItems: "center", gap: "15px", borderBottom: "1px solid #f3f4f6", paddingBottom: "10px" }}>
                       {item.image && (
-                        <img src={item.image} alt={item.name} style={{ width: "45px", height: "45px", objectFit: "cover", borderRadius: "4px", border: "1px solid #eaeaea" }} />
+                        <img 
+                          src={item.image} 
+                          alt={item.name} 
+                          style={{ width: "45px", height: "45px", objectFit: "cover", borderRadius: "4px", border: "1px solid #eaeaea" }} 
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        />
                       )}
                       <div style={{ flex: 1 }}>
                         <h4 style={{ margin: 0, fontSize: "0.85rem", fontWeight: 600, color: "#111" }}>{item.name}</h4>

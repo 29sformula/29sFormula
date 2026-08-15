@@ -95,6 +95,7 @@ export default function LoginPage() {
 
       setSuccess(true);
       localStorage.setItem("userSession", JSON.stringify(data));
+      localStorage.setItem("lastActivityTime", Date.now().toString());
 
       setTimeout(() => {
         window.location.href = "/";
@@ -145,6 +146,7 @@ export default function LoginPage() {
 
       setSuccess(true);
       localStorage.setItem("userSession", JSON.stringify(data));
+      localStorage.setItem("lastActivityTime", Date.now().toString());
 
       setTimeout(() => {
         window.location.href = "/";

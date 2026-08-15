@@ -136,7 +136,7 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
     });
   };
 
-  const handleApplyCoupon = () => {
+  const handleApplyCoupon = async () => {
     setCouponError(null);
     setCouponSuccess(null);
     
@@ -147,23 +147,30 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
     
     const code = couponCode.trim().toUpperCase();
     
-    if (code === "WELCOME10") {
-      const discountValue = Math.floor(subtotalAmount * 0.1);
-      setDiscount(discountValue);
-      setAppliedCouponCode(code);
-      setCouponSuccess(`Coupon applied! You saved ₹${discountValue.toLocaleString("en-IN")}.00`);
-      triggerConfetti();
-    } else if (code === "FLAT100") {
-      if (subtotalAmount >= 500) {
-        setDiscount(100);
+    try {
+      const res = await fetch(`http://127.0.0.1:5001/api/discounts/validate?code=${code}&subtotal=${subtotalAmount}`, { cache: "no-store" });
+      if (res.ok) {
+        const discountObj = await res.json();
+        
+        let discountValue = 0;
+        if (discountObj.type === "percentage") {
+          discountValue = Math.floor(subtotalAmount * (discountObj.value / 100));
+        } else {
+          discountValue = discountObj.value;
+        }
+        
+        setDiscount(discountValue);
         setAppliedCouponCode(code);
-        setCouponSuccess("Coupon applied! You saved ₹100.00");
+        setCouponSuccess(`Coupon applied! You saved ₹${discountValue.toLocaleString("en-IN")}.00`);
         triggerConfetti();
       } else {
-        setCouponError("Order amount must be greater than ₹500 for this coupon.");
+        const errData = await res.json().catch(() => null);
+        setCouponError(errData?.error || "Invalid discount coupon code.");
+        setDiscount(0);
+        setAppliedCouponCode(null);
       }
-    } else {
-      setCouponError("Invalid or expired coupon code.");
+    } catch (err) {
+      setCouponError("Could not validate coupon.");
       setDiscount(0);
       setAppliedCouponCode(null);
     }
@@ -321,7 +328,10 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
           body: JSON.stringify({ totalAmount, cartItems: orderPayload.cartItems })
         });
         
-        if (!initRes.ok) throw new Error("Failed to initialize payment");
+        if (!initRes.ok) {
+          const errData = await initRes.json().catch(() => null);
+          throw new Error(errData?.error || "Failed to initialize payment");
+        }
         const initData = await initRes.json();
         if (!initData.order_id) throw new Error("Invalid payment initialization");
 
@@ -409,7 +419,10 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
           body: JSON.stringify(orderPayload)
         });
 
-        if (!res.ok) throw new Error("Failed to place order. Please try again.");
+        if (!res.ok) {
+          const errData = await res.json().catch(() => null);
+          throw new Error(errData?.error || "Failed to place order. Please try again.");
+        }
 
         const data = await res.json();
         if (data && data.orderId) {

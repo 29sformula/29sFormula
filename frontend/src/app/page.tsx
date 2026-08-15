@@ -131,8 +131,36 @@ export default function Home() {
   const [heroManifestoFontAlignment, setHeroManifestoFontAlignment] = useState<string>("left");
   const [heroManifestoFontWeight, setHeroManifestoFontWeight] = useState<string>("500");
 
+
+  const [videoTitle, setVideoTitle] = useState<string>("NEW ARRIVALS");
+  const [videoSubtitle, setVideoSubtitle] = useState<string>("Drop's live. Smells divine. Feels better.");
+  const [videoUrl, setVideoUrl] = useState<string>("");
+  const [videoFallbackColor, setVideoFallbackColor] = useState<string>("#121212");
+  const [videoTitleFontType, setVideoTitleFontType] = useState<string>("Outfit");
+  const [videoTitleFontColor, setVideoTitleFontColor] = useState<string>("#ffffff");
+  const [videoTitleFontSize, setVideoTitleFontSize] = useState<string>("3.5rem");
+  const [videoTitleFontAlignment, setVideoTitleFontAlignment] = useState<string>("center");
+  const [videoTitleFontWeight, setVideoTitleFontWeight] = useState<string>("700");
+  const [videoSubtitleFontType, setVideoSubtitleFontType] = useState<string>("Outfit");
+  const [videoSubtitleFontColor, setVideoSubtitleFontColor] = useState<string>("#ffffff");
+  const [videoSubtitleFontSize, setVideoSubtitleFontSize] = useState<string>("1.1rem");
+  const [videoSubtitleFontAlignment, setVideoSubtitleFontAlignment] = useState<string>("center");
+  const [videoSubtitleFontWeight, setVideoSubtitleFontWeight] = useState<string>("500");
+  const [videoTemplate, setVideoTemplate] = useState<string>("center");
+  const [showVideoTitle, setShowVideoTitle] = useState<boolean>(true);
+  const [showVideoSubtitle, setShowVideoSubtitle] = useState<boolean>(true);
+  const [showVideoButton, setShowVideoButton] = useState<boolean>(true);
+  const [videoButtonText, setVideoButtonText] = useState<string>("Shop Now");
+  const [videoButtonStyle, setVideoButtonStyle] = useState<string>("outline");
+  const [videoButtonSize, setVideoButtonSize] = useState<string>("md");
+  const [videoButtonColor, setVideoButtonColor] = useState<string>("#ffffff");
+  const [videoButtonTextColor, setVideoButtonTextColor] = useState<string>("#121212");
+  const [videoBgType, setVideoBgType] = useState<string>("video");
+  const [videoBgColor, setVideoBgColor] = useState<string>("#121212");
+  const [videoBgImage, setVideoBgImage] = useState<string>("");
+
   useEffect(() => {
-    [heroTitleFontType, heroManifestoFontType].forEach(font => {
+    [heroTitleFontType, heroManifestoFontType, videoTitleFontType, videoSubtitleFontType].forEach(font => {
       if (!font) return;
       const systemFonts = ["SF Pro", "New York", "SF Mono", "Segoe UI", "Helvetica Neue", "Georgia", "Garamond"];
       if (systemFonts.includes(font)) return;
@@ -144,11 +172,7 @@ export default function Home() {
       link.href = `https://fonts.googleapis.com/css2?family=${font.replace(/\s+/g, "+")}:wght@300;400;500;600;700;800;900&display=swap`;
       document.head.appendChild(link);
     });
-  }, [heroTitleFontType, heroManifestoFontType]);
-  const [videoTitle, setVideoTitle] = useState<string>("NEW ARRIVALS");
-  const [videoSubtitle, setVideoSubtitle] = useState<string>("Drop's live. Smells divine. Feels better.");
-  const [videoUrl, setVideoUrl] = useState<string>("");
-  const [videoFallbackColor, setVideoFallbackColor] = useState<string>("#121212");
+  }, [heroTitleFontType, heroManifestoFontType, videoTitleFontType, videoSubtitleFontType]);
   const [lifestyleText, setLifestyleText] = useState<string>("Intense notes, Raw elements. This is 29sFORMULA.");
   const [lifestyleImage, setLifestyleImage] = useState<string>("https://images.unsplash.com/photo-1615655096345-61a54750068d?auto=format&fit=crop&w=1800&q=80");
   const [primaryColor, setPrimaryColor] = useState<string>(
@@ -162,6 +186,12 @@ export default function Home() {
   // Cart Drawer State
   const [showCartDrawer, setShowCartDrawer] = useState<boolean>(false);
   const [cartItems, setCartItems] = useState<any[]>([]);
+  const [cartError, setCartError] = useState<string | null>(null);
+
+  const showCartError = (msg: string) => {
+    setCartError(msg);
+    setTimeout(() => setCartError(null), 3000);
+  };
   const [isDiscountExpanded, setIsDiscountExpanded] = useState<boolean>(false);
   const [isCartClosing, setIsCartClosing] = useState<boolean>(false);
 
@@ -231,13 +261,28 @@ export default function Home() {
         } catch (e) {}
       }
       
+      const maxStock = ((product as any).variants && (product as any).variants.find((v: any) => v.size === size)?.quantity) ?? product.quantity;
+
       const existingIdx = itemsList.findIndex((item: any) => item._id === product._id && item.size === size);
       if (existingIdx > -1) {
-        itemsList[existingIdx].quantity += 1;
+        if (itemsList[existingIdx].quantity + 1 > maxStock) {
+          showCartError(`Only ${maxStock} units of ${product.name} (${size}) are available in stock.`);
+          itemsList[existingIdx].quantity = maxStock;
+          setShowCartDrawer(true);
+        } else {
+          itemsList[existingIdx].quantity += 1;
+        }
       } else {
         const variantPrice = (product.options && product.options.find((o: any) => o.size === size)?.price) 
                           || (product.variants && product.variants.find((v: any) => v.size === size)?.price)
                           || product.price;
+
+        let qtyToPush = 1;
+        if (1 > maxStock) {
+          showCartError(`Only ${maxStock} units of ${product.name} (${size}) are available in stock.`);
+          qtyToPush = maxStock;
+          setShowCartDrawer(true);
+        }
 
         itemsList.push({
           _id: product._id,
@@ -245,7 +290,8 @@ export default function Home() {
           price: variantPrice,
           imageFront: product.imageFront,
           size: size,
-          quantity: 1
+          quantity: qtyToPush,
+          maxStock: maxStock
         });
       }
       localStorage.setItem("cart", JSON.stringify(itemsList));
@@ -260,6 +306,17 @@ export default function Home() {
       setCartItems(updated);
       localStorage.setItem("cart", JSON.stringify(updated));
     } else {
+      const item = cartItems[index];
+      if (item.maxStock !== undefined && newQty > item.maxStock) {
+        showCartError(`Only ${item.maxStock} units of ${item.name} (${item.size}) are available in stock.`);
+        const updated = [...cartItems];
+        updated[index].quantity = item.maxStock;
+        setCartItems(updated);
+        localStorage.setItem("cart", JSON.stringify(updated));
+        window.dispatchEvent(new Event("cartUpdated"));
+        setShowCartDrawer(true);
+        return;
+      }
       const updated = [...cartItems];
       updated[index].quantity = newQty;
       setCartItems(updated);
@@ -444,6 +501,28 @@ export default function Home() {
               setVideoFallbackColor(data.videoFallbackColor);
               localStorage.setItem("settings_videoFallbackColor", data.videoFallbackColor);
             }
+            if (data.videoTitleFontType !== undefined) { setVideoTitleFontType(data.videoTitleFontType); localStorage.setItem("settings_videoTitleFontType", data.videoTitleFontType); }
+            if (data.videoTitleFontColor !== undefined) { setVideoTitleFontColor(data.videoTitleFontColor); localStorage.setItem("settings_videoTitleFontColor", data.videoTitleFontColor); }
+            if (data.videoTitleFontSize !== undefined) { setVideoTitleFontSize(data.videoTitleFontSize); localStorage.setItem("settings_videoTitleFontSize", data.videoTitleFontSize); }
+            if (data.videoTitleFontAlignment !== undefined) { setVideoTitleFontAlignment(data.videoTitleFontAlignment); localStorage.setItem("settings_videoTitleFontAlignment", data.videoTitleFontAlignment); }
+            if (data.videoTitleFontWeight !== undefined) { setVideoTitleFontWeight(data.videoTitleFontWeight); localStorage.setItem("settings_videoTitleFontWeight", data.videoTitleFontWeight); }
+            if (data.videoSubtitleFontType !== undefined) { setVideoSubtitleFontType(data.videoSubtitleFontType); localStorage.setItem("settings_videoSubtitleFontType", data.videoSubtitleFontType); }
+            if (data.videoSubtitleFontColor !== undefined) { setVideoSubtitleFontColor(data.videoSubtitleFontColor); localStorage.setItem("settings_videoSubtitleFontColor", data.videoSubtitleFontColor); }
+            if (data.videoSubtitleFontSize !== undefined) { setVideoSubtitleFontSize(data.videoSubtitleFontSize); localStorage.setItem("settings_videoSubtitleFontSize", data.videoSubtitleFontSize); }
+            if (data.videoSubtitleFontAlignment !== undefined) { setVideoSubtitleFontAlignment(data.videoSubtitleFontAlignment); localStorage.setItem("settings_videoSubtitleFontAlignment", data.videoSubtitleFontAlignment); }
+            if (data.videoSubtitleFontWeight !== undefined) { setVideoSubtitleFontWeight(data.videoSubtitleFontWeight); localStorage.setItem("settings_videoSubtitleFontWeight", data.videoSubtitleFontWeight); }
+            if (data.videoTemplate !== undefined) { setVideoTemplate(data.videoTemplate); localStorage.setItem("settings_videoTemplate", data.videoTemplate); }
+            if (data.showVideoTitle !== undefined) { setShowVideoTitle(data.showVideoTitle); localStorage.setItem("settings_showVideoTitle", String(data.showVideoTitle)); }
+            if (data.showVideoSubtitle !== undefined) { setShowVideoSubtitle(data.showVideoSubtitle); localStorage.setItem("settings_showVideoSubtitle", String(data.showVideoSubtitle)); }
+            if (data.showVideoButton !== undefined) { setShowVideoButton(data.showVideoButton); localStorage.setItem("settings_showVideoButton", String(data.showVideoButton)); }
+            if (data.videoButtonText !== undefined) { setVideoButtonText(data.videoButtonText); localStorage.setItem("settings_videoButtonText", data.videoButtonText); }
+            if (data.videoButtonStyle !== undefined) { setVideoButtonStyle(data.videoButtonStyle); localStorage.setItem("settings_videoButtonStyle", data.videoButtonStyle); }
+            if (data.videoButtonSize !== undefined) { setVideoButtonSize(data.videoButtonSize); localStorage.setItem("settings_videoButtonSize", data.videoButtonSize); }
+            if (data.videoButtonColor !== undefined) { setVideoButtonColor(data.videoButtonColor); localStorage.setItem("settings_videoButtonColor", data.videoButtonColor); }
+            if (data.videoButtonTextColor !== undefined) { setVideoButtonTextColor(data.videoButtonTextColor); localStorage.setItem("settings_videoButtonTextColor", data.videoButtonTextColor); }
+            if (data.videoBgType !== undefined) { setVideoBgType(data.videoBgType); localStorage.setItem("settings_videoBgType", data.videoBgType); }
+            if (data.videoBgColor !== undefined) { setVideoBgColor(data.videoBgColor); localStorage.setItem("settings_videoBgColor", data.videoBgColor); }
+            if (data.videoBgImage !== undefined) { setVideoBgImage(data.videoBgImage); localStorage.setItem("settings_videoBgImage", data.videoBgImage); }
             if (data.lifestyleText !== undefined) {
               setLifestyleText(data.lifestyleText);
               localStorage.setItem("settings_lifestyleText", data.lifestyleText);
@@ -619,8 +698,21 @@ export default function Home() {
 
       {/* 5. New Arrivals Video Section */}
       {showVideo && (
-        <section className={styles.videoSection} style={{ backgroundColor: videoFallbackColor }}>
-          {videoUrl && (
+        <section
+          className={styles.videoSection}
+          style={{
+            backgroundColor: videoBgType === "color" ? (videoBgColor || videoFallbackColor) : videoFallbackColor,
+            backgroundImage: videoBgType === "image" && videoBgImage ? `url(${videoBgImage})` : "none",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            display: "flex",
+            alignItems: videoTemplate === "bottom" ? "flex-end" : videoTemplate === "top" ? "flex-start" : "center",
+            justifyContent: "center",
+            position: "relative",
+            minHeight: "100vh"
+          }}
+        >
+          {videoBgType === "video" && videoUrl && (
             <video 
               ref={videoRef}
               key={videoUrl}
@@ -637,13 +729,49 @@ export default function Home() {
               Your browser does not support the video tag.
             </video>
           )}
-          <div className={styles.videoOverlay} />
-          <div className={styles.videoContent}>
-            <h2 className={styles.videoTitle}>{videoTitle}</h2>
-            <p className={styles.videoSubtitle}>{videoSubtitle}</p>
-            <Link href="/shop">
-              <button className={styles.videoBtn}>Shop Now</button>
-            </Link>
+          
+          {(videoBgType === "video" || videoBgType === "image") && <div className={styles.videoOverlay} style={{ backgroundColor: "rgba(0,0,0,0.4)", position: "absolute", inset: 0 }} />}
+          
+          <div className={styles.videoContent} style={{ position: "relative", zIndex: 10, textAlign: videoTitleFontAlignment as any, padding: "20px" }}>
+            {showVideoTitle && (
+              <h2 style={{
+                fontFamily: videoTitleFontType,
+                color: videoTitleFontColor,
+                fontSize: videoTitleFontSize,
+                fontWeight: videoTitleFontWeight,
+                margin: "0 0 10px 0"
+              }}>
+                {videoTitle}
+              </h2>
+            )}
+            {showVideoSubtitle && (
+              <p style={{
+                fontFamily: videoSubtitleFontType,
+                color: videoSubtitleFontColor,
+                fontSize: videoSubtitleFontSize,
+                fontWeight: videoSubtitleFontWeight,
+                margin: "0 0 20px 0"
+              }}>
+                {videoSubtitle}
+              </p>
+            )}
+            {showVideoButton && (
+              <Link href="/shop">
+                <button style={{
+                  padding: videoButtonSize === "sm" ? "8px 16px" : videoButtonSize === "lg" ? "16px 32px" : "12px 24px",
+                  fontSize: videoButtonSize === "sm" ? "0.9rem" : videoButtonSize === "lg" ? "1.2rem" : "1rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  borderRadius: "4px",
+                  transition: "all 0.3s ease",
+                  backgroundColor: videoButtonStyle === "solid" ? videoButtonColor : "transparent",
+                  color: videoButtonStyle === "solid" ? videoButtonTextColor : videoButtonColor,
+                  border: `2px solid ${videoButtonColor}`
+                }}>
+                  {videoButtonText}
+                </button>
+              </Link>
+            )}
           </div>
         </section>
       )}
@@ -1095,6 +1223,14 @@ export default function Home() {
                 ✕
               </button>
             </div>
+            {cartError && (
+              <div style={{ backgroundColor: '#fef2f2', borderLeft: '3px solid #ef4444', color: '#dc2626', padding: '12px', fontSize: '0.85rem', borderRadius: '4px', margin: '15px 20px 0 20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" style={{ width: '18px', height: '18px' }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span>{cartError}</span>
+              </div>
+            )}
 
             {cartItems.length > 0 ? (
               <div className={styles.cartDrawerBody}>

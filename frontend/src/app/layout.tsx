@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
+import SessionTracker from "@/components/SessionTracker";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -40,6 +41,7 @@ export default function RootLayout({
       </head>
       <body>
         <SmoothScroll>
+          <SessionTracker />
           {children}
         </SmoothScroll>
       </body>

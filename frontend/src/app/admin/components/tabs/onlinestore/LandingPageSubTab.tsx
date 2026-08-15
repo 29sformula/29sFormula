@@ -18,6 +18,7 @@ export default function LandingPageSubTab({
   setActiveCustomizerSection,
   activeCustomizerSection,
   setIsHeroCustomizerModalOpen,
+  setIsVideoCustomizerModalOpen,
   setHeroBackup,
   setDrafts,
   heroTitleFontType,
@@ -59,6 +60,12 @@ export default function LandingPageSubTab({
   setVideoSubtitle,
   videoUrl,
   setVideoUrl,
+  videoBgType,
+  setVideoBgType,
+  videoBgColor,
+  setVideoBgColor,
+  videoBgImage,
+  setVideoBgImage,
   uploadingVideo,
   videoFallbackColor,
   handleVideoUpload,
@@ -471,6 +478,34 @@ export default function LandingPageSubTab({
 
                         {activeCustomizerSection === "video" && (
                           <div className={styles.accordionContent}>
+                            <div style={{ marginBottom: "20px", display: "flex", justifyContent: "flex-end" }}>
+                              <button
+                                type="button"
+                                onClick={() => setIsVideoCustomizerModalOpen(true)}
+                                style={{
+                                  backgroundColor: "#3b82f6",
+                                  border: "none",
+                                  cursor: "pointer",
+                                  color: "#ffffff",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "6px",
+                                  fontSize: "0.85rem",
+                                  fontWeight: 600,
+                                  padding: "8px 12px",
+                                  borderRadius: "6px",
+                                  boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                                  transition: "background 0.2s"
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#2563eb"}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#3b82f6"}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "16px", height: "16px" }}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.83 21.75a.75.75 0 0 1-.322.206l-4 1a.75.75 0 0 1-.905-.905l1-4a.75.75 0 0 1 .206-.322l15.118-15.118L16.863 4.487Zm0 0L19.5 7.125" />
+                                </svg>
+                                <span>Advanced Customizer</span>
+                              </button>
+                            </div>
                             <div className={styles.toggleRow} style={{ marginBottom: "15px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                               <span className={styles.toggleLabel} style={{ fontWeight: 600, fontSize: "0.85rem", color: "#374151" }}>Display Video Section on Storefront</span>
                               <label className={styles.switch}>
@@ -506,100 +541,138 @@ export default function LandingPageSubTab({
                                 />
                               </div>
                             </div>
-                            <div className={styles.inputGroup}>
-                              <label className={styles.inputLabel}>MP4 Background Video</label>
-                              <div style={{ display: "flex", flexDirection: "column", gap: "10px", width: "100%", marginTop: "5px" }}>
-                                {videoUrl && (
-                                  <div style={{ display: "flex", alignItems: "center", gap: "10px", background: "#f3f4f6", padding: "10px 12px", borderRadius: "6px" }}>
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="#374151" style={{ width: "18px", height: "18px" }}>
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 20.25h12m-7.5-3v3m3-3v3m-10.125-3h14.25c.621 0 1.125-.504 1.125-1.125V4.875c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125Z" />
-                                    </svg>
-                                    <span style={{ fontSize: "0.85rem", color: "#374151", fontWeight: 600, flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                      Background Video Configured
-                                    </span>
+
+
+                            {/* Video Background Customization */}
+                            <div style={{
+                              marginTop: "20px",
+                              paddingTop: "20px",
+                              borderTop: "1px solid #e5e7eb",
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "12px"
+                            }}>
+
+                              <label className={styles.inputLabel} style={{ fontWeight: 700 }}>Video Background Customization</label>
+
+                              {/* Background Type Selection */}
+                              <div style={{ display: "flex", gap: "8px" }}>
+                                {["color", "image", "video"].map((type) => {
+                                  const label = type === "color" ? "Solid Color" : type === "image" ? "Image Background" : "Video Background";
+                                  const isActive = videoBgType === type;
+                                  return (
                                     <button
+                                      key={type}
                                       type="button"
-                                      onClick={() => setVideoUrl("")}
-                                      style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", fontSize: "0.85rem", fontWeight: 700 }}
-                                      disabled={!showVideo || uploadingVideo}
+                                      onClick={() => setVideoBgType(type)}
+                                      style={{
+                                        flex: 1,
+                                        padding: "8px 12px",
+                                        borderRadius: "6px",
+                                        border: "1px solid #d1d5db",
+                                        backgroundColor: isActive ? "#111827" : "#ffffff",
+                                        color: isActive ? "#ffffff" : "#374151",
+                                        fontSize: "0.8rem",
+                                        fontWeight: 600,
+                                        cursor: "pointer",
+                                        transition: "background 0.2s, color 0.2s"
+                                      }}
                                     >
-                                      Remove
+                                      {label}
                                     </button>
-                                  </div>
-                                )}
+                                  );
+                                })}
+                              </div>
 
-                                {!videoUrl && (
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: "10px",
-                                      background: `${videoFallbackColor}15`,
-                                      border: `1px solid ${videoFallbackColor}40`,
-                                      padding: "12px 14px",
-                                      borderRadius: "8px",
-                                      marginBottom: "5px"
-                                    }}
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke={videoFallbackColor} style={{ width: "20px", height: "20px", flexShrink: 0 }}>
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 1 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
-                                    </svg>
-                                    <span style={{ fontSize: "0.82rem", color: "#374151", fontWeight: 500 }}>
-                                      No background video configured. Storefront will display a solid background matching your chosen fallback color (<strong>{videoFallbackColor}</strong>).
-                                    </span>
-                                  </div>
-                                )}
-
-                                <div style={{ display: "flex", gap: "10px", alignItems: "center", width: "100%" }}>
-                                  <label
-                                    className={styles.fileUploadBtn}
-                                    style={{
-                                      flex: 1,
-                                      margin: 0,
-                                      cursor: (!showVideo || uploadingVideo) ? "not-allowed" : "pointer",
-                                      opacity: (!showVideo || uploadingVideo) ? 0.7 : 1
-                                    }}
-                                  >
-                                    <input
-                                      type="file"
-                                      accept="video/*"
-                                      style={{ display: "none" }}
-                                      onChange={handleVideoUpload}
-                                      disabled={!showVideo || uploadingVideo}
-                                    />
-                                    {uploadingVideo ? `Uploading... ${videoProgress !== null ? `${videoProgress}%` : ""}` : "Choose Video File"}
-                                  </label>
-                                </div>
-
-                                {videoProgress !== null && (
-                                  <div style={{ width: "100%", background: "#e5e7eb", borderRadius: "4px", height: "8px", overflow: "hidden", marginTop: "4px" }}>
-                                    <div style={{ width: `${videoProgress}%`, background: "#000000", height: "100%", transition: "width 0.1s ease" }} />
-                                  </div>
-                                )}
-
-                                {/* Fallback color picker for when no video is loaded */}
-                                <div className={styles.inputGroup} style={{ marginTop: "15px" }}>
-                                  <label className={styles.inputLabel}>Fallback Background Color</label>
-                                  <div style={{ display: "flex", gap: "15px", alignItems: "center", marginTop: "8px" }}>
+                              {/* Conditional Inputs */}
+                              {videoBgType === "color" && (
+                                <div className={styles.inputGroup}>
+                                  <label className={styles.inputLabel}>Background Color</label>
+                                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                                     <input
                                       type="color"
-                                      value={videoFallbackColor}
-                                      onChange={(e: any) => setVideoFallbackColor(e.target.value)}
-                                      style={{ width: "60px", height: "40px", border: "1px solid #d1d5db", borderRadius: "6px", cursor: "pointer", padding: "0", background: "transparent" }}
-                                      disabled={!showVideo}
+                                      value={videoBgColor}
+                                      onChange={(e: any) => setVideoBgColor(e.target.value)}
+                                      style={{
+                                        border: "1px solid #d1d5db",
+                                        borderRadius: "6px",
+                                        width: "40px",
+                                        height: "40px",
+                                        padding: 0,
+                                        cursor: "pointer",
+                                        backgroundColor: "transparent"
+                                      }}
                                     />
                                     <input
                                       type="text"
-                                      value={videoFallbackColor}
-                                      onChange={(e: any) => setVideoFallbackColor(e.target.value)}
-                                      placeholder="#57bc74"
+                                      value={videoBgColor}
+                                      onChange={(e: any) => setVideoBgColor(e.target.value)}
+                                      placeholder="#121212"
                                       className={styles.textInput}
-                                      style={{ flex: 1 }}
-                                      disabled={!showVideo}
+                                      style={{ flex: 1, fontFamily: "monospace" }}
                                     />
                                   </div>
                                 </div>
-                              </div>
+                              )}
+
+                              {videoBgType === "image" && (
+                                <div className={styles.inputGroup}>
+                                  <label className={styles.inputLabel}>Background Image URL</label>
+                                  <div style={{ display: "flex", gap: "8px" }}>
+                                    <input
+                                      type="text"
+                                      value={videoBgImage}
+                                      onChange={(e: any) => setVideoBgImage(e.target.value)}
+                                      placeholder="https://example.com/background.jpg"
+                                      className={styles.textInput}
+                                      style={{ flex: 1 }}
+                                    />
+                                    <label style={{
+                                      padding: "10px 14px",
+                                      backgroundColor: "#ffffff",
+                                      border: "1px solid #d1d5db",
+                                      borderRadius: "8px",
+                                      fontSize: "0.85rem",
+                                      fontWeight: 600,
+                                      cursor: "pointer",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "6px"
+                                    }}>
+                                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "16px", height: "16px" }}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                                      </svg>
+                                      <span>Upload</span>
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        style={{ display: "none" }}
+                                        onChange={async (e) => {
+                                          if (e.target.files && e.target.files[0]) {
+                                            const file = e.target.files[0];
+                                            const formData = new FormData();
+                                            formData.append("file", file);
+                                            try {
+                                              const res = await fetch("http://127.0.0.1:5001/api/upload", {
+                                                method: "POST",
+                                                body: formData
+                                              });
+                                              if (res.ok) {
+                                                const uploadResult = await res.json();
+                                                setVideoBgImage(uploadResult.url);
+                                              } else {
+                                                alert("Image upload failed");
+                                              }
+                                            } catch (err) {
+                                              console.error("Upload error:", err);
+                                            }
+                                          }
+                                        }}
+                                      />
+                                    </label>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                             <button
                               type="button"

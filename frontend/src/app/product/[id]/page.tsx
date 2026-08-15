@@ -48,6 +48,12 @@ export default function ProductDetailPage() {
   // Cart Drawer State
   const [showCartDrawer, setShowCartDrawer] = useState<boolean>(false);
   const [cartItems, setCartItems] = useState<any[]>([]);
+  const [cartError, setCartError] = useState<string | null>(null);
+
+  const showCartError = (msg: string) => {
+    setCartError(msg);
+    setTimeout(() => setCartError(null), 3000);
+  };
   const [isDiscountExpanded, setIsDiscountExpanded] = useState<boolean>(false);
   const [isCartClosing, setIsCartClosing] = useState<boolean>(false);
 
@@ -442,11 +448,26 @@ export default function ProductDetailPage() {
       
       const existingIdx = itemsList.findIndex((item: any) => item._id === product._id && item.size === size);
       if (existingIdx > -1) {
-        itemsList[existingIdx].quantity += qtyToAdd;
+        const maxS = itemsList[existingIdx].maxStock ?? ((product.variants && product.variants.find((v: any) => v.size === size)?.quantity) ?? product.quantity);
+        if (itemsList[existingIdx].quantity + qtyToAdd > maxS) {
+          showCartError(`Only ${maxS} units of ${product.name} (${size}) are available in stock.`);
+          itemsList[existingIdx].quantity = maxS;
+          setShowCartDrawer(true);
+        } else {
+          itemsList[existingIdx].quantity += qtyToAdd;
+        }
       } else {
         const variantPrice = (product.options && product.options.find((o: any) => o.size === size)?.price) 
                           || (product.variants && product.variants.find((v: any) => v.size === size)?.price)
                           || product.price;
+
+        const maxS = (product.variants && product.variants.find((v: any) => v.size === size)?.quantity) ?? product.quantity;
+        let qtyToPush = qtyToAdd;
+        if (qtyToAdd > maxS) {
+          showCartError(`Only ${maxS} units of ${product.name} (${size}) are available in stock.`);
+          qtyToPush = maxS;
+          setShowCartDrawer(true);
+        }
 
         itemsList.push({
           _id: product._id,
@@ -454,7 +475,8 @@ export default function ProductDetailPage() {
           price: variantPrice,
           imageFront: product.imageFront,
           size: size,
-          quantity: qtyToAdd
+          quantity: qtyToPush,
+          maxStock: maxS
         });
       }
       localStorage.setItem("cart", JSON.stringify(itemsList));
@@ -469,6 +491,17 @@ export default function ProductDetailPage() {
       setCartItems(updated);
       localStorage.setItem("cart", JSON.stringify(updated));
     } else {
+      const item = cartItems[index];
+      if (item.maxStock !== undefined && newQty > item.maxStock) {
+        showCartError(`Only ${item.maxStock} units of ${item.name} (${item.size}) are available in stock.`);
+        const updated = [...cartItems];
+        updated[index].quantity = item.maxStock;
+        setCartItems(updated);
+        localStorage.setItem("cart", JSON.stringify(updated));
+        window.dispatchEvent(new Event("cartUpdated"));
+        setShowCartDrawer(true);
+        return;
+      }
       const updated = [...cartItems];
       updated[index].quantity = newQty;
       setCartItems(updated);
@@ -578,7 +611,16 @@ export default function ProductDetailPage() {
   };
 
   const handleQuantityIncrease = () => {
-    setQuantity(prev => prev + 1);
+    if (!product) return;
+    const maxStock = ((product as any).variants && (product as any).variants.find((v: any) => v.size === selectedVolume)?.quantity) ?? (product as any).quantity;
+    setQuantity(prev => {
+      if (prev + 1 > maxStock) {
+        showCartError(`Only ${maxStock} units of ${product.name} (${selectedVolume}) are available in stock.`);
+        setShowCartDrawer(true);
+        return maxStock;
+      }
+      return prev + 1;
+    });
   };
 
   const handleQuantityDecrease = () => {
@@ -1164,6 +1206,14 @@ export default function ProductDetailPage() {
                 ✕
               </button>
             </div>
+            {cartError && (
+              <div style={{ backgroundColor: '#fef2f2', borderLeft: '3px solid #ef4444', color: '#dc2626', padding: '12px', fontSize: '0.85rem', borderRadius: '4px', margin: '15px 20px 0 20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" style={{ width: '18px', height: '18px' }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span>{cartError}</span>
+              </div>
+            )}
 
             {cartItems.length > 0 ? (
               <div className={styles.cartDrawerBody}>

@@ -237,6 +237,29 @@ export default function AdminDashboard() {
   const [showAnnouncement, setShowAnnouncement] = useState<boolean>(true);
   const [showVideo, setShowVideo] = useState<boolean>(true);
   const [videoFallbackColor, setVideoFallbackColor] = useState<string>("#121212");
+  const [isVideoCustomizerModalOpen, setIsVideoCustomizerModalOpen] = useState(false);
+  const [videoTitleFontType, setVideoTitleFontType] = useState<string>("Outfit");
+  const [videoTitleFontColor, setVideoTitleFontColor] = useState<string>("#ffffff");
+  const [videoTitleFontSize, setVideoTitleFontSize] = useState<string>("3.5rem");
+  const [videoTitleFontAlignment, setVideoTitleFontAlignment] = useState<string>("center");
+  const [videoTitleFontWeight, setVideoTitleFontWeight] = useState<string>("700");
+  const [videoSubtitleFontType, setVideoSubtitleFontType] = useState<string>("Outfit");
+  const [videoSubtitleFontColor, setVideoSubtitleFontColor] = useState<string>("#ffffff");
+  const [videoSubtitleFontSize, setVideoSubtitleFontSize] = useState<string>("1.1rem");
+  const [videoSubtitleFontAlignment, setVideoSubtitleFontAlignment] = useState<string>("center");
+  const [videoSubtitleFontWeight, setVideoSubtitleFontWeight] = useState<string>("500");
+  const [videoTemplate, setVideoTemplate] = useState<string>("center");
+  const [showVideoTitle, setShowVideoTitle] = useState<boolean>(true);
+  const [showVideoSubtitle, setShowVideoSubtitle] = useState<boolean>(true);
+  const [showVideoButton, setShowVideoButton] = useState<boolean>(true);
+  const [videoButtonText, setVideoButtonText] = useState<string>("Shop Now");
+  const [videoButtonStyle, setVideoButtonStyle] = useState<string>("outline");
+  const [videoButtonSize, setVideoButtonSize] = useState<string>("md");
+  const [videoButtonColor, setVideoButtonColor] = useState<string>("#ffffff");
+  const [videoButtonTextColor, setVideoButtonTextColor] = useState<string>("#121212");
+  const [videoBgType, setVideoBgType] = useState<string>("video");
+  const [videoBgColor, setVideoBgColor] = useState<string>("#121212");
+  const [videoBgImage, setVideoBgImage] = useState<string>("");
   const [showLifestyle, setShowLifestyle] = useState<boolean>(true);
   const [supportText, setSupportText] = useState<string>("For support inquiries, please contact us.");
   const [careersText, setCareersText] = useState<string>("Join our team! Check out our open positions.");
@@ -320,6 +343,28 @@ export default function AdminDashboard() {
     videoSubtitle !== (originalSettings.videoSubtitle || "") ||
     videoUrl !== (originalSettings.videoUrl || "") ||
     videoFallbackColor !== (originalSettings.videoFallbackColor || "#57bc74") ||
+    videoTitleFontType !== (originalSettings.videoTitleFontType || "Outfit") ||
+    videoTitleFontColor !== (originalSettings.videoTitleFontColor || "#ffffff") ||
+    videoTitleFontSize !== (originalSettings.videoTitleFontSize || "3.5rem") ||
+    videoTitleFontAlignment !== (originalSettings.videoTitleFontAlignment || "center") ||
+    videoTitleFontWeight !== (originalSettings.videoTitleFontWeight || "700") ||
+    videoSubtitleFontType !== (originalSettings.videoSubtitleFontType || "Outfit") ||
+    videoSubtitleFontColor !== (originalSettings.videoSubtitleFontColor || "#ffffff") ||
+    videoSubtitleFontSize !== (originalSettings.videoSubtitleFontSize || "1.1rem") ||
+    videoSubtitleFontAlignment !== (originalSettings.videoSubtitleFontAlignment || "center") ||
+    videoSubtitleFontWeight !== (originalSettings.videoSubtitleFontWeight || "500") ||
+    videoTemplate !== (originalSettings.videoTemplate || "center") ||
+    showVideoTitle !== (originalSettings.showVideoTitle ?? true) ||
+    showVideoSubtitle !== (originalSettings.showVideoSubtitle ?? true) ||
+    showVideoButton !== (originalSettings.showVideoButton ?? true) ||
+    videoButtonText !== (originalSettings.videoButtonText || "Shop Now") ||
+    videoButtonStyle !== (originalSettings.videoButtonStyle || "outline") ||
+    videoButtonSize !== (originalSettings.videoButtonSize || "md") ||
+    videoButtonColor !== (originalSettings.videoButtonColor || "#ffffff") ||
+    videoButtonTextColor !== (originalSettings.videoButtonTextColor || "#121212") ||
+    videoBgType !== (originalSettings.videoBgType || "video") ||
+    videoBgColor !== (originalSettings.videoBgColor || "#121212") ||
+    videoBgImage !== (originalSettings.videoBgImage || "") ||
     lifestyleText !== (originalSettings.lifestyleText || "") ||
     lifestyleImage !== (originalSettings.lifestyleImage || "") ||
     primaryColor !== (originalSettings.primaryColor || "#57bc74") ||
@@ -381,8 +426,29 @@ export default function AdminDashboard() {
     if (heroButtonTextColor !== (originalSettings.heroButtonTextColor || "#ffffff")) changes.push("Hero CTA Button text color");
     if (videoTitle !== (originalSettings.videoTitle || "")) changes.push("Video banner headline title");
     if (videoSubtitle !== (originalSettings.videoSubtitle || "")) changes.push("Video banner description");
-    if (videoUrl !== (originalSettings.videoUrl || "")) changes.push("Background MP4 video URL");
-    if (videoFallbackColor !== (originalSettings.videoFallbackColor || "#57bc74")) changes.push("Video Arrivals Fallback Background Color");
+    if (videoUrl !== (originalSettings.videoUrl || "")) changes.push("Background video URL");
+    if (videoTitleFontType !== (originalSettings.videoTitleFontType || "Outfit")) changes.push("Video title font type");
+    if (videoTitleFontColor !== (originalSettings.videoTitleFontColor || "#ffffff")) changes.push("Video title font color");
+    if (videoTitleFontSize !== (originalSettings.videoTitleFontSize || "3.5rem")) changes.push("Video title font size");
+    if (videoTitleFontAlignment !== (originalSettings.videoTitleFontAlignment || "center")) changes.push("Video title font alignment");
+    if (videoTitleFontWeight !== (originalSettings.videoTitleFontWeight || "700")) changes.push("Video title font weight");
+    if (videoSubtitleFontType !== (originalSettings.videoSubtitleFontType || "Outfit")) changes.push("Video subtitle font type");
+    if (videoSubtitleFontColor !== (originalSettings.videoSubtitleFontColor || "#ffffff")) changes.push("Video subtitle font color");
+    if (videoSubtitleFontSize !== (originalSettings.videoSubtitleFontSize || "1.1rem")) changes.push("Video subtitle font size");
+    if (videoSubtitleFontAlignment !== (originalSettings.videoSubtitleFontAlignment || "center")) changes.push("Video subtitle font alignment");
+    if (videoSubtitleFontWeight !== (originalSettings.videoSubtitleFontWeight || "500")) changes.push("Video subtitle font weight");
+    if (videoTemplate !== (originalSettings.videoTemplate || "center")) changes.push("Video layout template");
+    if (showVideoTitle !== (originalSettings.showVideoTitle ?? true)) changes.push("Video Title toggle");
+    if (showVideoSubtitle !== (originalSettings.showVideoSubtitle ?? true)) changes.push("Video Subtitle toggle");
+    if (showVideoButton !== (originalSettings.showVideoButton ?? true)) changes.push("Video Button toggle");
+    if (videoButtonText !== (originalSettings.videoButtonText || "Shop Now")) changes.push("Video CTA Button text");
+    if (videoButtonStyle !== (originalSettings.videoButtonStyle || "outline")) changes.push("Video CTA Button style");
+    if (videoButtonSize !== (originalSettings.videoButtonSize || "md")) changes.push("Video CTA Button size");
+    if (videoButtonColor !== (originalSettings.videoButtonColor || "#ffffff")) changes.push("Video CTA Button color");
+    if (videoButtonTextColor !== (originalSettings.videoButtonTextColor || "#121212")) changes.push("Video CTA Button text color");
+    if (videoBgType !== (originalSettings.videoBgType || "video")) changes.push("Video background type");
+    if (videoBgColor !== (originalSettings.videoBgColor || "#121212")) changes.push("Video custom background color");
+    if (videoBgImage !== (originalSettings.videoBgImage || "")) changes.push("Video background image URL");
     if (JSON.stringify(faqs) !== JSON.stringify(originalSettings.faqs || [])) changes.push("Frequently Asked Questions (FAQ) list");
     if (lifestyleText !== (originalSettings.lifestyleText || "")) changes.push("Lifestyle overlay text copy");
     if (lifestyleImage !== (originalSettings.lifestyleImage || "")) changes.push("Lifestyle banner background image");
@@ -530,6 +596,28 @@ export default function AdminDashboard() {
           videoSubtitle: data.videoSubtitle || "",
           videoUrl: data.videoUrl || "",
           videoFallbackColor: data.videoFallbackColor || "#57bc74",
+          videoTitleFontType: data.videoTitleFontType || "Outfit",
+          videoTitleFontColor: data.videoTitleFontColor || "#ffffff",
+          videoTitleFontSize: data.videoTitleFontSize || "3.5rem",
+          videoTitleFontAlignment: data.videoTitleFontAlignment || "center",
+          videoTitleFontWeight: data.videoTitleFontWeight || "700",
+          videoSubtitleFontType: data.videoSubtitleFontType || "Outfit",
+          videoSubtitleFontColor: data.videoSubtitleFontColor || "#ffffff",
+          videoSubtitleFontSize: data.videoSubtitleFontSize || "1.1rem",
+          videoSubtitleFontAlignment: data.videoSubtitleFontAlignment || "center",
+          videoSubtitleFontWeight: data.videoSubtitleFontWeight || "500",
+          videoTemplate: data.videoTemplate || "center",
+          showVideoTitle: data.showVideoTitle !== false,
+          showVideoSubtitle: data.showVideoSubtitle !== false,
+          showVideoButton: data.showVideoButton !== false,
+          videoButtonText: data.videoButtonText || "Shop Now",
+          videoButtonStyle: data.videoButtonStyle || "outline",
+          videoButtonSize: data.videoButtonSize || "md",
+          videoButtonColor: data.videoButtonColor || "#ffffff",
+          videoButtonTextColor: data.videoButtonTextColor || "#121212",
+          videoBgType: data.videoBgType || "video",
+          videoBgColor: data.videoBgColor || "#121212",
+          videoBgImage: data.videoBgImage || "",
           lifestyleText: data.lifestyleText || "",
           lifestyleImage: data.lifestyleImage || "https://images.unsplash.com/photo-1615655096345-61a54750068d?auto=format&fit=crop&w=1800&q=80",
           primaryColor: data.primaryColor || "#57bc74",
@@ -789,6 +877,28 @@ export default function AdminDashboard() {
           videoSubtitle,
           videoUrl,
           videoFallbackColor,
+          videoTitleFontType,
+          videoTitleFontColor,
+          videoTitleFontSize,
+          videoTitleFontAlignment,
+          videoTitleFontWeight,
+          videoSubtitleFontType,
+          videoSubtitleFontColor,
+          videoSubtitleFontSize,
+          videoSubtitleFontAlignment,
+          videoSubtitleFontWeight,
+          videoTemplate,
+          showVideoTitle,
+          showVideoSubtitle,
+          showVideoButton,
+          videoButtonText,
+          videoButtonStyle,
+          videoButtonSize,
+          videoButtonColor,
+          videoButtonTextColor,
+          videoBgType,
+          videoBgColor,
+          videoBgImage,
           lifestyleText,
           lifestyleImage,
           primaryColor,
@@ -853,6 +963,28 @@ export default function AdminDashboard() {
           videoSubtitle,
           videoUrl,
           videoFallbackColor,
+          videoTitleFontType,
+          videoTitleFontColor,
+          videoTitleFontSize,
+          videoTitleFontAlignment,
+          videoTitleFontWeight,
+          videoSubtitleFontType,
+          videoSubtitleFontColor,
+          videoSubtitleFontSize,
+          videoSubtitleFontAlignment,
+          videoSubtitleFontWeight,
+          videoTemplate,
+          showVideoTitle,
+          showVideoSubtitle,
+          showVideoButton,
+          videoButtonText,
+          videoButtonStyle,
+          videoButtonSize,
+          videoButtonColor,
+          videoButtonTextColor,
+          videoBgType,
+          videoBgColor,
+          videoBgImage,
           lifestyleText,
           lifestyleImage,
           primaryColor,
@@ -1003,6 +1135,28 @@ export default function AdminDashboard() {
           videoSubtitle,
           videoUrl,
           videoFallbackColor,
+          videoTitleFontType,
+          videoTitleFontColor,
+          videoTitleFontSize,
+          videoTitleFontAlignment,
+          videoTitleFontWeight,
+          videoSubtitleFontType,
+          videoSubtitleFontColor,
+          videoSubtitleFontSize,
+          videoSubtitleFontAlignment,
+          videoSubtitleFontWeight,
+          videoTemplate,
+          showVideoTitle,
+          showVideoSubtitle,
+          showVideoButton,
+          videoButtonText,
+          videoButtonStyle,
+          videoButtonSize,
+          videoButtonColor,
+          videoButtonTextColor,
+          videoBgType,
+          videoBgColor,
+          videoBgImage,
           lifestyleText,
           lifestyleImage,
           primaryColor,
@@ -1068,6 +1222,28 @@ export default function AdminDashboard() {
           videoSubtitle,
           videoUrl,
           videoFallbackColor,
+          videoTitleFontType,
+          videoTitleFontColor,
+          videoTitleFontSize,
+          videoTitleFontAlignment,
+          videoTitleFontWeight,
+          videoSubtitleFontType,
+          videoSubtitleFontColor,
+          videoSubtitleFontSize,
+          videoSubtitleFontAlignment,
+          videoSubtitleFontWeight,
+          videoTemplate,
+          showVideoTitle,
+          showVideoSubtitle,
+          showVideoButton,
+          videoButtonText,
+          videoButtonStyle,
+          videoButtonSize,
+          videoButtonColor,
+          videoButtonTextColor,
+          videoBgType,
+          videoBgColor,
+          videoBgImage,
           lifestyleText,
           lifestyleImage,
           primaryColor,
@@ -1982,7 +2158,8 @@ export default function AdminDashboard() {
               error={error}
               handleSaveSettings={handleSaveSettings}
               setActiveCustomizerSection={setActiveCustomizerSection}
-              setIsHeroCustomizerModalOpen={setIsHeroCustomizerModalOpen}
+                        setIsHeroCustomizerModalOpen={setIsHeroCustomizerModalOpen}
+          setIsVideoCustomizerModalOpen={setIsVideoCustomizerModalOpen}
               activeCustomizerSection={activeCustomizerSection}
               heroTitleFontType={heroTitleFontType}
               heroTitleFontSize={heroTitleFontSize}
@@ -2019,6 +2196,12 @@ export default function AdminDashboard() {
               setVideoSubtitle={setVideoSubtitle}
               videoUrl={videoUrl}
               setVideoUrl={setVideoUrl}
+              videoBgType={videoBgType}
+              setVideoBgType={setVideoBgType}
+              videoBgColor={videoBgColor}
+              setVideoBgColor={setVideoBgColor}
+              videoBgImage={videoBgImage}
+              setVideoBgImage={setVideoBgImage}
               uploadingVideo={uploadingVideo}
               videoFallbackColor={videoFallbackColor}
               handleVideoUpload={handleVideoUpload}
@@ -2279,6 +2462,7 @@ export default function AdminDashboard() {
           heroTitleFontSize={heroTitleFontSize}
           heroTitleFontType={heroTitleFontType}
           heroTitleFontWeight={heroTitleFontWeight}
+          imageFront={imageFront}
           images={images}
           isDeletingCustomer={isDeletingCustomer}
           isDeletingProduct={isDeletingProduct}
@@ -2433,6 +2617,80 @@ export default function AdminDashboard() {
           sectionName="Hero Section"
           primaryColor={primaryColor}
         />
+        )}
+
+        {isVideoCustomizerModalOpen && (
+          <CustomizeLayoutModal 
+            isOpen={true} 
+            onClose={() => setIsVideoCustomizerModalOpen(false)} 
+            initialConfig={{
+              titleText: videoTitle,
+              titleFontType: videoTitleFontType,
+              titleFontColor: videoTitleFontColor,
+              titleFontSize: videoTitleFontSize,
+              titleFontAlignment: videoTitleFontAlignment,
+              titleFontWeight: videoTitleFontWeight,
+              showTitle: showVideoTitle,
+              
+              manifestoText: videoSubtitle,
+              manifestoFontType: videoSubtitleFontType,
+              manifestoFontColor: videoSubtitleFontColor,
+              manifestoFontSize: videoSubtitleFontSize,
+              manifestoFontAlignment: videoSubtitleFontAlignment,
+              manifestoFontWeight: videoSubtitleFontWeight,
+              showManifesto: showVideoSubtitle,
+              
+              buttonText: videoButtonText,
+              buttonStyle: videoButtonStyle,
+              buttonSize: videoButtonSize,
+              buttonColor: videoButtonColor,
+              buttonTextColor: videoButtonTextColor,
+              showButton: showVideoButton,
+              
+              layoutTemplate: videoTemplate,
+              bgType: videoBgType,
+              bgColor: videoBgColor,
+              bgImage: videoBgImage,
+              bgVideo: videoUrl,
+            }}
+            onApply={(config) => {
+              setVideoTitle(config.titleText);
+              setVideoTitleFontType(config.titleFontType);
+              setVideoTitleFontColor(config.titleFontColor);
+              setVideoTitleFontSize(config.titleFontSize);
+              setVideoTitleFontAlignment(config.titleFontAlignment);
+              setVideoTitleFontWeight(config.titleFontWeight);
+              setShowVideoTitle(config.showTitle);
+              
+              setVideoSubtitle(config.manifestoText);
+              setVideoSubtitleFontType(config.manifestoFontType);
+              setVideoSubtitleFontColor(config.manifestoFontColor);
+              setVideoSubtitleFontSize(config.manifestoFontSize);
+              setVideoSubtitleFontAlignment(config.manifestoFontAlignment);
+              setVideoSubtitleFontWeight(config.manifestoFontWeight);
+              setShowVideoSubtitle(config.showManifesto);
+              
+              setVideoButtonText(config.buttonText);
+              setVideoButtonStyle(config.buttonStyle);
+              setVideoButtonSize(config.buttonSize);
+              setVideoButtonColor(config.buttonColor);
+              setVideoButtonTextColor(config.buttonTextColor);
+              setShowVideoButton(config.showButton);
+              
+              setVideoTemplate(config.layoutTemplate || "center");
+              setVideoBgType(config.bgType || "video");
+              setVideoBgColor(config.bgColor || "#121212");
+              setVideoBgImage(config.bgImage || "");
+              setVideoUrl(config.bgVideo || "");
+              
+              setIsVideoCustomizerModalOpen(false);
+              setTimeout(() => {
+                saveSettingsSilent();
+              }, 100);
+            }}
+            sectionName="Video Section"
+            primaryColor={primaryColor}
+          />
         )}
     </div>
   );
