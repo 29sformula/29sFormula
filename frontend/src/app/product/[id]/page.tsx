@@ -385,6 +385,9 @@ export default function ProductDetailPage() {
     const variantPrice = ((product as any).options && (product as any).options.find((o: any) => o.size === selectedVolume)?.price) 
                       || ((product as any).variants && (product as any).variants.find((v: any) => v.size === selectedVolume)?.price)
                       || product.price;
+        const variantStrikePrice = ((product as any).options && (product as any).options.find((o: any) => o.size === size)?.strikePrice) 
+                          || ((product as any).variants && (product as any).variants.find((v: any) => v.size === size)?.strikePrice)
+                          || product.strikePrice;
 
     const buyNowItem = {
       _id: product._id,
@@ -473,6 +476,7 @@ export default function ProductDetailPage() {
           _id: product._id,
           name: product.name,
           price: variantPrice,
+          strikePrice: variantStrikePrice,
           imageFront: product.imageFront,
           size: size,
           quantity: qtyToPush,

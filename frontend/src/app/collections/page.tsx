@@ -137,6 +137,9 @@ export default function Collections() {
         const variantPrice = ((product as any).options && (product as any).options.find((o: any) => o.size === size)?.price) 
                           || ((product as any).variants && (product as any).variants.find((v: any) => v.size === size)?.price)
                           || product.price;
+        const variantStrikePrice = ((product as any).options && (product as any).options.find((o: any) => o.size === size)?.strikePrice) 
+                          || ((product as any).variants && (product as any).variants.find((v: any) => v.size === size)?.strikePrice)
+                          || product.strikePrice;
 
         let qtyToPush = 1;
         if (1 > maxStock) {
@@ -149,6 +152,7 @@ export default function Collections() {
           _id: product._id,
           name: product.name,
           price: variantPrice,
+          strikePrice: variantStrikePrice,
           imageFront: product.imageFront,
           size: size,
           quantity: qtyToPush,

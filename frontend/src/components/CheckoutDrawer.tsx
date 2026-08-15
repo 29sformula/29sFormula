@@ -26,6 +26,7 @@ interface CartItem {
   _id: string;
   name: string;
   price: number;
+  strikePrice?: number;
   size: string;
   quantity: number;
   imageFront?: string;
@@ -683,7 +684,19 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
                     <span className={styles.itemName}>
                       {item.name} <span className={styles.itemSize}>({item.size})</span> x {item.quantity}
                     </span>
-                    <span className={styles.itemPrice}>₹{(item.price * item.quantity).toLocaleString("en-IN")}.00</span>
+                    <div className={styles.itemPrice} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      {item.strikePrice && item.strikePrice > item.price && (
+                        <del style={{ color: "#ef4444", fontSize: "0.85em" }}>
+                          ₹{(item.strikePrice * item.quantity).toLocaleString("en-IN")}.00
+                        </del>
+                      )}
+                      <span>₹{(item.price * item.quantity).toLocaleString("en-IN")}.00</span>
+                      {item.strikePrice && item.strikePrice > item.price && (
+                        <span style={{ color: "#16a34a", fontSize: "0.85em", fontWeight: 700 }}>
+                          -{Math.round(((item.strikePrice - item.price) / item.strikePrice) * 100)}%
+                        </span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
