@@ -237,6 +237,7 @@ export default function AdminModals(props: any) {
                           <th style={{ padding: "8px 6px", fontSize: "0.8rem", fontWeight: 600, color: "#4b5563" }}>Size*</th>
                           <th style={{ padding: "8px 6px", fontSize: "0.8rem", fontWeight: 600, color: "#4b5563" }}>Quantity*</th>
                           <th style={{ padding: "8px 6px", fontSize: "0.8rem", fontWeight: 600, color: "#4b5563" }}>Price*</th>
+                          <th style={{ padding: "8px 6px", fontSize: "0.8rem", fontWeight: 600, color: "#4b5563" }}>Strike Price</th>
                           <th style={{ padding: "8px 6px", fontSize: "0.8rem", fontWeight: 600, color: "#4b5563" }}>Making Price*</th>
                           <th style={{ padding: "8px 6px", fontSize: "0.8rem", fontWeight: 600, color: "#4b5563", minWidth: "180px" }}>Category*</th>
                           <th style={{ padding: "8px 6px", width: "40px" }}></th>
@@ -293,11 +294,26 @@ export default function AdminModals(props: any) {
                             <td style={{ padding: "8px 4px" }}>
                               <input
                                 type="number"
+                                value={opt.strikePrice || ""}
+                                min="0"
+                                placeholder="Optional"
+                                onChange={(e) => {
+                                  const updated = [...options];
+                                  updated[index].strikePrice = e.target.value === "" ? "" : (parseFloat(e.target.value) || 0);
+                                  setOptions(updated);
+                                }}
+                                className={styles.textInput}
+                                style={{ padding: "6px 8px", fontSize: "0.8rem", width: "100%", boxSizing: "border-box" }}
+                              />
+                            </td>
+                            <td style={{ padding: "8px 4px" }}>
+                              <input
+                                type="number"
                                 value={opt.makingPrice}
                                 min="0"
                                 onChange={(e) => {
                                   const updated = [...options];
-                                  updated[index].makingPrice = e.target.value === "" ? "" : (parseFloat(e.target.value) || 0);
+                                  updated[index].makingPrice = e.target.value === "" ? "" : (parseInt(e.target.value) || 0);
                                   setOptions(updated);
                                 }}
                                 required
@@ -410,7 +426,7 @@ export default function AdminModals(props: any) {
                   <button
                     type="button"
                     onClick={() => {
-                      setOptions([...options, { size: "", quantity: "", price: "", makingPrice: "", category: [] }]);
+                      setOptions([...options, { size: "", quantity: "", price: "", strikePrice: "", makingPrice: "", category: [] }]);
                     }}
                     style={{
                       marginTop: "12px",

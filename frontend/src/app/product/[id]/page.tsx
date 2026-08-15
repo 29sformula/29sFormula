@@ -722,13 +722,28 @@ export default function ProductDetailPage() {
 
             {/* Price display tag */}
             <div className={styles.priceRow}>
-              <span className={styles.priceVal}>
-                Rs. {(
-                  (product as any).variants?.find((v: any) => v.size === selectedVolume)?.price || 
-                  (product as any).options?.find((v: any) => v.size === selectedVolume)?.price || 
-                  product.price
-                ).toLocaleString("en-IN")}.00
-              </span>
+              {(() => {
+                const currentVariant = (product as any).variants?.find((v: any) => v.size === selectedVolume) || (product as any).options?.find((v: any) => v.size === selectedVolume);
+                const currentPrice = currentVariant?.price || product.price;
+                const currentStrikePrice = currentVariant?.strikePrice || product.strikePrice;
+                return (
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    {currentStrikePrice && currentStrikePrice > currentPrice && (
+                      <span style={{ color: "#ef4444", textDecoration: "line-through", fontSize: "1.1rem", fontWeight: 500 }}>
+                        Rs. {currentStrikePrice.toLocaleString("en-IN")}.00
+                      </span>
+                    )}
+                    <span className={styles.priceVal}>
+                      Rs. {currentPrice.toLocaleString("en-IN")}.00
+                    </span>
+                    {currentStrikePrice && currentStrikePrice > currentPrice && (
+                      <span style={{ color: "#16a34a", fontSize: "1.1rem", fontWeight: 700 }}>
+                        -{Math.round(((currentStrikePrice - currentPrice) / currentStrikePrice) * 100)}%
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
               <span className={styles.taxSubtext}>{deliverySubtext.toUpperCase()}</span>
             </div>
             {product.quantity !== undefined && product.quantity <= 5 && (

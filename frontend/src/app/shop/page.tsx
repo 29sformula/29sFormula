@@ -11,6 +11,7 @@ interface Variant {
   size: string;
   quantity: number;
   price: number;
+  strikePrice?: number;
   category: string;
 }
 
@@ -633,7 +634,22 @@ export default function Shop() {
 
                         return (
                           <>
-                            <p className={styles.productPrice}>From Rs. {lowestPrice.toLocaleString("en-IN")}.00</p>
+                            <p className={styles.productPrice}>
+                            {product.strikePrice && product.strikePrice > lowestPrice && (
+                              <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                                <del style={{ color: "#ef4444", fontSize: "0.85em" }}>
+                                  Rs. {product.strikePrice.toLocaleString("en-IN")}.00
+                                </del>
+                                <span>From Rs. {lowestPrice.toLocaleString("en-IN")}.00</span>
+                                <span style={{ color: "#16a34a", fontSize: "0.85em", fontWeight: 700 }}>
+                                  -{Math.round(((product.strikePrice - lowestPrice) / product.strikePrice) * 100)}%
+                                </span>
+                              </span>
+                            )}
+                            {(!product.strikePrice || product.strikePrice <= lowestPrice) && (
+                              <span>From Rs. {lowestPrice.toLocaleString("en-IN")}.00</span>
+                            )}
+                          </p>
                             {availableSizes.length > 0 && (
                               <p style={{ color: "#6b7280", fontSize: "0.75rem", marginTop: "4px" }}>
                                 Available in: {availableSizes.join(", ")}

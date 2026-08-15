@@ -10,6 +10,7 @@ const productSchema = new mongoose.Schema({
   
   // Denormalized computed values for fast storefront query rendering
   price: { type: Number },
+  strikePrice: { type: Number },
   makingPrice: { type: Number, default: 0 },
   quantity: { type: Number, default: 0 },
   category: { type: [String], default: [] },
@@ -23,6 +24,7 @@ const productVariantSchema = new mongoose.Schema({
   size: { type: String, required: true },
   quantity: { type: Number, required: true, default: 0 },
   price: { type: Number, required: true },
+  strikePrice: { type: Number },
   makingPrice: { type: Number, default: 0 },
   category: { type: [String], default: [] }
 }, { timestamps: true });

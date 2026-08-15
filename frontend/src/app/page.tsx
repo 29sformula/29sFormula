@@ -854,7 +854,21 @@ export default function Home() {
                   </div>
                   <div className={styles.productInfo}>
                     <h3 className={styles.productTitle}>{product.name}</h3>
-                    <p className={styles.productPrice}>Rs. {product.price.toLocaleString("en-IN")}.00</p>
+                    <p className={styles.productPrice}>
+                      {product.strikePrice && product.strikePrice > product.price && (
+                        <>
+                          <del style={{ color: "#ef4444", marginRight: "8px", fontSize: "0.85em" }}>
+                            Rs. {product.strikePrice.toLocaleString("en-IN")}.00
+                          </del>
+                        </>
+                      )}
+                      Rs. {product.price.toLocaleString("en-IN")}.00
+                      {product.strikePrice && product.strikePrice > product.price && (
+                        <span style={{ color: "#16a34a", fontSize: "0.85em", fontWeight: 700, marginLeft: "8px" }}>
+                          -{Math.round(((product.strikePrice - product.price) / product.strikePrice) * 100)}%
+                        </span>
+                      )}
+                    </p>
                     {product.quantity !== undefined && product.quantity <= 5 && (
                       <p style={{ color: "#dc2626", fontSize: "0.72rem", fontWeight: 700, marginTop: "4px", letterSpacing: "0.02em" }}>
                         {product.quantity === 0 ? "OUT OF STOCK" : `ONLY ${product.quantity} LEFT`}
@@ -961,7 +975,21 @@ export default function Home() {
                   </div>
                   <div className={styles.productInfo}>
                     <h3 className={styles.productTitle}>{product.name}</h3>
-                    <p className={styles.productPrice}>Rs. {product.price.toLocaleString("en-IN")}.00</p>
+                    <p className={styles.productPrice}>
+                      {product.strikePrice && product.strikePrice > product.price && (
+                        <>
+                          <del style={{ color: "#ef4444", marginRight: "8px", fontSize: "0.85em" }}>
+                            Rs. {product.strikePrice.toLocaleString("en-IN")}.00
+                          </del>
+                        </>
+                      )}
+                      Rs. {product.price.toLocaleString("en-IN")}.00
+                      {product.strikePrice && product.strikePrice > product.price && (
+                        <span style={{ color: "#16a34a", fontSize: "0.85em", fontWeight: 700, marginLeft: "8px" }}>
+                          -{Math.round(((product.strikePrice - product.price) / product.strikePrice) * 100)}%
+                        </span>
+                      )}
+                    </p>
                     {product.quantity !== undefined && product.quantity <= 5 && (
                       <p style={{ color: "#dc2626", fontSize: "0.72rem", fontWeight: 700, marginTop: "4px", letterSpacing: "0.02em" }}>
                         {product.quantity === 0 ? "OUT OF STOCK" : `ONLY ${product.quantity} LEFT`}

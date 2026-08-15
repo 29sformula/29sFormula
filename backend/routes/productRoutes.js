@@ -72,6 +72,7 @@ router.post("/api/products", async (req, res) => {
 
     // Compute global properties
     let computedPrice = 0;
+    let computedStrikePrice = undefined;
     let computedMakingPrice = 0;
     let computedQuantity = 0;
     let computedCategory = ["Latest Arrivals"];
@@ -80,6 +81,8 @@ router.post("/api/products", async (req, res) => {
     if (variants && Array.isArray(variants) && variants.length > 0) {
       computedQuantity = variants.reduce((sum, v) => sum + (Number(v.quantity) || 0), 0);
       computedPrice = Math.min(...variants.map(v => Number(v.price) || 0));
+      const strikePrices = variants.map(v => Number(v.strikePrice)).filter(p => p > 0);
+      if (strikePrices.length > 0) computedStrikePrice = Math.max(...strikePrices);
       computedMakingPrice = Math.min(...variants.map(v => Number(v.makingPrice) || 0));
       computedCategory = [...new Set(variants.flatMap(v => Array.isArray(v.category) ? v.category : [v.category]).filter(Boolean))];
       computedSizes = variants.map(v => v.size).filter(Boolean);
@@ -96,6 +99,7 @@ router.post("/api/products", async (req, res) => {
       imageBack,
       images,
       price: computedPrice,
+      strikePrice: computedStrikePrice,
       makingPrice: computedMakingPrice,
       quantity: computedQuantity,
       category: computedCategory,
@@ -111,6 +115,7 @@ router.post("/api/products", async (req, res) => {
           size: v.size,
           quantity: Number(v.quantity) || 0,
           price: Number(v.price) || 0,
+          strikePrice: v.strikePrice ? Number(v.strikePrice) : undefined,
           makingPrice: Number(v.makingPrice) || 0,
           category: [...new Set([...(Array.isArray(v.category) ? v.category : (v.category ? [v.category] : [])), "Latest Arrivals"])]
         });
@@ -164,6 +169,7 @@ router.put("/api/products/:id", async (req, res) => {
 
     // Compute global properties
     let computedPrice = 0;
+    let computedStrikePrice = undefined;
     let computedMakingPrice = 0;
     let computedQuantity = 0;
     let computedCategory = ["Latest Arrivals"];
@@ -172,6 +178,8 @@ router.put("/api/products/:id", async (req, res) => {
     if (variants && Array.isArray(variants) && variants.length > 0) {
       computedQuantity = variants.reduce((sum, v) => sum + (Number(v.quantity) || 0), 0);
       computedPrice = Math.min(...variants.map(v => Number(v.price) || 0));
+      const strikePrices = variants.map(v => Number(v.strikePrice)).filter(p => p > 0);
+      if (strikePrices.length > 0) computedStrikePrice = Math.max(...strikePrices);
       computedMakingPrice = Math.min(...variants.map(v => Number(v.makingPrice) || 0));
       computedCategory = [...new Set(variants.flatMap(v => Array.isArray(v.category) ? v.category : [v.category]).filter(Boolean))];
       computedSizes = variants.map(v => v.size).filter(Boolean);
@@ -190,6 +198,7 @@ router.put("/api/products/:id", async (req, res) => {
         imageBack,
         images,
         price: computedPrice,
+        strikePrice: computedStrikePrice,
         makingPrice: computedMakingPrice,
         quantity: computedQuantity,
         category: computedCategory,
@@ -208,6 +217,7 @@ router.put("/api/products/:id", async (req, res) => {
           size: v.size,
           quantity: Number(v.quantity) || 0,
           price: Number(v.price) || 0,
+          strikePrice: v.strikePrice ? Number(v.strikePrice) : undefined,
           makingPrice: Number(v.makingPrice) || 0,
           category: (oldProduct.category && oldProduct.category.includes("Latest Arrivals")) 
                       ? [...new Set([...(Array.isArray(v.category) ? v.category : (v.category ? [v.category] : [])), "Latest Arrivals"])] 

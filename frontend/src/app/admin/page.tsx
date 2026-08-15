@@ -181,7 +181,7 @@ export default function AdminDashboard() {
   const [images, setImages] = useState<string[]>([]);
   const [sizes, setSizes] = useState<string[]>(["50ml", "100ml", "150ml"]);
   const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({});
-  const [options, setOptions] = useState<{ size: string; quantity: number | ""; price: number | ""; makingPrice: number | ""; category: string[] }[]>([{ size: "", quantity: "", price: "", makingPrice: "", category: [] }]);
+  const [options, setOptions] = useState<{ size: string; quantity: number | ""; price: number | ""; strikePrice: number | ""; makingPrice: number | ""; category: string[] }[]>([{ size: "", quantity: "", price: "", strikePrice: "", makingPrice: "", category: [] }]);
   const [openCategoryIndex, setOpenCategoryIndex] = useState<number | null>(null);
   const [faqs, setFaqs] = useState<FaqItem[]>([]);
   const [newSizeInput, setNewSizeInput] = useState<string>("");
@@ -1766,10 +1766,11 @@ export default function AdminDashboard() {
         size: sz,
         quantity: product.sizeQuantities ? (product.sizeQuantities[sz] || 0) : 0,
         price: product.price || 0,
+        strikePrice: product.strikePrice || "",
         makingPrice: product.makingPrice || 0,
         category: Array.isArray(product.category) ? product.category.filter(c => c !== "Latest Arrivals") : (product.category && product.category !== "Latest Arrivals" ? [product.category] : [])
       }));
-      setOptions(legacyOptions.length > 0 ? legacyOptions : [{ size: "", quantity: "", price: "", makingPrice: "", category: [] }]);
+      setOptions(legacyOptions.length > 0 ? legacyOptions : [{ size: "", quantity: "", price: "", strikePrice: "", makingPrice: "", category: [] }]);
     }
 
     setShowCrudModal(true);
