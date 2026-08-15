@@ -193,7 +193,7 @@ export default function CompletedSubTab({
                               <th>Amount</th>
                               <th>Order Date</th>
                               <th>Status</th>
-                              <th>Actions</th>
+                              <th>Details</th>
                             </tr>
                           )}
                         </thead>
@@ -203,18 +203,16 @@ export default function CompletedSubTab({
                             .filter(o => {
                               if (activeSubTab === "returns") {
                                 return o.status === "Return Requested" || 
-                                       (o.returnRequest && o.returnRequest.status === "Pending") ||
-                                       (o.status === "Return Approved" && o.refundStatus !== "Refunded");
+                                       (o.returnRequest && o.returnRequest.status === "Pending");
                               } else if (activeSubTab === "cancelled") {
                                 const matchesRefund = refundStatusFilter === "All" || (o.refundStatus || "Not Refunded") === refundStatusFilter;
                                 return o.status === "Cancelled" && (o.refundStatus || "Not Refunded") !== "Refunded" && matchesRefund;
                               } else if (activeSubTab === "completed") {
                                 const hasPendingReturn = o.status === "Return Requested" || (o.returnRequest && o.returnRequest.status === "Pending");
-                                const hasUnrefundedApprovedReturn = o.status === "Return Approved" && o.refundStatus !== "Refunded";
-                                if (hasPendingReturn || hasUnrefundedApprovedReturn) return false;
+                                if (hasPendingReturn) return false;
                                 return o.status === "Delivered" || 
                                        o.status === "Return Rejected" || 
-                                       (o.status === "Return Approved" && o.refundStatus === "Refunded") || 
+                                       o.status === "Return Approved" || 
                                        (o.status === "Cancelled" && o.refundStatus === "Refunded");
                               } else {
                                 const matchesStatus = orderStatusFilter === "All" || o.status === orderStatusFilter;
@@ -237,7 +235,7 @@ export default function CompletedSubTab({
                                 return (
                                   <tr key={order._id}>
                                     <td>
-                                      <span className={styles.tableName}>{order.orderId}</span>
+                                      <span className={styles.tableName}>{order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId}</span>
                                     </td>
                                     <td>
                                       <span className={styles.tableName}>{order.customerName}</span>
@@ -346,7 +344,7 @@ export default function CompletedSubTab({
                               return (
                                 <tr key={order._id}>
                                   <td>
-                                    <span className={styles.tableName}>{order.orderId}</span>
+                                    <span className={styles.tableName}>{order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId}</span>
                                   </td>
                                   <td>
                                     <span className={styles.tableName}>{order.customerName}</span>
@@ -372,64 +370,15 @@ export default function CompletedSubTab({
                                       fontSize: "0.75rem",
                                       fontWeight: 700,
                                       textTransform: "uppercase",
-                                      backgroundColor: order.status === "Delivered" ? "#eaf7ee" : order.status === "Shipped" ? "#eff6ff" : "#fef3c7",
-                                      color: order.status === "Delivered" ? "#15803d" : order.status === "Shipped" ? "#1d4ed8" : "#b45309"
+                                      backgroundColor: order.status === "Delivered" || (order.status === "Return Approved" && !(order.returnRequest?.returnType === "Refund" && order.refundStatus !== "Refunded")) ? "#eaf7ee" : order.status === "Return Rejected" ? "#fef2f2" : order.status === "Shipped" ? "#eff6ff" : order.status === "Return Approved" ? "#fef3c7" : "#fef3c7",
+                                      color: order.status === "Delivered" || (order.status === "Return Approved" && !(order.returnRequest?.returnType === "Refund" && order.refundStatus !== "Refunded")) ? "#15803d" : order.status === "Return Rejected" ? "#991b1b" : order.status === "Shipped" ? "#1d4ed8" : order.status === "Return Approved" ? "#b45309" : "#b45309"
                                     }}>
-                                      {order.status}
+                                      {order.status === "Return Approved" ? (order.returnRequest?.returnType === "Refund" && order.refundStatus !== "Refunded" ? "Payment Pending" : "Approved") : order.status === "Return Rejected" ? "Rejected" : order.status}
                                     </span>
                                   </td>
                                   <td>
                                     <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                                      <div style={{ position: "relative" }}>
-                                        <div
-                                          onClick={() => setOpenStatusDropdownId(openStatusDropdownId === order._id ? null : order._id)}
-                                          className={styles.selectInput}
-                                          style={{ padding: "4px 8px", fontSize: "0.8rem", cursor: "pointer", minWidth: "110px", display: "flex", alignItems: "center", justifyContent: "space-between" }}
-                                        >
-                                          {order.status}
-                                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="#6b7280" style={{ width: "12px", height: "12px", transform: openStatusDropdownId === order._id ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                                          </svg>
-                                        </div>
 
-                                        {openStatusDropdownId === order._id && (
-                                          <>
-                                            <div style={{ position: "fixed", inset: 0, zIndex: 100 }} onClick={() => setOpenStatusDropdownId(null)} />
-                                            <div style={{
-                                              position: "absolute",
-                                              left: 0,
-                                              minWidth: "120px",
-                                              background: "#fff",
-                                              border: "1px solid #e5e7eb",
-                                              borderRadius: "8px",
-                                              boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-                                              zIndex: 9999,
-                                              overflow: "hidden",
-                                              top: "100%",
-                                              marginTop: "4px"
-                                            }}>
-                                              {["Processing", "Shipped", "Delivered"].map((opt) => (
-                                                <div
-                                                  key={opt}
-                                                  onClick={() => { handleUpdateOrderStatus(order._id, opt); setOpenStatusDropdownId(null); }}
-                                                  style={{
-                                                    padding: "6px 12px",
-                                                    fontSize: "0.8rem",
-                                                    cursor: "pointer",
-                                                    backgroundColor: order.status === opt ? "#eff6ff" : "transparent",
-                                                    color: order.status === opt ? "#2563eb" : "#374151",
-                                                    fontWeight: order.status === opt ? 600 : 400
-                                                  }}
-                                                  onMouseEnter={(e) => { if (order.status !== opt) e.currentTarget.style.backgroundColor = "#f3f4f6"; }}
-                                                  onMouseLeave={(e) => { if (order.status !== opt) e.currentTarget.style.backgroundColor = "transparent"; }}
-                                                >
-                                                  {opt}
-                                                </div>
-                                              ))}
-                                            </div>
-                                          </>
-                                        )}
-                                      </div>
                                       <button
                                         onClick={() => setSelectedOrder(order)}
                                         title="View Order Details"
@@ -438,15 +387,6 @@ export default function CompletedSubTab({
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "16px", height: "16px" }}>
                                           <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                                           <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                        </svg>
-                                      </button>
-                                      <button
-                                        onClick={() => handleDeleteOrder(order._id)}
-                                        title="Delete Order"
-                                        style={{ background: "transparent", border: "none", cursor: "pointer", color: "#ef4444", padding: "4px" }}
-                                      >
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "16px", height: "16px" }}>
-                                          <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                         </svg>
                                       </button>
                                     </div>

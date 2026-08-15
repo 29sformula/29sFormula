@@ -203,18 +203,16 @@ export default function ActiveOrdersSubTab({
                             .filter(o => {
                               if (activeSubTab === "returns") {
                                 return o.status === "Return Requested" || 
-                                       (o.returnRequest && o.returnRequest.status === "Pending") ||
-                                       (o.status === "Return Approved" && o.refundStatus !== "Refunded");
+                                       (o.returnRequest && o.returnRequest.status === "Pending");
                               } else if (activeSubTab === "cancelled") {
                                 const matchesRefund = refundStatusFilter === "All" || (o.refundStatus || "Not Refunded") === refundStatusFilter;
                                 return o.status === "Cancelled" && (o.refundStatus || "Not Refunded") !== "Refunded" && matchesRefund;
                               } else if (activeSubTab === "completed") {
                                 const hasPendingReturn = o.status === "Return Requested" || (o.returnRequest && o.returnRequest.status === "Pending");
-                                const hasUnrefundedApprovedReturn = o.status === "Return Approved" && o.refundStatus !== "Refunded";
-                                if (hasPendingReturn || hasUnrefundedApprovedReturn) return false;
+                                if (hasPendingReturn) return false;
                                 return o.status === "Delivered" || 
                                        o.status === "Return Rejected" || 
-                                       (o.status === "Return Approved" && o.refundStatus === "Refunded") || 
+                                       o.status === "Return Approved" || 
                                        (o.status === "Cancelled" && o.refundStatus === "Refunded");
                               } else {
                                 const matchesStatus = orderStatusFilter === "All" || o.status === orderStatusFilter;
@@ -237,7 +235,7 @@ export default function ActiveOrdersSubTab({
                                 return (
                                   <tr key={order._id}>
                                     <td>
-                                      <span className={styles.tableName}>{order.orderId}</span>
+                                      <span className={styles.tableName}>{order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId}</span>
                                     </td>
                                     <td>
                                       <span className={styles.tableName}>{order.customerName}</span>
@@ -345,8 +343,11 @@ export default function ActiveOrdersSubTab({
 
                               return (
                                 <tr key={order._id}>
-                                  <td>
-                                    <span className={styles.tableName}>{order.orderId}</span>
+                                  <td style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                    <span className={styles.tableName}>{order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId}</span>
+                                    {order.returnRequest?.returnType === "Replacement" && order.returnRequest?.status === "Approved" && (
+                                      <span style={{ fontSize: "0.65rem", fontWeight: 700, padding: "2px 6px", borderRadius: "8px", backgroundColor: "#e0e7ff", color: "#4338ca", width: "fit-content" }}>EXCHANGE</span>
+                                    )}
                                   </td>
                                   <td>
                                     <span className={styles.tableName}>{order.customerName}</span>
@@ -372,10 +373,10 @@ export default function ActiveOrdersSubTab({
                                       fontSize: "0.75rem",
                                       fontWeight: 700,
                                       textTransform: "uppercase",
-                                      backgroundColor: order.status === "Delivered" ? "#eaf7ee" : order.status === "Shipped" ? "#eff6ff" : "#fef3c7",
-                                      color: order.status === "Delivered" ? "#15803d" : order.status === "Shipped" ? "#1d4ed8" : "#b45309"
+                                      backgroundColor: order.status === "Delivered" || (order.status === "Return Approved" && !(order.returnRequest?.returnType === "Refund" && order.refundStatus !== "Refunded")) ? "#eaf7ee" : order.status === "Return Rejected" ? "#fef2f2" : order.status === "Shipped" ? "#eff6ff" : order.status === "Return Approved" ? "#fef3c7" : "#fef3c7",
+                                      color: order.status === "Delivered" || (order.status === "Return Approved" && !(order.returnRequest?.returnType === "Refund" && order.refundStatus !== "Refunded")) ? "#15803d" : order.status === "Return Rejected" ? "#991b1b" : order.status === "Shipped" ? "#1d4ed8" : order.status === "Return Approved" ? "#b45309" : "#b45309"
                                     }}>
-                                      {order.status}
+                                      {order.status === "Return Approved" ? (order.returnRequest?.returnType === "Refund" && order.refundStatus !== "Refunded" ? "Payment Pending" : "Approved") : order.status === "Return Rejected" ? "Rejected" : order.status}
                                     </span>
                                   </td>
                                   <td>

@@ -34,6 +34,7 @@ export default function AdminDashboard() {
   const { authorized } = useAdminAuth();
 
   // Layout State
+  const [timelineFilter, setTimelineFilter] = useState<string>("30days");
   const [activeTab, setActiveTab] = useState<"home" | "orders" | "products" | "customers" | "marketing" | "discounts" | "online-store">("home");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [productsDropdownOpen, setProductsDropdownOpen] = useState<boolean>(false);
@@ -75,9 +76,8 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!authorized) return;
     
-    if (activeTab === "home" && !fetchedTabs.current.has("home")) {
-      fetchedTabs.current.add("home");
-      fetchDashboardStats();
+    if (activeTab === "home") {
+      fetchDashboardStats(timelineFilter);
     }
     
     if (activeTab === "products" && !fetchedTabs.current.has("products")) {
@@ -101,7 +101,7 @@ export default function AdminDashboard() {
       fetchedTabs.current.add("discounts");
       fetchDiscounts();
     }
-  }, [activeTab, authorized]);
+  }, [activeTab, authorized, timelineFilter]);
   useEffect(() => {
     const savedCustom = localStorage.getItem("admin_custom_categories");
     if (savedCustom) {
@@ -497,7 +497,7 @@ export default function AdminDashboard() {
       window.removeEventListener("beforeunload", handleBeforeUnload);
       window.removeEventListener("popstate", handlePopState);
     };
-  }, [authorized, activeTab, hasUnsavedChanges]);
+  }, [authorized, activeTab, hasUnsavedChanges, timelineFilter]);
 
   const fetchSettings = async () => {
     try {
@@ -2086,6 +2086,8 @@ export default function AdminDashboard() {
               dashboardStats={dashboardStats}
               setActiveTab={setActiveTab}
               setActiveSubTab={setActiveSubTab}
+              timelineFilter={timelineFilter}
+              setTimelineFilter={setTimelineFilter}
             />
           )}
 

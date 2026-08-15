@@ -651,6 +651,36 @@ export default function TrackOrderPage() {
 
             {/* Modal Body Form */}
             <form onSubmit={handleSubmitReturnRequest} style={{ display: "flex", flexDirection: "column", gap: "20px", padding: "24px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <label style={{ fontSize: "0.82rem", fontWeight: 700, color: "#475569" }}>
+                  Resolution Preference
+                </label>
+                <div style={{ display: "flex", gap: "16px", alignItems: "center", marginBottom: "8px" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", color: "#334155", cursor: "pointer" }}>
+                    <input 
+                      type="radio" 
+                      name="returnType" 
+                      value="Replacement" 
+                      checked={returnType === "Replacement"} 
+                      onChange={() => setReturnType("Replacement")}
+                      style={{ accentColor: primaryColor, width: "16px", height: "16px", cursor: "pointer" }}
+                    />
+                    Exchange / Replacement
+                  </label>
+                  <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", color: "#334155", cursor: "pointer" }}>
+                    <input 
+                      type="radio" 
+                      name="returnType" 
+                      value="Refund" 
+                      checked={returnType === "Refund"} 
+                      onChange={() => setReturnType("Refund")}
+                      style={{ accentColor: primaryColor, width: "16px", height: "16px", cursor: "pointer" }}
+                    />
+                    Refund
+                  </label>
+                </div>
+              </div>
+
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 <label style={{ fontSize: "0.82rem", fontWeight: 700, color: "#475569" }}>
                   Reason for Return (Explain transit damage)
@@ -774,16 +804,16 @@ export default function TrackOrderPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={isReturning || isUploading}
+                  disabled={isReturning || isUploading || returnReason.trim().length === 0 || proofImages.length === 0}
                   style={{
                     padding: "10px 20px",
                     borderRadius: "8px",
                     border: "none",
                     fontSize: "0.85rem",
                     fontWeight: 700,
-                    backgroundColor: primaryColor,
+                    backgroundColor: (isReturning || isUploading || returnReason.trim().length === 0 || proofImages.length === 0) ? "#94a3b8" : primaryColor,
                     color: "#ffffff",
-                    cursor: (isReturning || isUploading) ? "not-allowed" : "pointer"
+                    cursor: (isReturning || isUploading || returnReason.trim().length === 0 || proofImages.length === 0) ? "not-allowed" : "pointer"
                   }}
                 >
                   {isReturning ? "Submitting..." : "Send Request"}

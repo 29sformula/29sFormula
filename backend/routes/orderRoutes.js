@@ -703,12 +703,19 @@ router.put("/api/orders/:id/return-status", async (req, res) => {
     if (adminNotes !== undefined) {
       returnRequest.adminNotes = adminNotes;
     }
+    if (!returnRequest.returnType) {
+      returnRequest.returnType = 'Replacement';
+    }
     await returnRequest.save();
 
     const order = await Order.findById(req.params.id);
     if (order) {
       if (status === "Approved") {
-        order.status = "Return Approved";
+        if (returnRequest.returnType === "Replacement") {
+          order.status = "Processing"; // Send back to active orders
+        } else {
+          order.status = "Return Approved";
+        }
       } else if (status === "Rejected") {
         order.status = "Return Rejected";
       }
@@ -732,7 +739,7 @@ router.put("/api/orders/:id/return-status", async (req, res) => {
     res.json(returnRequest);
   } catch (error) {
     console.error("Failed to update return request status:", error);
-    res.status(500).json({ error: "Failed to update return request status" });
+    res.status(500).json({ error: "Failed to update return request status", details: error.message });
   }
 });
 

@@ -1255,27 +1255,29 @@ export default function AdminModals(props: any) {
                     fontSize: "0.75rem",
                     fontWeight: 700,
                     textTransform: "uppercase",
-                    backgroundColor: selectedOrder.status === "Delivered" ? "#eaf7ee" : selectedOrder.status === "Shipped" ? "#eff6ff" : selectedOrder.status === "Cancelled" ? "#fee2e2" : "#fef3c7",
-                    color: selectedOrder.status === "Delivered" ? "#15803d" : selectedOrder.status === "Shipped" ? "#1d4ed8" : selectedOrder.status === "Cancelled" ? "#ef4444" : "#b45309"
+                    backgroundColor: selectedOrder.status === "Delivered" || (selectedOrder.status === "Return Approved" && !(selectedOrder.returnRequest?.returnType === "Refund" && selectedOrder.refundStatus !== "Refunded")) ? "#eaf7ee" : selectedOrder.status === "Return Rejected" ? "#fef2f2" : selectedOrder.status === "Shipped" ? "#eff6ff" : selectedOrder.status === "Cancelled" ? "#fee2e2" : selectedOrder.status === "Return Approved" ? "#fef3c7" : "#fef3c7",
+                    color: selectedOrder.status === "Delivered" || (selectedOrder.status === "Return Approved" && !(selectedOrder.returnRequest?.returnType === "Refund" && selectedOrder.refundStatus !== "Refunded")) ? "#15803d" : selectedOrder.status === "Return Rejected" ? "#991b1b" : selectedOrder.status === "Shipped" ? "#1d4ed8" : selectedOrder.status === "Cancelled" ? "#ef4444" : selectedOrder.status === "Return Approved" ? "#b45309" : "#b45309"
                   }}>
-                    {selectedOrder.status}
+                    {selectedOrder.status === "Return Approved" ? (selectedOrder.returnRequest?.returnType === "Refund" && selectedOrder.refundStatus !== "Refunded" ? "Payment Pending" : "Approved") : selectedOrder.status === "Return Rejected" ? "Rejected" : selectedOrder.status}
                   </span>
-                  <select
-                    value={selectedOrder.status}
-                    onChange={(e) => handleUpdateOrderStatus(selectedOrder._id, e.target.value)}
-                    style={{ padding: "4px 8px", border: "1px solid #d1d5db", borderRadius: "4px", fontSize: "0.8rem", background: "#fff", cursor: "pointer", color: "#000" }}
-                  >
-                    <option value="Processing">Processing</option>
-                    <option value="Shipped">Shipped</option>
-                    <option value="Delivered">Delivered</option>
-                    <option value="Return Requested">Return Requested</option>
-                    <option value="Returned">Returned</option>
-                    <option value="Cancelled">Cancelled</option>
-                  </select>
+                  {!["Return Approved", "Return Rejected"].includes(selectedOrder.status) && (
+                    <select
+                      value={selectedOrder.status}
+                      onChange={(e) => handleUpdateOrderStatus(selectedOrder._id, e.target.value)}
+                      style={{ padding: "4px 8px", border: "1px solid #d1d5db", borderRadius: "4px", fontSize: "0.8rem", background: "#fff", cursor: "pointer", color: "#000" }}
+                    >
+                      <option value="Processing">Processing</option>
+                      <option value="Shipped">Shipped</option>
+                      <option value="Delivered">Delivered</option>
+                      <option value="Return Requested">Return Requested</option>
+                      <option value="Returned">Returned</option>
+                      <option value="Cancelled">Cancelled</option>
+                    </select>
+                  )}
                 </div>
               </div>
 
-              {selectedOrder.paymentMethod !== "COD" && ["Return Requested", "Returned", "Return Approved", "Return Rejected", "Cancelled"].includes(selectedOrder.status) && (
+              {selectedOrder.paymentMethod !== "COD" && ["Return Requested", "Returned", "Return Approved", "Cancelled"].includes(selectedOrder.status) && (
                 <div>
                   <h3 style={{ fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 8px 0", color: "#888" }}>Refund Status</h3>
                   <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
@@ -1286,8 +1288,8 @@ export default function AdminModals(props: any) {
                       fontSize: "0.75rem",
                       fontWeight: 700,
                       textTransform: "uppercase",
-                      backgroundColor: selectedOrder.refundStatus === "Refunded" ? "#eaf7ee" : "#fef3c7",
-                      color: selectedOrder.refundStatus === "Refunded" ? "#15803d" : "#b45309"
+                      backgroundColor: selectedOrder.refundStatus === "Refunded" ? "#eaf7ee" : "#fef2f2",
+                      color: selectedOrder.refundStatus === "Refunded" ? "#15803d" : "#991b1b"
                     }}>
                       {selectedOrder.refundStatus || "Not Refunded"}
                     </span>
@@ -1327,8 +1329,99 @@ export default function AdminModals(props: any) {
               </div>
 
               <div style={{ borderTop: "1px solid #eaeaea", paddingTop: "15px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#111" }}>Total Amount Due (COD)</span>
+                <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#111" }}>Total Amount Due ({selectedOrder.paymentMethod})</span>
                 <span style={{ fontSize: "1.05rem", fontWeight: 700, color: "#4f46e5" }}>₹{selectedOrder.totalAmount.toLocaleString("en-IN")}.00</span>
+              </div>
+
+              {/* ORDER TIMELINE */}
+              <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px dashed #e5e7eb" }}>
+                <h3 style={{ fontSize: "0.85rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 16px 0", color: "#6b7280" }}>Order Timeline</h3>
+                
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px", position: "relative", paddingLeft: "10px" }}>
+                  <div style={{ position: "absolute", left: "14px", top: "4px", bottom: "4px", width: "2px", backgroundColor: "#e5e7eb", zIndex: 0 }}></div>
+                  
+                  {/* Order Placed */}
+                  <div style={{ display: "flex", gap: "12px", position: "relative", zIndex: 1 }}>
+                    <div style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#10b981", marginTop: "4px", flexShrink: 0, boxShadow: "0 0 0 3px #fff, 0 0 0 4px #10b981" }}></div>
+                    <div>
+                      <p style={{ margin: 0, fontSize: "0.85rem", fontWeight: 600, color: "#111827" }}>Order Placed</p>
+                      <p style={{ margin: "2px 0 0 0", fontSize: "0.75rem", color: "#6b7280" }}>{new Date(selectedOrder.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</p>
+                    </div>
+                  </div>
+
+                  {/* Shipped */}
+                  {(selectedOrder.status !== "Cancelled") && (
+                    <div style={{ display: "flex", gap: "12px", position: "relative", zIndex: 1 }}>
+                      <div style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: ["Shipped", "Delivered", "Return Requested", "Returned", "Return Approved", "Return Rejected"].includes(selectedOrder.status) ? "#10b981" : "#e5e7eb", marginTop: "4px", flexShrink: 0, boxShadow: ["Shipped", "Delivered", "Return Requested", "Returned", "Return Approved", "Return Rejected"].includes(selectedOrder.status) ? "0 0 0 3px #fff, 0 0 0 4px #10b981" : "0 0 0 3px #fff" }}></div>
+                      <div>
+                        <p style={{ margin: 0, fontSize: "0.85rem", fontWeight: 600, color: ["Shipped", "Delivered", "Return Requested", "Returned", "Return Approved", "Return Rejected"].includes(selectedOrder.status) ? "#111827" : "#9ca3af" }}>Shipped</p>
+                        {["Shipped", "Delivered", "Return Requested", "Returned", "Return Approved", "Return Rejected"].includes(selectedOrder.status) && (
+                          <p style={{ margin: "2px 0 0 0", fontSize: "0.75rem", color: "#6b7280" }}>{new Date(selectedOrder.updatedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Delivered */}
+                  {(selectedOrder.status !== "Cancelled") && (
+                    <div style={{ display: "flex", gap: "12px", position: "relative", zIndex: 1 }}>
+                      <div style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: ["Delivered", "Return Requested", "Returned", "Return Approved", "Return Rejected"].includes(selectedOrder.status) ? "#10b981" : "#e5e7eb", marginTop: "4px", flexShrink: 0, boxShadow: ["Delivered", "Return Requested", "Returned", "Return Approved", "Return Rejected"].includes(selectedOrder.status) ? "0 0 0 3px #fff, 0 0 0 4px #10b981" : "0 0 0 3px #fff" }}></div>
+                      <div>
+                        <p style={{ margin: 0, fontSize: "0.85rem", fontWeight: 600, color: ["Delivered", "Return Requested", "Returned", "Return Approved", "Return Rejected"].includes(selectedOrder.status) ? "#111827" : "#9ca3af" }}>Delivered</p>
+                        {["Delivered", "Return Requested", "Returned", "Return Approved", "Return Rejected"].includes(selectedOrder.status) && (
+                          <p style={{ margin: "2px 0 0 0", fontSize: "0.75rem", color: "#6b7280" }}>{new Date(selectedOrder.updatedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Cancelled */}
+                  {(selectedOrder.status === "Cancelled") && (
+                    <div style={{ display: "flex", gap: "12px", position: "relative", zIndex: 1 }}>
+                      <div style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#ef4444", marginTop: "4px", flexShrink: 0, boxShadow: "0 0 0 3px #fff, 0 0 0 4px #ef4444" }}></div>
+                      <div>
+                        <p style={{ margin: 0, fontSize: "0.85rem", fontWeight: 600, color: "#111827" }}>Cancelled</p>
+                        <p style={{ margin: "2px 0 0 0", fontSize: "0.75rem", color: "#6b7280" }}>{new Date(selectedOrder.updatedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Returns & Refunds */}
+                  {selectedOrder.returnRequest && (
+                    <>
+                      {/* Return Requested */}
+                      <div style={{ display: "flex", gap: "12px", position: "relative", zIndex: 1 }}>
+                        <div style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#f59e0b", marginTop: "4px", flexShrink: 0, boxShadow: "0 0 0 3px #fff, 0 0 0 4px #f59e0b" }}></div>
+                        <div>
+                          <p style={{ margin: 0, fontSize: "0.85rem", fontWeight: 600, color: "#111827" }}>Return Requested</p>
+                          <p style={{ margin: "2px 0 0 0", fontSize: "0.75rem", color: "#6b7280" }}>{new Date(selectedOrder.returnRequest.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</p>
+                        </div>
+                      </div>
+
+                      {/* Return Approved/Rejected */}
+                      {selectedOrder.returnRequest.status !== "Pending" && (
+                        <div style={{ display: "flex", gap: "12px", position: "relative", zIndex: 1 }}>
+                          <div style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: selectedOrder.returnRequest.status === "Approved" ? "#10b981" : "#ef4444", marginTop: "4px", flexShrink: 0, boxShadow: `0 0 0 3px #fff, 0 0 0 4px ${selectedOrder.returnRequest.status === "Approved" ? "#10b981" : "#ef4444"}` }}></div>
+                          <div>
+                            <p style={{ margin: 0, fontSize: "0.85rem", fontWeight: 600, color: "#111827" }}>Return {selectedOrder.returnRequest.status}</p>
+                            <p style={{ margin: "2px 0 0 0", fontSize: "0.75rem", color: "#6b7280" }}>{new Date(selectedOrder.returnRequest.updatedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Refunded */}
+                      {selectedOrder.refundStatus === "Refunded" && (
+                        <div style={{ display: "flex", gap: "12px", position: "relative", zIndex: 1 }}>
+                          <div style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#10b981", marginTop: "4px", flexShrink: 0, boxShadow: "0 0 0 3px #fff, 0 0 0 4px #10b981" }}></div>
+                          <div>
+                            <p style={{ margin: 0, fontSize: "0.85rem", fontWeight: 600, color: "#111827" }}>Refund Issued</p>
+                            <p style={{ margin: "2px 0 0 0", fontSize: "0.75rem", color: "#6b7280" }}>{new Date(selectedOrder.updatedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</p>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>

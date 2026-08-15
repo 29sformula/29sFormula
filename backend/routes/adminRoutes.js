@@ -8,14 +8,32 @@ const router = express.Router();
 
 router.get("/api/admin/dashboard-stats", async (req, res) => {
   try {
+    const { timeline } = req.query;
+    let dateFilter = {};
+    const now = new Date();
+    
+    if (timeline === "today") {
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      dateFilter = { createdAt: { $gte: startOfToday } };
+    } else if (timeline === "7days") {
+      const startOf7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      dateFilter = { createdAt: { $gte: startOf7Days } };
+    } else if (timeline === "30days") {
+      const startOf30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      dateFilter = { createdAt: { $gte: startOf30Days } };
+    } else if (timeline === "year") {
+      const startOfYear = new Date(now.getFullYear(), 0, 1);
+      dateFilter = { createdAt: { $gte: startOfYear } };
+    }
+
     const [totalProducts, latestArrivalsCount, bestSellersCount, totalCustomers, orders, topProducts] = await Promise.all([
       Product.countDocuments(),
       Product.countDocuments({ category: "Latest Arrivals" }),
       Product.countDocuments({ category: "Best Seller" }),
-      Customer.countDocuments(),
-      Order.find({}, "totalAmount status deletedByAdmin createdAt cartItems").lean(),
+      Customer.countDocuments(dateFilter),
+      Order.find(dateFilter, "totalAmount status deletedByAdmin createdAt cartItems").lean(),
       Order.aggregate([
-        { $match: { deletedByAdmin: false, status: { $nin: ["Cancelled"] } } },
+        { $match: { ...dateFilter, deletedByAdmin: false, status: { $nin: ["Cancelled"] } } },
         { $unwind: "$cartItems" },
         { $group: { _id: "$cartItems.productId", totalSold: { $sum: "$cartItems.quantity" } } },
         { $sort: { totalSold: -1 } },
@@ -41,18 +59,55 @@ router.get("/api/admin/dashboard-stats", async (req, res) => {
     const totalSalesCount = revenueOrders.length;
 
     const historicalDataMap = {};
-    const formatter = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short' });
-    for (let i = 29; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const dateString = formatter.format(d);
-      historicalDataMap[dateString] = { date: dateString, sales: 0, orders: 0, profit: 0 };
+    let dateKeyFn;
+    
+    if (timeline === "today") {
+      const formatterHour = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+      for (let i = 23; i >= 0; i--) {
+        const d = new Date();
+        d.setHours(d.getHours() - i);
+        d.setMinutes(0);
+        const key = formatterHour.format(d);
+        historicalDataMap[key] = { date: key, sales: 0, orders: 0, profit: 0 };
+      }
+      dateKeyFn = (dateObj) => {
+        const d = new Date(dateObj);
+        d.setMinutes(0);
+        return formatterHour.format(d);
+      };
+    } else if (timeline === "7days") {
+      const formatter = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short' });
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const key = formatter.format(d);
+        historicalDataMap[key] = { date: key, sales: 0, orders: 0, profit: 0 };
+      }
+      dateKeyFn = (dateObj) => formatter.format(new Date(dateObj));
+    } else if (timeline === "year" || timeline === "all") {
+      const formatterMonth = new Intl.DateTimeFormat('en-GB', { month: 'short', year: '2-digit' });
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date();
+        d.setMonth(d.getMonth() - i);
+        const key = formatterMonth.format(d);
+        historicalDataMap[key] = { date: key, sales: 0, orders: 0, profit: 0 };
+      }
+      dateKeyFn = (dateObj) => formatterMonth.format(new Date(dateObj));
+    } else {
+      const formatter = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short' });
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const key = formatter.format(d);
+        historicalDataMap[key] = { date: key, sales: 0, orders: 0, profit: 0 };
+      }
+      dateKeyFn = (dateObj) => formatter.format(new Date(dateObj));
     }
 
     const allValidOrders = orders.filter(o => !o.deletedByAdmin && o.status !== "Cancelled");
     allValidOrders.forEach(o => {
       if (!o.createdAt) return;
-      const dateString = formatter.format(new Date(o.createdAt));
+      const dateString = dateKeyFn(o.createdAt);
       if (historicalDataMap[dateString]) {
         historicalDataMap[dateString].sales += (o.totalAmount || 0);
         historicalDataMap[dateString].orders += 1;
@@ -71,24 +126,16 @@ router.get("/api/admin/dashboard-stats", async (req, res) => {
 
     const historicalData = Object.values(historicalDataMap);
 
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
     let totalProfitThisMonth = 0;
     const thisMonthRevenue = allValidOrders.reduce((acc, o) => {
-      if (o.createdAt) {
-        const orderDate = new Date(o.createdAt);
-        if (orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear) {
-          if (o.cartItems && Array.isArray(o.cartItems)) {
-            o.cartItems.forEach(item => {
-              const itemPrice = item.price || 0;
-              const itemMakingPrice = item.makingPrice || 0;
-              totalProfitThisMonth += (itemPrice - itemMakingPrice) * (item.quantity || 1);
-            });
-          }
-          return acc + (o.totalAmount || 0);
-        }
+      if (o.cartItems && Array.isArray(o.cartItems)) {
+        o.cartItems.forEach(item => {
+          const itemPrice = item.price || 0;
+          const itemMakingPrice = item.makingPrice || 0;
+          totalProfitThisMonth += (itemPrice - itemMakingPrice) * (item.quantity || 1);
+        });
       }
-      return acc;
+      return acc + (o.totalAmount || 0);
     }, 0);
 
     res.json({

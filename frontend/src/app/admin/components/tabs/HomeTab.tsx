@@ -60,12 +60,16 @@ interface HomeTabProps {
   dashboardStats: DashboardStats | null;
   setActiveTab: (val: any) => void;
   setActiveSubTab: (val: any) => void;
+  timelineFilter: string;
+  setTimelineFilter: (val: string) => void;
 }
 
 export default function HomeTab({
   dashboardStats,
   setActiveTab,
-  setActiveSubTab
+  setActiveSubTab,
+  timelineFilter,
+  setTimelineFilter
 }: HomeTabProps) {
   return (
             <div className={styles.viewContainer}>
@@ -235,8 +239,16 @@ export default function HomeTab({
                         <span className={styles.legendItem}><span className={`${styles.legendDot} ${styles.legendPurple}`} />Orders</span>
                         <span className={styles.legendItem}><span className={styles.legendDot} style={{ backgroundColor: "#10b981" }} />Profit</span>
                       </div>
-                      <select className={styles.chartSelect}>
-                        <option>Last 30 Days</option>
+                      <select 
+                        className={styles.chartSelect}
+                        value={timelineFilter}
+                        onChange={(e) => { setTimelineFilter(e.target.value); }}
+                      >
+                        <option value="today">Today</option>
+                        <option value="7days">Last 7 Days</option>
+                        <option value="30days">Last 30 Days</option>
+                        <option value="year">This Year</option>
+                        <option value="all">All Time</option>
                       </select>
                     </div>
                   </div>

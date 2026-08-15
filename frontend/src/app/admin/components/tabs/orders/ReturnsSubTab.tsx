@@ -203,18 +203,16 @@ export default function ReturnsSubTab({
                             .filter(o => {
                               if (activeSubTab === "returns") {
                                 return o.status === "Return Requested" || 
-                                       (o.returnRequest && o.returnRequest.status === "Pending") ||
-                                       (o.status === "Return Approved" && o.refundStatus !== "Refunded");
+                                       (o.returnRequest && o.returnRequest.status === "Pending");
                               } else if (activeSubTab === "cancelled") {
                                 const matchesRefund = refundStatusFilter === "All" || (o.refundStatus || "Not Refunded") === refundStatusFilter;
                                 return o.status === "Cancelled" && (o.refundStatus || "Not Refunded") !== "Refunded" && matchesRefund;
                               } else if (activeSubTab === "completed") {
                                 const hasPendingReturn = o.status === "Return Requested" || (o.returnRequest && o.returnRequest.status === "Pending");
-                                const hasUnrefundedApprovedReturn = o.status === "Return Approved" && o.refundStatus !== "Refunded";
-                                if (hasPendingReturn || hasUnrefundedApprovedReturn) return false;
+                                if (hasPendingReturn) return false;
                                 return o.status === "Delivered" || 
                                        o.status === "Return Rejected" || 
-                                       (o.status === "Return Approved" && o.refundStatus === "Refunded") || 
+                                       o.status === "Return Approved" || 
                                        (o.status === "Cancelled" && o.refundStatus === "Refunded");
                               } else {
                                 const matchesStatus = orderStatusFilter === "All" || o.status === orderStatusFilter;
@@ -237,7 +235,7 @@ export default function ReturnsSubTab({
                                 return (
                                   <tr key={order._id}>
                                     <td>
-                                      <span className={styles.tableName}>{order.orderId}</span>
+                                      <span className={styles.tableName}>{order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId}</span>
                                     </td>
                                     <td>
                                       <span className={styles.tableName}>{order.customerName}</span>
@@ -293,7 +291,7 @@ export default function ReturnsSubTab({
                                           className={styles.selectInput}
                                           style={{ padding: "4px 8px", fontSize: "0.8rem", cursor: "pointer", minWidth: "110px", display: "flex", alignItems: "center", justifyContent: "space-between" }}
                                         >
-                                          Action
+                                          {order.returnRequest?.status || "Pending"}
                                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="#6b7280" style={{ width: "12px", height: "12px", transform: openStatusDropdownId === order._id ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>
                                             <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                           </svg>
@@ -346,7 +344,7 @@ export default function ReturnsSubTab({
                               return (
                                 <tr key={order._id}>
                                   <td>
-                                    <span className={styles.tableName}>{order.orderId}</span>
+                                    <span className={styles.tableName}>{order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId}</span>
                                   </td>
                                   <td>
                                     <span className={styles.tableName}>{order.customerName}</span>
@@ -372,10 +370,10 @@ export default function ReturnsSubTab({
                                       fontSize: "0.75rem",
                                       fontWeight: 700,
                                       textTransform: "uppercase",
-                                      backgroundColor: order.status === "Delivered" ? "#eaf7ee" : order.status === "Shipped" ? "#eff6ff" : "#fef3c7",
-                                      color: order.status === "Delivered" ? "#15803d" : order.status === "Shipped" ? "#1d4ed8" : "#b45309"
+                                      backgroundColor: order.status === "Delivered" || (order.status === "Return Approved" && !(order.returnRequest?.returnType === "Refund" && order.refundStatus !== "Refunded")) ? "#eaf7ee" : order.status === "Return Rejected" ? "#fef2f2" : order.status === "Shipped" ? "#eff6ff" : order.status === "Return Approved" ? "#fef3c7" : "#fef3c7",
+                                      color: order.status === "Delivered" || (order.status === "Return Approved" && !(order.returnRequest?.returnType === "Refund" && order.refundStatus !== "Refunded")) ? "#15803d" : order.status === "Return Rejected" ? "#991b1b" : order.status === "Shipped" ? "#1d4ed8" : order.status === "Return Approved" ? "#b45309" : "#b45309"
                                     }}>
-                                      {order.status}
+                                      {order.status === "Return Approved" ? (order.returnRequest?.returnType === "Refund" && order.refundStatus !== "Refunded" ? "Payment Pending" : "Approved") : order.status === "Return Rejected" ? "Rejected" : order.status}
                                     </span>
                                   </td>
                                   <td>

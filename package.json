@@ -9,5 +9,8 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "Root project runner for 29sFormula"
+  "description": "Root project runner for 29sFormula",
+  "dependencies": {
+    "puppeteer": "^25.7.0"
+  }
 }
