@@ -1243,10 +1243,29 @@ export default function ProductDetailPage() {
                       <div className={styles.cartItemInfo}>
                         <div className={styles.cartItemHeaderRow}>
                           <h4 className={styles.cartItemName}>{item.name.toUpperCase()}</h4>
-                          <span className={styles.cartItemTotalPrice}>Rs. {(item.price * item.quantity).toLocaleString("en-IN")}.00</span>
+                          <div className={styles.cartItemTotalPrice} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            {item.strikePrice && item.strikePrice > item.price && (
+                              <del style={{ color: "#ef4444", fontSize: "0.85em" }}>
+                                Rs. {(item.strikePrice * item.quantity).toLocaleString("en-IN")}.00
+                              </del>
+                            )}
+                            <span>Rs. {(item.price * item.quantity).toLocaleString("en-IN")}.00</span>
+                          </div>
                         </div>
                         <p className={styles.cartItemSize}>{item.size}</p>
-                        <p className={styles.cartItemUnitPrice}>Rs. {item.price.toLocaleString("en-IN")}.00</p>
+                        <div className={styles.cartItemUnitPrice} style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
+                          {item.strikePrice && item.strikePrice > item.price && (
+                            <del style={{ color: "#ef4444", fontSize: "0.85em" }}>
+                              Rs. {item.strikePrice.toLocaleString("en-IN")}.00
+                            </del>
+                          )}
+                          <span>Rs. {item.price.toLocaleString("en-IN")}.00</span>
+                          {item.strikePrice && item.strikePrice > item.price && (
+                            <span style={{ color: "#16a34a", fontSize: "0.85em", fontWeight: 700 }}>
+                              -{Math.round(((item.strikePrice - item.price) / item.strikePrice) * 100)}%
+                            </span>
+                          )}
+                        </div>
                         
                         <div className={styles.cartItemControlsRow}>
                           <div className={styles.qtyControlRow}>
