@@ -691,11 +691,6 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
                         </del>
                       )}
                       <span>₹{(item.price * item.quantity).toLocaleString("en-IN")}.00</span>
-                      {item.strikePrice && item.strikePrice > item.price && (
-                        <span style={{ color: "#16a34a", fontSize: "0.85em", fontWeight: 700 }}>
-                          -{Math.round(((item.strikePrice - item.price) / item.strikePrice) * 100)}%
-                        </span>
-                      )}
                     </div>
                   </div>
                 ))}
