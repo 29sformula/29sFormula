@@ -839,7 +839,16 @@ router.post("/api/orders/razorpay-verify", async (req, res) => {
       await customer.save();
     }
 
-    const orderId = "ORD" + Date.now() + Math.floor(Math.random() * 1000);
+    let orderIdNum = 1001;
+    const lastOrder = await Order.findOne({ orderId: /^ORD-\d+$/ }).sort({ _id: -1 });
+    if (lastOrder && lastOrder.orderId) {
+      const parts = lastOrder.orderId.split("-");
+      const lastNum = parseInt(parts[1], 10);
+      if (!isNaN(lastNum)) {
+        orderIdNum = lastNum + 1;
+      }
+    }
+    const orderId = `ORD-${orderIdNum}`;
     const newOrder = new Order({
       ...orderPayload,
       orderId,
