@@ -22,7 +22,7 @@ export default function Footer() {
   useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:5001/api/settings")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/settings`)
       .then(res => res.json())
       .then(data => {
         if (data.supportText) setSupportText(data.supportText);

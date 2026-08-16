@@ -230,7 +230,7 @@ export default function Collections() {
     } catch (e) {}
 
     // Fetch products
-    fetch("http://127.0.0.1:5001/api/products", { cache: "no-store" })
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/products`, { cache: "no-store" })
       .then(res => {
         if (!res.ok) throw new Error("Failed to fetch products");
         return res.json();
@@ -250,7 +250,7 @@ export default function Collections() {
       .finally(() => setLoading(false));
 
     // Fetch primary theme color
-    fetch("http://127.0.0.1:5001/api/settings", { cache: "no-store" })
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/settings`, { cache: "no-store" })
       .then(res => {
         if (!res.ok) throw new Error("Failed to fetch settings");
         return res.json();

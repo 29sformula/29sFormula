@@ -366,7 +366,7 @@ export default function ProductPageSubTab({
                                             const formData = new FormData();
                                             formData.append("file", file);
                                             try {
-                                              const res = await fetch("http://127.0.0.1:5001/api/upload", {
+                                              const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/upload`, {
                                                 method: "POST",
                                                 body: formData
                                               });
@@ -425,7 +425,7 @@ export default function ProductPageSubTab({
                                             const formData = new FormData();
                                             formData.append("file", file);
                                             try {
-                                              const res = await fetch("http://127.0.0.1:5001/api/upload", {
+                                              const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/upload`, {
                                                 method: "POST",
                                                 body: formData
                                               });

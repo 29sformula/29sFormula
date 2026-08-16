@@ -83,7 +83,7 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
           if (user.email) {
             setEmail(user.email);
             // Automatically fetch customer details to pre-fill phone and address
-            fetch(`http://127.0.0.1:5001/api/customers/search?query=${encodeURIComponent(user.email)}`)
+            fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/customers/search?query=${encodeURIComponent(user.email)}`)
               .then(res => {
                 if (res.ok) return res.json();
                 throw new Error("Not found");
@@ -149,7 +149,7 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
     const code = couponCode.trim().toUpperCase();
     
     try {
-      const res = await fetch(`http://127.0.0.1:5001/api/discounts/validate?code=${code}&subtotal=${subtotalAmount}`, { cache: "no-store" });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/discounts/validate?code=${code}&subtotal=${subtotalAmount}`, { cache: "no-store" });
       if (res.ok) {
         const discountObj = await res.json();
         
@@ -243,7 +243,7 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
     setSearchSuccess(null);
 
     try {
-      const res = await fetch(`http://127.0.0.1:5001/api/customers/search?query=${encodeURIComponent(searchQuery.trim())}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/customers/search?query=${encodeURIComponent(searchQuery.trim())}`);
       if (!res.ok) {
         throw new Error("Customer not found. Please fill in your details manually.");
       }
@@ -323,7 +323,7 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
           throw new Error("Razorpay SDK failed to load. Are you online?");
         }
 
-        const initRes = await fetch("http://127.0.0.1:5001/api/orders/razorpay-init", {
+        const initRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/orders/razorpay-init`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ totalAmount, cartItems: orderPayload.cartItems })
@@ -345,7 +345,7 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
           order_id: initData.order_id,
           handler: async function (response: any) {
             try {
-              const verifyRes = await fetch("http://127.0.0.1:5001/api/orders/razorpay-verify", {
+              const verifyRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/orders/razorpay-verify`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -414,7 +414,7 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
         // Do not set isSubmitting(false) here, it will be handled by the handler or error event
 
       } else {
-        const res = await fetch("http://127.0.0.1:5001/api/orders", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/orders`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(orderPayload)

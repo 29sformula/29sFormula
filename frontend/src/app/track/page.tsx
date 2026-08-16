@@ -60,7 +60,7 @@ export default function TrackOrderPage() {
   const [showCartDrawer, setShowCartDrawer] = useState(false);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:5001/api/settings", { cache: "no-store" })
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/settings`, { cache: "no-store" })
       .then(res => res.json())
       .then(data => {
         if (data && data.primaryColor) {
@@ -93,7 +93,7 @@ export default function TrackOrderPage() {
     setCancelSuccess(false);
 
     try {
-      const res = await fetch(`http://127.0.0.1:5001/api/orders/track?query=${encodeURIComponent(queryStr.trim())}`, { cache: "no-store" });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/orders/track?query=${encodeURIComponent(queryStr.trim())}`, { cache: "no-store" });
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || "No order matched these details.");
@@ -149,7 +149,7 @@ export default function TrackOrderPage() {
     setError(null);
 
     try {
-      const res = await fetch(`http://127.0.0.1:5001/api/orders/${currentOrder._id}/cancel`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/orders/${currentOrder._id}/cancel`, {
         method: "POST"
       });
       const data = await res.json();
@@ -176,7 +176,7 @@ export default function TrackOrderPage() {
     formData.append("file", file);
     
     try {
-      const res = await fetch("http://127.0.0.1:5001/api/upload", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/upload`, {
         method: "POST",
         body: formData
       });
@@ -207,7 +207,7 @@ export default function TrackOrderPage() {
     setError(null);
 
     try {
-      const res = await fetch(`http://127.0.0.1:5001/api/orders/${modalOrderId}/return`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/orders/${modalOrderId}/return`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

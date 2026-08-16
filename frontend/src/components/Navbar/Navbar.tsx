@@ -65,7 +65,7 @@ export default function Navbar({ onCartClick }: NavbarProps) {
     if (cachedLogoValue) setBrandLogoValue(cachedLogoValue);
 
     // Fetch latest settings in background
-    fetch("http://127.0.0.1:5001/api/settings")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/settings`)
       .then(res => res.json())
       .then(data => {
         if (data) {
@@ -105,7 +105,7 @@ export default function Navbar({ onCartClick }: NavbarProps) {
   useEffect(() => {
     if (isSearchOpen && !hasFetchedProducts) {
       setHasFetchedProducts(true);
-      fetch("http://127.0.0.1:5001/api/products", { cache: "no-store" })
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/products`, { cache: "no-store" })
         .then((res) => res.json())
         .then((data) => {
           if (Array.isArray(data)) setProducts(data);

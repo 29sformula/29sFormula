@@ -560,7 +560,7 @@ export default function AdminDashboard() {
 
   const fetchSettings = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:5001/api/settings", { cache: "no-store" });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/settings`, { cache: "no-store" });
       if (!res.ok) throw new Error("Failed to fetch settings catalog");
       const data = await res.json();
       if (data) {
@@ -723,7 +723,7 @@ export default function AdminDashboard() {
 
   const fetchAdminReviews = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:5001/api/admin/reviews", { cache: "no-store" });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/admin/reviews`, { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
         setAdminReviews(data || []);
@@ -737,7 +737,7 @@ export default function AdminDashboard() {
     if (!deleteReviewTarget) return;
     setIsDeletingReview(true);
     try {
-      const res = await fetch(`http://127.0.0.1:5001/api/admin/reviews/${deleteReviewTarget}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/admin/reviews/${deleteReviewTarget}`, {
         method: "DELETE"
       });
       if (res.ok) {
@@ -757,7 +757,7 @@ export default function AdminDashboard() {
     if (!editReviewTarget) return;
     setIsEditingReview(true);
     try {
-      const res = await fetch(`http://127.0.0.1:5001/api/admin/reviews/${editReviewTarget._id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/admin/reviews/${editReviewTarget._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -785,7 +785,7 @@ export default function AdminDashboard() {
 
   const fetchDiscounts = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:5001/api/discounts", { cache: "no-store" });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/discounts`, { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
         setDiscountsList(data || []);
@@ -800,7 +800,7 @@ export default function AdminDashboard() {
     if (!newDiscountCode || !newDiscountValue) return;
 
     try {
-      const res = await fetch("http://127.0.0.1:5001/api/discounts", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/discounts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -829,7 +829,7 @@ export default function AdminDashboard() {
 
   const handleDeleteDiscount = async (id: string) => {
     try {
-      const res = await fetch(`http://127.0.0.1:5001/api/discounts/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/discounts/${id}`, {
         method: "DELETE"
       });
       if (res.ok) {
@@ -908,7 +908,7 @@ export default function AdminDashboard() {
 
   const saveSettingsSilent = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:5001/api/settings", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/settings`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1172,7 +1172,7 @@ export default function AdminDashboard() {
     try {
       setLoadingSettings(true);
       setError(null);
-      const res = await fetch("http://127.0.0.1:5001/api/settings", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/settings`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1364,7 +1364,7 @@ export default function AdminDashboard() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://127.0.0.1:5001/api/products", { cache: "no-store" });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/products`, { cache: "no-store" });
       if (!res.ok) throw new Error("Failed to fetch products");
       const data = await res.json();
       setProducts(data);
@@ -1377,7 +1377,7 @@ export default function AdminDashboard() {
   };
 
   const fetchOrders = () => {
-    fetch("http://127.0.0.1:5001/api/orders", { cache: "no-store" })
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/orders`, { cache: "no-store" })
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -1388,7 +1388,7 @@ export default function AdminDashboard() {
   };
 
   const fetchCustomers = () => {
-    fetch("http://127.0.0.1:5001/api/customers", { cache: "no-store" })
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/customers`, { cache: "no-store" })
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -1401,7 +1401,7 @@ export default function AdminDashboard() {
   const handleDeleteCustomer = async (id: string) => {
     setIsDeletingCustomer(true);
     try {
-      const res = await fetch(`http://127.0.0.1:5001/api/customers/${id}`, { method: "DELETE" });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/customers/${id}`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
         fetchCustomers();
@@ -1429,7 +1429,7 @@ export default function AdminDashboard() {
 
   const executeReturnStatusUpdate = async (orderId: string, newStatus: string, notes: string) => {
     try {
-      const res = await fetch(`http://127.0.0.1:5001/api/orders/${orderId}/return-status`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/orders/${orderId}/return-status`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus, adminNotes: notes })
@@ -1455,7 +1455,7 @@ export default function AdminDashboard() {
   };
 
   const handleUpdateOrderStatus = (orderId: string, status: string) => {
-    fetch(`http://127.0.0.1:5001/api/orders/${orderId}`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/orders/${orderId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status })
@@ -1482,7 +1482,7 @@ export default function AdminDashboard() {
   const executeDeleteOrder = async (orderId: string) => {
     setIsDeletingOrder(true);
     try {
-      const res = await fetch(`http://127.0.0.1:5001/api/orders/${orderId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/orders/${orderId}`, {
         method: "DELETE"
       });
       if (!res.ok) throw new Error("Failed to delete order");
@@ -1499,7 +1499,7 @@ export default function AdminDashboard() {
   };
 
   const handleUpdateRefundStatus = (orderId: string, refundStatus: string) => {
-    fetch(`http://127.0.0.1:5001/api/orders/${orderId}`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/orders/${orderId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refundStatus })
@@ -1542,7 +1542,7 @@ export default function AdminDashboard() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const res = await fetch("http://127.0.0.1:5001/api/upload", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/upload`, {
           method: "POST",
           body: formData
         });
@@ -1595,7 +1595,7 @@ export default function AdminDashboard() {
     formData.append("file", file);
 
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", "http://127.0.0.1:5001/api/upload");
+    xhr.open("POST", `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/upload`);
 
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable) {
@@ -1651,7 +1651,7 @@ export default function AdminDashboard() {
     formData.append("file", file);
 
     try {
-      const res = await fetch("http://127.0.0.1:5001/api/upload", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/upload`, {
         method: "POST",
         body: formData
       });
@@ -1682,7 +1682,7 @@ export default function AdminDashboard() {
     formData.append("file", file);
 
     try {
-      const res = await fetch("http://127.0.0.1:5001/api/upload", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/upload`, {
         method: "POST",
         body: formData
       });
@@ -1788,8 +1788,8 @@ export default function AdminDashboard() {
 
     try {
       const url = isEditing
-        ? `http://127.0.0.1:5001/api/products/${editId}`
-        : "http://127.0.0.1:5001/api/products";
+        ? `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/products/${editId}`
+        : `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/products`;
       const method = isEditing ? "PUT" : "POST";
 
       const res = await fetch(url, {
@@ -1872,7 +1872,7 @@ export default function AdminDashboard() {
         if (!prod) continue;
         const existingCats = Array.isArray(prod.category) ? prod.category : [prod.category].filter(Boolean);
         const updatedCats = Array.from(new Set([...existingCats, name]));
-        const res = await fetch(`http://127.0.0.1:5001/api/products/${prodId}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/products/${prodId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -1910,7 +1910,7 @@ export default function AdminDashboard() {
     if (!renameCategoryTarget || !renameCategoryNewName.trim()) return;
     setIsRenamingCategory(true);
     try {
-      const res = await fetch("http://127.0.0.1:5001/api/categories/rename", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/categories/rename`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ oldName: renameCategoryTarget, newName: renameCategoryNewName.trim() })
@@ -1958,7 +1958,7 @@ export default function AdminDashboard() {
       for (const prod of productsToUpdate) {
         const existingCats = Array.isArray(prod.category) ? prod.category : [prod.category].filter(Boolean);
         const updatedCats = existingCats.filter(c => c !== deleteCategoryTarget);
-        const res = await fetch(`http://127.0.0.1:5001/api/products/${prod._id}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/products/${prod._id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -2007,7 +2007,7 @@ export default function AdminDashboard() {
         const existingCats = Array.isArray(prod.category) ? prod.category : [prod.category].filter(Boolean);
         const updatedCats = Array.from(new Set([...existingCats, selectedCategoryView]));
 
-        const res = await fetch(`http://127.0.0.1:5001/api/products/${prodId}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/products/${prodId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -2035,7 +2035,7 @@ export default function AdminDashboard() {
 
   const handleDelete = async (id: string) => {
     try {
-      const res = await fetch(`http://127.0.0.1:5001/api/products/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/products/${id}`, {
         method: "DELETE"
       });
       if (!res.ok) throw new Error("Failed to delete product");

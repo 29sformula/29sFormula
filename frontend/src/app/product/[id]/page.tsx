@@ -83,7 +83,7 @@ export default function ProductDetailPage() {
 
     try {
       const cartSubtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-      const res = await fetch(`http://127.0.0.1:5001/api/discounts/validate?code=${couponCodeInput.trim()}&subtotal=${cartSubtotal}`, { cache: "no-store" });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/discounts/validate?code=${couponCodeInput.trim()}&subtotal=${cartSubtotal}`, { cache: "no-store" });
       if (res.ok) {
         const discount = await res.json();
         setAppliedDiscount(discount);
@@ -200,7 +200,7 @@ export default function ProductDetailPage() {
       formData.append("file", file);
 
       try {
-        const res = await fetch("http://127.0.0.1:5001/api/upload", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/upload`, {
           method: "POST",
           body: formData
         });
@@ -225,7 +225,7 @@ export default function ProductDetailPage() {
 
   const fetchReviews = async (productId: string) => {
     try {
-      const res = await fetch(`http://127.0.0.1:5001/api/reviews/${productId}`, { cache: "no-store" });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/reviews/${productId}`, { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
         setReviewsData({
@@ -281,7 +281,7 @@ export default function ProductDetailPage() {
     }));
 
     try {
-      await fetch(`http://127.0.0.1:5001/api/reviews/${reviewId}/helpful`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/reviews/${reviewId}/helpful`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ increment: true })
@@ -306,7 +306,7 @@ export default function ProductDetailPage() {
         images: reviewImages
       };
 
-      const res = await fetch("http://127.0.0.1:5001/api/reviews", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/reviews`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -521,7 +521,7 @@ export default function ProductDetailPage() {
   useEffect(() => {
 
     // Get primary color and Product Page CMS settings from backend
-    fetch("http://127.0.0.1:5001/api/settings", { cache: "no-store" })
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/settings`, { cache: "no-store" })
       .then(res => res.json())
       .then(data => {
         if (data) {
@@ -546,7 +546,7 @@ export default function ProductDetailPage() {
       }
     } catch (e) {}
 
-    fetch("http://127.0.0.1:5001/api/products", { cache: "no-store" })
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/products`, { cache: "no-store" })
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -561,7 +561,7 @@ export default function ProductDetailPage() {
     if (!id) return;
 
     // Load product details
-    fetch(`http://127.0.0.1:5001/api/products/${id}`, { cache: "no-store" })
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/products/${id}`, { cache: "no-store" })
       .then(res => {
         if (!res.ok) throw new Error("Product fetch failed");
         return res.json();

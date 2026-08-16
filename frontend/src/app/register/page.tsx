@@ -16,7 +16,7 @@ export default function RegisterPage() {
   );
 
   useEffect(() => {
-    fetch("http://127.0.0.1:5001/api/settings")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/settings`)
       .then(res => res.json())
       .then(data => {
         if (data && data.primaryColor) {
@@ -38,7 +38,7 @@ export default function RegisterPage() {
     setError(null);
 
     try {
-      const res = await fetch("http://127.0.0.1:5001/api/auth/register", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password })

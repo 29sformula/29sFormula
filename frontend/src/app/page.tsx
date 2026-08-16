@@ -392,7 +392,7 @@ export default function Home() {
     }
 
     const loadData = () => {
-      fetch("http://127.0.0.1:5001/api/storefront/home", { cache: "no-store" })
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/storefront/home`, { cache: "no-store" })
         .then(res => {
           if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
           return res.json();

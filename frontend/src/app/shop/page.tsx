@@ -255,7 +255,7 @@ export default function Shop() {
     } catch (e) {}
 
     // Fetch shop data
-    fetch("http://127.0.0.1:5001/api/storefront/shop", { cache: "no-store" })
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/storefront/shop`, { cache: "no-store" })
       .then(res => {
         if (!res.ok) throw new Error("Failed to fetch shop data");
         return res.json();

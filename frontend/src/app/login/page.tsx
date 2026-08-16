@@ -24,7 +24,7 @@ export default function LoginPage() {
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
 
   useEffect(() => {
-    fetch("http://127.0.0.1:5001/api/settings")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/settings`)
       .then(res => res.json())
       .then(data => {
         if (data) {
@@ -82,7 +82,7 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const res = await fetch("http://127.0.0.1:5001/api/auth/google", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/auth/google`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ credential: response.credential })
@@ -133,7 +133,7 @@ export default function LoginPage() {
     }
 
     try {
-      const res = await fetch("http://127.0.0.1:5001/api/auth/login", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })
