@@ -337,7 +337,7 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
         if (!initData.order_id) throw new Error("Invalid payment initialization");
 
         const options = {
-          key: "rzp_test_TPXyukl63mUehR", // Test API Key
+          key: "rzp_test_TQPDhHLa4xiz9t", // Test API Key
           amount: initData.amount,
           currency: initData.currency,
           name: "29sFORMULA",
