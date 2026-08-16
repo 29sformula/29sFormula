@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styles from '../../page.module.css';
 import { DashboardStats } from '../../types';
 
@@ -20,8 +20,14 @@ const generateChartPath = (
   data.forEach((d, i) => {
     const x = minX + i * step;
     const y = minY - ((d[key] || 0) / maxValue) * height;
-    if (i === 0) path += `M ${x} ${y} `;
-    else path += `L ${x} ${y} `;
+    if (i === 0) {
+      path += `M ${x} ${y} `;
+    } else {
+      const prevX = minX + (i - 1) * step;
+      const prevY = minY - ((data[i - 1][key] || 0) / maxValue) * height;
+      const cpX = prevX + (x - prevX) / 2;
+      path += `C ${cpX} ${prevY}, ${cpX} ${y}, ${x} ${y} `;
+    }
   });
   return path;
 };
@@ -46,8 +52,14 @@ const generateSparklinePath = (
   sliceData.forEach((d, i) => {
     const x = minX + i * step;
     const y = minY - (d[key] / maxValue) * height;
-    if (i === 0) path += `M ${x} ${y} `;
-    else path += `L ${x} ${y} `;
+    if (i === 0) {
+      path += `M ${x} ${y} `;
+    } else {
+      const prevX = minX + (i - 1) * step;
+      const prevY = minY - (sliceData[i - 1][key] / maxValue) * height;
+      const cpX = prevX + (x - prevX) / 2;
+      path += `C ${cpX} ${prevY}, ${cpX} ${y}, ${x} ${y} `;
+    }
   });
 
   if (fill) {
@@ -71,6 +83,39 @@ export default function HomeTab({
   timelineFilter,
   setTimelineFilter
 }: HomeTabProps) {
+  const [hoveredData, setHoveredData] = useState<{x: number, y: number, date: string, sales: number} | null>(null);
+  
+  const data = dashboardStats?.historicalData || [];
+  const minX = 50, maxX = 750, minY = 205, maxY = 30;
+  const maxValue = Math.max(...data.map(d => d.sales || 0), 1);
+  const width = maxX - minX;
+  const height = minY - maxY;
+  const step = width / Math.max(data.length - 1, 1);
+
+  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (data.length === 0) return;
+    const svgRect = e.currentTarget.getBoundingClientRect();
+    const mouseX = ((e.clientX - svgRect.left) / svgRect.width) * 800;
+    
+    let closest = data[0];
+    let closestDist = Infinity;
+    let closestIndex = 0;
+    
+    data.forEach((d, i) => {
+      const x = minX + i * step;
+      const dist = Math.abs(x - mouseX);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closest = d;
+        closestIndex = i;
+      }
+    });
+
+    const x = minX + closestIndex * step;
+    const y = minY - ((closest.sales || 0) / maxValue) * height;
+    setHoveredData({ x, y, date: closest.date, sales: closest.sales || 0 });
+  };
+
   return (
             <div className={styles.viewContainer}>
               <h1 className={styles.pageHeading}>Dashboard</h1>
@@ -236,8 +281,6 @@ export default function HomeTab({
                     <div className={styles.chartHeaderRight}>
                       <div className={styles.legendRow}>
                         <span className={styles.legendItem}><span className={`${styles.legendDot} ${styles.legendBlack}`} />Sales</span>
-                        <span className={styles.legendItem}><span className={`${styles.legendDot} ${styles.legendPurple}`} />Orders</span>
-                        <span className={styles.legendItem}><span className={styles.legendDot} style={{ backgroundColor: "#10b981" }} />Profit</span>
                       </div>
                       <select 
                         className={styles.chartSelect}
@@ -254,8 +297,14 @@ export default function HomeTab({
                   </div>
 
                   {/* Bezier SVG Line Chart */}
-                  <div className={styles.chartCanvasArea}>
-                    <svg viewBox="0 0 800 240" className={styles.mainSvgChart}>
+                  <div className={styles.chartCanvasArea} style={{ position: "relative" }}>
+                    <svg 
+                      viewBox="0 0 800 240" 
+                      className={styles.mainSvgChart}
+                      onMouseMove={handleMouseMove}
+                      onMouseLeave={() => setHoveredData(null)}
+                      style={{ cursor: 'crosshair', overflow: 'visible' }}
+                    >
                       {/* Grid Lines */}
                       <line x1="40" y1="30" x2="760" y2="30" stroke="#f3f4f6" strokeWidth="1" />
                       <line x1="40" y1="65" x2="760" y2="65" stroke="#f3f4f6" strokeWidth="1" />
@@ -284,25 +333,47 @@ export default function HomeTab({
                         stroke="#000000"
                         strokeWidth="3"
                       />
-
-                      {/* Line 2: Orders (Purple Line) */}
-                      <path
-                        d={generateChartPath(dashboardStats?.historicalData || [], "orders", 750, 50, 30, 205)}
-                        fill="none"
-                        stroke="#a855f7"
-                        strokeWidth="3"
-                        opacity="0.6"
-                      />
-
-                      {/* Line 3: Profit (Green Line) */}
-                      <path
-                        d={generateChartPath(dashboardStats?.historicalData || [], "profit", 750, 50, 30, 205)}
-                        fill="none"
-                        stroke="#10b981"
-                        strokeWidth="3"
-                        opacity="0.8"
-                      />
+                      
+                      {/* Continuous Tracking Crosshair */}
+                      {hoveredData && (
+                        <>
+                          <line 
+                            x1={hoveredData.x} y1="30" x2={hoveredData.x} y2="205" 
+                            stroke="#d1d5db" strokeWidth="1" strokeDasharray="4 4" 
+                          />
+                          <circle
+                            cx={hoveredData.x} cy={hoveredData.y} r="5"
+                            fill="#000000" stroke="#ffffff" strokeWidth="2"
+                            style={{ pointerEvents: 'none', filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.2))' }}
+                          />
+                        </>
+                      )}
                     </svg>
+
+                    {/* Tooltip Overlay */}
+                    {hoveredData && (
+                      <div style={{
+                        position: 'absolute',
+                        left: `calc(${(hoveredData.x / 800) * 100}% - 50px)`,
+                        top: `calc(${(hoveredData.y / 240) * 100}% - 50px)`,
+                        backgroundColor: '#111827',
+                        color: '#ffffff',
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        fontSize: '12px',
+                        pointerEvents: 'none',
+                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                        zIndex: 10,
+                        whiteSpace: 'nowrap',
+                        textAlign: 'center',
+                        transform: 'translateY(-10px)',
+                        transition: 'opacity 0.2s',
+                        border: '1px solid rgba(255,255,255,0.1)'
+                      }}>
+                        <div style={{ fontWeight: 600, marginBottom: '2px', color: '#f9fafb' }}>{hoveredData.date}</div>
+                        <div style={{ color: '#10b981', fontWeight: 700, fontSize: '14px' }}>₹{hoveredData.sales.toLocaleString('en-IN')}</div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -329,6 +400,66 @@ export default function HomeTab({
                         </div>
                       ))
                     )}
+                  </div>
+                </div>
+              </section>
+
+              {/* Recent Orders Table */}
+              <section className={styles.chartPanelGrid} style={{ marginTop: '24px', display: 'block' }}>
+                <div className={styles.chartContainerCard}>
+                  <div className={styles.chartHeader} style={{ borderBottom: '1px solid #f3f4f6', paddingBottom: '16px', marginBottom: '16px' }}>
+                    <div className={styles.chartHeaderLeft}>
+                      <span className={styles.chartHeaderLabel}>Recent Orders</span>
+                    </div>
+                    <button 
+                      onClick={() => { setActiveTab("orders"); setActiveSubTab("all"); }}
+                      style={{ background: 'transparent', border: 'none', color: '#4f46e5', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}
+                    >
+                      View All
+                    </button>
+                  </div>
+                  
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                      <thead>
+                        <tr>
+                          <th style={{ padding: '12px 16px', color: '#6b7280', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', borderBottom: '1px solid #f3f4f6' }}>Order ID</th>
+                          <th style={{ padding: '12px 16px', color: '#6b7280', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', borderBottom: '1px solid #f3f4f6' }}>Date</th>
+                          <th style={{ padding: '12px 16px', color: '#6b7280', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', borderBottom: '1px solid #f3f4f6' }}>Status</th>
+                          <th style={{ padding: '12px 16px', color: '#6b7280', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', borderBottom: '1px solid #f3f4f6', textAlign: 'right' }}>Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {!dashboardStats ? (
+                          <tr><td colSpan={4} style={{ padding: '16px', textAlign: 'center', color: '#6b7280' }}>Loading...</td></tr>
+                        ) : !dashboardStats.recentOrders || dashboardStats.recentOrders.length === 0 ? (
+                          <tr><td colSpan={4} style={{ padding: '16px', textAlign: 'center', color: '#6b7280' }}>No recent orders found.</td></tr>
+                        ) : (
+                          dashboardStats.recentOrders.map((order: any) => (
+                            <tr key={order._id} style={{ borderBottom: '1px solid #f9fafb' }}>
+                              <td style={{ padding: '12px 16px', fontSize: '14px', fontWeight: 500, color: '#111827' }}>
+                                ORD-{order._id.substring(order._id.length - 4).toUpperCase()}
+                              </td>
+                              <td style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280' }}>
+                                {new Date(order.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                              </td>
+                              <td style={{ padding: '12px 16px' }}>
+                                <span style={{ 
+                                  padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 600,
+                                  backgroundColor: order.status === 'Delivered' ? '#dcfce7' : order.status === 'Pending' ? '#fef9c3' : '#f3f4f6',
+                                  color: order.status === 'Delivered' ? '#166534' : order.status === 'Pending' ? '#854d0e' : '#4b5563'
+                                }}>
+                                  {order.status || 'Pending'}
+                                </span>
+                              </td>
+                              <td style={{ padding: '12px 16px', fontSize: '14px', fontWeight: 600, color: '#111827', textAlign: 'right' }}>
+                                ₹{(order.totalAmount || 0).toLocaleString('en-IN')}
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </section>

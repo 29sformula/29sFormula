@@ -26,7 +26,7 @@ router.get("/api/admin/dashboard-stats", async (req, res) => {
       dateFilter = { createdAt: { $gte: startOfYear } };
     }
 
-    const [totalProducts, latestArrivalsCount, bestSellersCount, totalCustomers, orders, topProducts] = await Promise.all([
+    const [totalProducts, latestArrivalsCount, bestSellersCount, totalCustomers, orders, topProducts, recentOrders] = await Promise.all([
       Product.countDocuments(),
       Product.countDocuments({ category: "Latest Arrivals" }),
       Product.countDocuments({ category: "Best Seller" }),
@@ -42,7 +42,8 @@ router.get("/api/admin/dashboard-stats", async (req, res) => {
         const productIds = topSales.map(t => t._id);
         const products = await Product.find({ _id: { $in: productIds } }).lean();
         return topSales.map(t => products.find(p => String(p._id) === String(t._id))).filter(Boolean);
-      })
+      }),
+      Order.find({ deletedByAdmin: false }).sort({ createdAt: -1 }).limit(5).lean()
     ]);
 
     const activeOrders = orders.filter(o => 
@@ -148,7 +149,8 @@ router.get("/api/admin/dashboard-stats", async (req, res) => {
       totalCustomers,
       topProducts,
       historicalData,
-      totalProfitThisMonth
+      totalProfitThisMonth,
+      recentOrders
     });
   } catch (error) {
     console.error("Failed to fetch dashboard stats:", error);

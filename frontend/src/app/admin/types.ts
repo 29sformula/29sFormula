@@ -19,6 +19,7 @@ export interface DashboardStats {
     profit?: number;
   }[];
   totalProfitThisMonth?: number;
+  recentOrders?: any[];
 }
 
 export interface Product {

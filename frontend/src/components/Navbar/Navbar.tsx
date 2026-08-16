@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import styles from "./Navbar.module.css";
 
 interface NavbarProps {
@@ -18,6 +18,14 @@ export default function Navbar({ onCartClick }: NavbarProps) {
   const [imageError, setImageError] = useState<boolean>(false);
   const pathname = usePathname();
   const [cartItemCount, setCartItemCount] = useState<number>(0);
+
+  // Search State
+  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [products, setProducts] = useState<any[]>([]);
+  const [hasFetchedProducts, setHasFetchedProducts] = useState<boolean>(false);
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
         const loadCartCount = () => {
@@ -78,6 +86,50 @@ export default function Navbar({ onCartClick }: NavbarProps) {
       window.removeEventListener("storage", loadCartCount);
     };
   }, []);
+
+  // Search Effects
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setIsSearchOpen((prev) => !prev);
+      }
+      if (e.key === "Escape") {
+        setIsSearchOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    if (isSearchOpen && !hasFetchedProducts) {
+      setHasFetchedProducts(true);
+      fetch("http://127.0.0.1:5001/api/products", { cache: "no-store" })
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data)) setProducts(data);
+        })
+        .catch((err) => console.error("Error fetching products for search:", err));
+    }
+  }, [isSearchOpen, hasFetchedProducts]);
+
+  useEffect(() => {
+    if (isSearchOpen && searchInputRef.current) {
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
+    }
+  }, [isSearchOpen]);
+
+  const getSearchResults = () => {
+    if (!searchQuery.trim()) return [];
+    const query = searchQuery.toLowerCase().trim();
+    return products
+      .filter((p) => p.name.toLowerCase().includes(query) || (p.description && p.description.toLowerCase().includes(query)))
+      .slice(0, 6);
+  };
+  const searchResults = getSearchResults();
 
   const handleLogout = () => {
     localStorage.removeItem("userSession");
@@ -142,11 +194,11 @@ export default function Navbar({ onCartClick }: NavbarProps) {
       </div>
       
       <div className={styles.navRight}>
-        <Link href="/shop" aria-label="Search" className={styles.iconBtn}>
+        <button aria-label="Search" className={styles.iconBtn} onClick={() => setIsSearchOpen(true)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={styles.navIcon}>
             <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.602 10.602Z" />
           </svg>
-        </Link>
+        </button>
         {currentUser ? (
           <div style={{ position: "relative" }}>
             <button 
@@ -270,6 +322,99 @@ export default function Navbar({ onCartClick }: NavbarProps) {
             </span>
           )}
         </button>
+      </div>
+      {/* Global Search Overlay */}
+      <div 
+        onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }}
+        style={{
+          position: 'fixed', inset: 0, top: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 9999,
+          transition: 'opacity 0.4s ease-in-out',
+          opacity: isSearchOpen ? 1 : 0,
+          pointerEvents: isSearchOpen ? 'auto' : 'none'
+        }}
+      />
+
+      <div style={{
+        position: 'fixed', left: 0, right: 0, backgroundColor: '#ffffff', zIndex: 10000,
+        paddingTop: '40px', paddingBottom: '30px', paddingLeft: '24px', paddingRight: '24px',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        top: isSearchOpen ? 0 : '-600px',
+        opacity: isSearchOpen ? 1 : 0,
+        pointerEvents: isSearchOpen ? 'auto' : 'none',
+        color: '#111827'
+      }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', display: 'flex', flexDirection: 'column', maxHeight: '70vh' }}>
+          
+          <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', paddingBottom: '16px', marginBottom: '16px', borderBottom: '1px solid #e5e7eb' }}>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="#9ca3af" style={{ width: '24px', height: '24px' }}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.602 10.602Z" />
+            </svg>
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search 29sFormula..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: '100%', backgroundColor: 'transparent', border: 'none', outline: 'none',
+                color: '#111827', fontSize: '1.25rem', padding: 0, margin: 0,
+                boxShadow: 'none'
+              }}
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} style={{ background: 'transparent', border: 'none', color: '#86868b', cursor: 'pointer', padding: '4px' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: '20px', height: '20px' }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+            <div style={{ width: '1px', height: '24px', backgroundColor: '#e5e7eb', margin: '0 8px' }}></div>
+            <button onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }} style={{ background: '#f3f4f6', border: '1px solid #e5e7eb', color: '#4b5563', cursor: 'pointer', padding: '6px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e5e7eb'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'} title="Close search">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" style={{ width: '14px', height: '14px' }}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+
+          <div style={{ overflowY: 'auto', flex: 1, paddingRight: '4px' }}>
+            {!searchQuery.trim() ? (
+              <div style={{ padding: '4px 0' }}>
+                <p style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em', color: '#86868b', textTransform: 'uppercase', marginBottom: '16px' }}>Quick Links</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <button onClick={() => { router.push('/'); setIsSearchOpen(false); setSearchQuery(''); }} style={{ display: 'flex', alignItems: 'center', padding: '10px 12px', borderRadius: '8px', background: 'transparent', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left', color: '#4b5563', transition: 'all 0.2s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>Home</button>
+                  <button onClick={() => { router.push('/shop'); setIsSearchOpen(false); setSearchQuery(''); }} style={{ display: 'flex', alignItems: 'center', padding: '10px 12px', borderRadius: '8px', background: 'transparent', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left', color: '#4b5563', transition: 'all 0.2s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>Shop All Products</button>
+                  <button onClick={() => { router.push('/track'); setIsSearchOpen(false); setSearchQuery(''); }} style={{ display: 'flex', alignItems: 'center', padding: '10px 12px', borderRadius: '8px', background: 'transparent', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left', color: '#4b5563', transition: 'all 0.2s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>Track Order</button>
+                </div>
+              </div>
+            ) : searchResults.length === 0 ? (
+              <div style={{ padding: '32px 0', textAlign: 'center', color: '#6b7280' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: '48px', height: '48px', margin: '0 auto 16px', opacity: 0.5 }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.602 10.602Z" />
+                </svg>
+                <p>No results found for "{searchQuery}"</p>
+              </div>
+            ) : (
+              <div>
+                <p style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em', color: '#86868b', textTransform: 'uppercase', marginBottom: '8px' }}>Products</p>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  {searchResults.map((p) => (
+                    <button
+                      key={p._id}
+                      onClick={() => { router.push(`/product/${p._id}`); setIsSearchOpen(false); setSearchQuery(''); }}
+                      style={{ display: 'flex', alignItems: 'center', padding: '10px 12px', borderRadius: '8px', background: 'transparent', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left', color: '#111827', transition: 'all 0.2s' }}
+                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      {p.imageFront ? <img src={p.imageFront} style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover', marginRight: '12px' }} /> : <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: '#e5e7eb', marginRight: '12px' }}></div>}
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontSize: '14px', fontWeight: 600 }}>{p.name}</span>
+                        <span style={{ fontSize: '12px', color: '#6b7280' }}>Rs. {p.price}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </header>
   );

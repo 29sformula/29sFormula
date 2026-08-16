@@ -2179,7 +2179,7 @@ const getSearchResults = () => {
         <div 
           onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }}
           style={{
-            position: 'fixed', inset: 0, top: '70px', backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 1000,
+            position: 'fixed', inset: 0, top: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 1000,
             transition: 'opacity 0.4s ease-in-out',
             opacity: isSearchOpen ? 1 : 0,
             pointerEvents: isSearchOpen ? 'auto' : 'none'
@@ -2191,7 +2191,7 @@ const getSearchResults = () => {
           paddingTop: '40px', paddingBottom: '30px', paddingLeft: '24px', paddingRight: '24px',
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
           transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-          top: isSearchOpen ? '70px' : '-600px',
+          top: isSearchOpen ? 0 : '-600px',
           opacity: isSearchOpen ? 1 : 0,
           pointerEvents: isSearchOpen ? 'auto' : 'none'
         }}>
@@ -2220,6 +2220,10 @@ const getSearchResults = () => {
                   </svg>
                 </button>
               )}
+              <div style={{ width: '1px', height: '24px', backgroundColor: '#e5e7eb', margin: '0 8px' }}></div>
+              <button onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }} style={{ background: '#f3f4f6', border: '1px solid #e5e7eb', color: '#4b5563', cursor: 'pointer', padding: '6px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', letterSpacing: '0.05em' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e5e7eb'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'} title="Close search">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" style={{ width: '14px', height: '14px' }}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+              </button>
             </div>
 
             <div style={{ overflowY: 'auto', flex: 1, paddingRight: '4px' }}>
