@@ -15,6 +15,7 @@ interface Product {
   _id: string;
   name: string;
   price: number;
+  strikePrice?: number;
   quantity?: number;
   description?: string;
   category: string | string[];
@@ -385,9 +386,10 @@ export default function ProductDetailPage() {
     const variantPrice = ((product as any).options && (product as any).options.find((o: any) => o.size === selectedVolume)?.price) 
                       || ((product as any).variants && (product as any).variants.find((v: any) => v.size === selectedVolume)?.price)
                       || product.price;
+        // @ts-ignore
         const variantStrikePrice = ((product as any).options && (product as any).options.find((o: any) => o.size === selectedVolume)?.strikePrice) 
                           || ((product as any).variants && (product as any).variants.find((v: any) => v.size === selectedVolume)?.strikePrice)
-                          || product.strikePrice;
+                          || (product as any).strikePrice;
 
     const buyNowItem = {
       _id: product._id,
@@ -465,6 +467,7 @@ export default function ProductDetailPage() {
                           || (product.variants && product.variants.find((v: any) => v.size === size)?.price)
                           || product.price;
 
+        const variantStrikePrice = ((product as any).options && (product as any).options.find((o: any) => o.size === size)?.strikePrice) || ((product as any).variants && (product as any).variants.find((v: any) => v.size === size)?.strikePrice) || (product as any).strikePrice;
         const maxS = (product.variants && product.variants.find((v: any) => v.size === size)?.quantity) ?? product.quantity;
         let qtyToPush = qtyToAdd;
         if (qtyToAdd > maxS) {
@@ -730,7 +733,7 @@ export default function ProductDetailPage() {
               {(() => {
                 const currentVariant = (product as any).variants?.find((v: any) => v.size === selectedVolume) || (product as any).options?.find((v: any) => v.size === selectedVolume);
                 const currentPrice = currentVariant?.price || product.price;
-                const currentStrikePrice = currentVariant?.strikePrice || product.strikePrice;
+                const currentStrikePrice = currentVariant?.strikePrice || (product as any).strikePrice;
                 return (
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     {currentStrikePrice && currentStrikePrice > currentPrice && (

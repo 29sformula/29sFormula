@@ -12,6 +12,7 @@ interface Product {
   _id: string;
   name: string;
   price: number;
+  strikePrice?: number;
   quantity?: number;
   category: string | string[];
   imageFront: string;
@@ -120,7 +121,7 @@ export default function Collections() {
                           || product.price;
         const variantStrikePrice = ((product as any).options && (product as any).options.find((o: any) => o.size === size)?.strikePrice) 
                           || ((product as any).variants && (product as any).variants.find((v: any) => v.size === size)?.strikePrice)
-                          || product.strikePrice;
+                          || (product as any).strikePrice;
 
         let qtyToPush = 1;
         if (1 > maxStock) {

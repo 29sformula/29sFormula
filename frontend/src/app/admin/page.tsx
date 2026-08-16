@@ -56,7 +56,31 @@ export default function AdminDashboard() {
   const [activeCategoryPopoverProductId, setActiveCategoryPopoverProductId] = useState<string | null>(null);
   const [categoriesDropdownOpen, setCategoriesDropdownOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [isSearchFocused, setIsSearchFocused] = useState<boolean>(false);
+  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      }
+      if (e.key === "Escape") {
+        setIsSearchOpen(false);
+        setSearchQuery("");
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    if (isSearchOpen && searchInputRef.current) {
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 50);
+    }
+  }, [isSearchOpen]);
 
   const SEARCH_PAGES = [
     { label: "Dashboard Home", target: "home" },
@@ -67,7 +91,7 @@ export default function AdminDashboard() {
     { label: "Discounts & Coupons", target: "discounts" },
     { label: "Online Store Settings", target: "online-store" },
   ];
-  const searchSuggestions = searchQuery.trim() ? SEARCH_PAGES.filter(p => p.label.toLowerCase().includes(searchQuery.toLowerCase())) : SEARCH_PAGES;
+  
   const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set());
 
   const toggleExpand = (productId: string) => {
@@ -114,6 +138,23 @@ export default function AdminDashboard() {
       fetchDiscounts();
     }
   }, [activeTab, authorized, timelineFilter]);
+
+  useEffect(() => {
+    if (isSearchOpen) {
+      if (!fetchedTabs.current.has("products")) {
+        fetchedTabs.current.add("products");
+        fetchProducts();
+      }
+      if (!fetchedTabs.current.has("orders")) {
+        fetchedTabs.current.add("orders");
+        fetchOrders();
+      }
+      if (!fetchedTabs.current.has("customers")) {
+        fetchedTabs.current.add("customers");
+        fetchCustomers();
+      }
+    }
+  }, [isSearchOpen]);
   useEffect(() => {
     const savedCustom = localStorage.getItem("admin_custom_categories");
     if (savedCustom) {
@@ -1697,7 +1738,7 @@ export default function AdminDashboard() {
     setImages([]);
     setSizes(["50ml", "100ml", "150ml"]);
     setSizeQuantities({});
-    setOptions([{ size: "", quantity: "", price: "", makingPrice: "", category: [] }]);
+    setOptions([{ size: "", quantity: "", price: "", strikePrice: "", makingPrice: "", category: [] }]);
     setIsEditing(false);
     setEditId(null);
     setCategoriesDropdownOpen(false);
@@ -1802,7 +1843,7 @@ export default function AdminDashboard() {
         makingPrice: product.makingPrice || 0,
         category: Array.isArray(product.category) ? product.category.filter(c => c !== "Latest Arrivals") : (product.category && product.category !== "Latest Arrivals" ? [product.category] : [])
       }));
-      setOptions(legacyOptions.length > 0 ? legacyOptions : [{ size: "", quantity: "", price: "", strikePrice: "", makingPrice: "", category: [] }]);
+      setOptions(legacyOptions.length > 0 ? legacyOptions : [{ size: "", quantity: "", price: "", strikePrice: "", makingPrice: "", category: [] }] as any);
     }
 
     setShowCrudModal(true);
@@ -2053,6 +2094,38 @@ export default function AdminDashboard() {
 
   
 
+const getSearchResults = () => {
+    if (!searchQuery.trim()) return { pages: [], products: [], orders: [], customers: [] };
+    const query = searchQuery.toLowerCase().trim();
+    
+    const matchedPages = SEARCH_PAGES.filter(p => p.label.toLowerCase().includes(query));
+    
+    const matchedProducts = products.filter(p => 
+      p.name.toLowerCase().includes(query) || 
+      (p.description && p.description.toLowerCase().includes(query))
+    ).slice(0, 5);
+
+    const matchedOrders = orders.filter(o => {
+      const oid = o.orderId || "";
+      const customerName = (o.shippingAddress?.fullName || "").toLowerCase();
+      const customerEmail = (o.shippingAddress?.email || "").toLowerCase();
+      const customerPhone = String(o.shippingAddress?.phone || "");
+      return oid.toLowerCase().includes(query) || 
+             customerName.includes(query) || 
+             customerEmail.includes(query) || 
+             customerPhone.includes(query);
+    });
+
+    const matchedCustomers = customers.filter(c => 
+      (c.name && c.name.toLowerCase().includes(query)) ||
+      (c.email && c.email.toLowerCase().includes(query)) ||
+      (c.phone && String(c.phone).includes(query))
+    ).slice(0, 5);
+
+    return { pages: matchedPages, products: matchedProducts, orders: matchedOrders, customers: matchedCustomers };
+  };
+  const searchResults = getSearchResults();
+
   return (
     <div className={styles.adminPageWrapper}>
       
@@ -2093,42 +2166,210 @@ export default function AdminDashboard() {
       <div className={styles.mainWrapper}>
 
         {/* Top bar with search input */}
-        <header className={styles.topNavbar}>
-                    <div className={styles.searchBar}>
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={styles.searchIcon}>
+        <header className={styles.topNavbar} style={{ borderBottom: '1px solid #e5e7eb', backgroundColor: '#ffffff' }}>
+          <div onClick={() => setIsSearchOpen(true)} style={{ cursor: 'pointer', backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '30px', transition: 'all 0.2s', padding: '8px 12px 8px 16px', marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="#6b7280" style={{ width: '18px', height: '18px' }}>
               <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.602 10.602Z" />
             </svg>
-            <input
-              type="text"
-              placeholder="Search something"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => setIsSearchFocused(true)}
-              onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-              className={styles.searchInput}
-            />
-            {isSearchFocused && searchSuggestions.length > 0 && (
-              <div style={{ position: 'absolute', top: '110%', left: 0, right: 0, backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', zIndex: 50, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
-                {searchSuggestions.map((s, idx) => (
-                  <div
-                    key={idx}
-                    onClick={() => {
-                      handleNavigationTrigger(s.target as any);
-                      setSearchQuery("");
-                      setIsSearchFocused(false);
-                    }}
-                    style={{ padding: '12px 18px', cursor: 'pointer', borderBottom: idx < searchSuggestions.length - 1 ? '1px solid #f3f4f6' : 'none', fontSize: '0.9rem', color: '#374151', display: 'flex', alignItems: 'center', gap: '10px' }}
-                    onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#f9fafb')}
-                    onMouseOut={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: '16px', height: '16px', color: '#9ca3af' }}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
-                    {s.label}
-                  </div>
-                ))}
-              </div>
-            )}
+            <span style={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '2px 6px', fontSize: '11px', fontWeight: 600, color: '#6b7280', letterSpacing: '0.05em', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>⌘K</span>
           </div>
         </header>
+
+        {/* GoJim Style Global Search Overlay */}
+        <div 
+          onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }}
+          style={{
+            position: 'fixed', inset: 0, top: '70px', backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 1000,
+            transition: 'opacity 0.4s ease-in-out',
+            opacity: isSearchOpen ? 1 : 0,
+            pointerEvents: isSearchOpen ? 'auto' : 'none'
+          }}
+        />
+
+        <div style={{
+          position: 'fixed', left: 0, right: 0, backgroundColor: '#ffffff', zIndex: 1050,
+          paddingTop: '40px', paddingBottom: '30px', paddingLeft: '24px', paddingRight: '24px',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+          top: isSearchOpen ? '70px' : '-600px',
+          opacity: isSearchOpen ? 1 : 0,
+          pointerEvents: isSearchOpen ? 'auto' : 'none'
+        }}>
+          <div style={{ maxWidth: '896px', margin: '0 auto', display: 'flex', flexDirection: 'column', maxHeight: '50vh' }}>
+            
+            <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', paddingBottom: '16px', marginBottom: '16px', borderBottom: '1px solid #e5e7eb' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="#86868b" style={{ width: '24px', height: '24px', flexShrink: 0 }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.602 10.602Z" />
+              </svg>
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search Admin Portal..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  width: '100%', backgroundColor: 'transparent', border: 'none', outline: 'none',
+                  color: '#111827', fontSize: '1.25rem', padding: 0, margin: 0,
+                  boxShadow: 'none'
+                }}
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} style={{ background: 'transparent', border: 'none', color: '#86868b', cursor: 'pointer' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: '20px', height: '20px' }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+
+            <div style={{ overflowY: 'auto', flex: 1, paddingRight: '4px' }}>
+              {!searchQuery.trim() ? (
+                <div style={{ padding: '4px 0' }}>
+                  <p style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em', color: '#86868b', textTransform: 'uppercase', marginBottom: '16px' }}>Quick Links</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {SEARCH_PAGES.map((link) => (
+                      <button
+                        key={link.label}
+                        onClick={() => {
+                          handleNavigationTrigger(link.target as any);
+                          setIsSearchOpen(false);
+                          setSearchQuery('');
+                        }}
+                        style={{
+                          display: 'flex', alignItems: 'center', padding: '10px 12px', borderRadius: '8px', background: 'transparent', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left', color: '#4b5563', transition: 'all 0.2s'
+                        }}
+                        onMouseOver={(e) => { e.currentTarget.style.color = '#111827'; (e.currentTarget.firstChild as HTMLElement).style.color = '#111827'; e.currentTarget.style.backgroundColor = '#f9fafb'; }}
+                        onMouseOut={(e) => { e.currentTarget.style.color = '#4b5563'; (e.currentTarget.firstChild as HTMLElement).style.color = '#86868b'; e.currentTarget.style.backgroundColor = 'transparent'; }}
+                      >
+                        <span style={{ fontSize: '14px', fontWeight: 600, color: '#86868b', transition: 'color 0.2s', marginRight: '12px' }}>→</span>
+                        <span style={{ fontSize: '14px', fontWeight: 500, transition: 'color 0.2s' }}>{link.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div style={{ padding: '4px 0' }}>
+                  {searchResults.pages.length === 0 && searchResults.products.length === 0 && searchResults.orders.length === 0 && searchResults.customers.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '32px 0' }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="#86868b" style={{ width: '24px', height: '24px', margin: '0 auto 12px' }}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <p style={{ fontSize: '14px', fontWeight: 500, color: '#111827', margin: '0 0 4px 0' }}>No results found</p>
+                      <p style={{ fontSize: '12px', color: '#86868b', margin: 0 }}>No match found for "{searchQuery}". Check the spelling and try again.</p>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                      
+                      {/* Pages */}
+                      {searchResults.pages.length > 0 && (
+                        <div>
+                          <p style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em', color: '#86868b', textTransform: 'uppercase', marginBottom: '8px' }}>Pages</p>
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            {searchResults.pages.map((link) => (
+                              <button
+                                key={link.label}
+                                onClick={() => { handleNavigationTrigger(link.target as any); setIsSearchOpen(false); setSearchQuery(''); }}
+                                style={{ display: 'flex', alignItems: 'center', padding: '10px 12px', borderRadius: '8px', background: 'transparent', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left', color: '#111827', transition: 'all 0.2s' }}
+                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                              >
+                                <span style={{ fontSize: '14px', fontWeight: 500 }}>{link.label}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Products */}
+                      {searchResults.products.length > 0 && (
+                        <div>
+                          <p style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em', color: '#86868b', textTransform: 'uppercase', marginBottom: '8px' }}>Products</p>
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            {searchResults.products.map((p) => (
+                              <button
+                                key={p._id}
+                                onClick={() => { handleEdit(p); setIsSearchOpen(false); setSearchQuery(''); }}
+                                style={{ display: 'flex', alignItems: 'center', padding: '10px 12px', borderRadius: '8px', background: 'transparent', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left', color: '#111827', transition: 'all 0.2s' }}
+                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                              >
+                                {p.imageFront ? <img src={p.imageFront} style={{ width: '32px', height: '32px', borderRadius: '6px', objectFit: 'cover', marginRight: '12px' }} /> : <div style={{ width: '32px', height: '32px', borderRadius: '6px', backgroundColor: '#e5e7eb', marginRight: '12px' }}></div>}
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                  <span style={{ fontSize: '14px', fontWeight: 500 }}>{p.name}</span>
+                                  <span style={{ fontSize: '12px', color: '#6b7280' }}>Rs. {p.price}</span>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Orders */}
+                      {searchResults.orders.length > 0 && (
+                        <div>
+                          <p style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em', color: '#86868b', textTransform: 'uppercase', marginBottom: '8px' }}>Orders</p>
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            {searchResults.orders.map((o) => (
+                              <button
+                                key={o._id}
+                                onClick={() => { 
+                                  let targetSubTab = "all";
+                                  if (o.status === "Delivered") targetSubTab = "completed";
+                                  else if (o.status === "Cancelled") targetSubTab = "cancelled";
+                                  else if (o.status === "Returned" || (o.returnRequest && o.returnRequest.status)) targetSubTab = "returns";
+
+                                  setActiveTab('orders'); 
+                                  setActiveSubTab(targetSubTab as any); 
+                                  setSelectedOrder(o); 
+                                  setIsSearchOpen(false); 
+                                  setSearchQuery(''); 
+                                }}
+                                style={{ display: 'flex', alignItems: 'center', padding: '10px 12px', borderRadius: '8px', background: 'transparent', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left', color: '#111827', transition: 'all 0.2s' }}
+                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                              >
+                                <div style={{ width: '32px', height: '32px', borderRadius: '6px', backgroundColor: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '12px' }}>
+                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="#6b7280" style={{ width: '16px', height: '16px' }}><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" /></svg>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                  <span style={{ fontSize: '14px', fontWeight: 500 }}>Order #{o.orderId}</span>
+                                  <span style={{ fontSize: '12px', color: '#6b7280' }}>{o.shippingAddress?.fullName} - Rs. {o.totalAmount}</span>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Customers */}
+                      {searchResults.customers.length > 0 && (
+                        <div>
+                          <p style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em', color: '#86868b', textTransform: 'uppercase', marginBottom: '8px' }}>Customers</p>
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            {searchResults.customers.map((c, idx) => (
+                              <button
+                                key={idx}
+                                onClick={() => { setActiveTab('customers'); setIsSearchOpen(false); setSearchQuery(''); }}
+                                style={{ display: 'flex', alignItems: 'center', padding: '10px 12px', borderRadius: '8px', background: 'transparent', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left', color: '#111827', transition: 'all 0.2s' }}
+                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                              >
+                                <div style={{ width: '32px', height: '32px', borderRadius: '16px', backgroundColor: '#e0e7ff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '12px', color: '#4338ca', fontSize: '14px', fontWeight: 600 }}>
+                                  {c.name ? c.name.charAt(0).toUpperCase() : '?'}
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                  <span style={{ fontSize: '14px', fontWeight: 500 }}>{c.name || 'Unknown'}</span>
+                                  <span style={{ fontSize: '12px', color: '#6b7280' }}>{c.email || c.phone}</span>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
 
         {/* Dynamic tabs render content */}
         <div className={styles.scrollableContent}>

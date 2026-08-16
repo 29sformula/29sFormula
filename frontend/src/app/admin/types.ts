@@ -25,6 +25,7 @@ export interface Product {
   _id?: string;
   name: string;
   price: number;
+  strikePrice?: number;
   makingPrice?: number;
   quantity?: number;
   description: string;
