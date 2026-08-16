@@ -10,6 +10,14 @@ const settingsSchema = new mongoose.Schema({
     type: Number,
     default: 60
   },
+  tickerBgColor: {
+    type: String,
+    default: "#ffffff"
+  },
+  tickerTextColor: {
+    type: String,
+    default: "#000000"
+  },
   announcementText: { 
     type: String, 
     default: "EVERY BOTTLE IS PREPARED WITH CARE. DUE TO SEASONAL DEMAND, PROCESSING MAY TAKE UP TO 5-7 DAYS BEFORE DISPATCH." 

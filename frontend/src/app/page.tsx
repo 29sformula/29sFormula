@@ -601,6 +601,22 @@ export default function Home() {
         }
       `}</style>
       
+      {/* 2.5 Top Marquee Ticker */}
+      {globalSettings?.showTicker && globalSettings?.tickerText && (
+        <div className={styles.tickerContainer} style={{ backgroundColor: globalSettings?.tickerBgColor || "#ffffff", color: globalSettings?.tickerTextColor || "#000000" }}>
+          <div className={styles.tickerTrack} style={{ animationDuration: `${(globalSettings.tickerSpeed || 60)}s` }}>
+            {/* Group 1 (First 50%) */}
+            {[...Array(4)].map((_, i) => (
+              <span key={`t1-${i}`}>{globalSettings.tickerText}</span>
+            ))}
+            {/* Group 2 (Second 50% for seamless looping) */}
+            {[...Array(4)].map((_, i) => (
+              <span key={`t2-${i}`}>{globalSettings.tickerText}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* 3. Navigation Header */}
       <Navbar onCartClick={() => setShowCartDrawer(true)} />
 

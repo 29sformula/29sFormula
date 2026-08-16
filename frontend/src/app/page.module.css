@@ -22,7 +22,9 @@
   display: flex;
   flex-shrink: 0;
   white-space: pre;
-  animation: marquee 60s linear infinite;
+  animation-name: marquee;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
 }
 
 .tickerTrack span {
@@ -38,7 +40,7 @@
     transform: translate3d(0, 0, 0);
   }
   100% {
-    transform: translate3d(-100%, 0, 0);
+    transform: translate3d(-50%, 0, 0);
   }
 }
 

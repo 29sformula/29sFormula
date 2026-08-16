@@ -56,6 +56,18 @@ export default function AdminDashboard() {
   const [activeCategoryPopoverProductId, setActiveCategoryPopoverProductId] = useState<string | null>(null);
   const [categoriesDropdownOpen, setCategoriesDropdownOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isSearchFocused, setIsSearchFocused] = useState<boolean>(false);
+
+  const SEARCH_PAGES = [
+    { label: "Dashboard Home", target: "home" },
+    { label: "Products Catalog", target: "products" },
+    { label: "Orders Management", target: "orders" },
+    { label: "Customers Directory", target: "customers" },
+    { label: "Marketing Campaigns & Promos", target: "marketing" },
+    { label: "Discounts & Coupons", target: "discounts" },
+    { label: "Online Store Settings", target: "online-store" },
+  ];
+  const searchSuggestions = searchQuery.trim() ? SEARCH_PAGES.filter(p => p.label.toLowerCase().includes(searchQuery.toLowerCase())) : SEARCH_PAGES;
   const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set());
 
   const toggleExpand = (productId: string) => {
@@ -192,6 +204,8 @@ export default function AdminDashboard() {
   // Storefront CMS Configuration State
   const [tickerText, setTickerText] = useState<string>("");
   const [tickerSpeed, setTickerSpeed] = useState<number>(60);
+  const [tickerBgColor, setTickerBgColor] = useState<string>("#ffffff");
+  const [tickerTextColor, setTickerTextColor] = useState<string>("#000000");
   const [announcementText, setAnnouncementText] = useState<string>("");
   const [heroTitle, setHeroTitle] = useState<string>("");
   const [heroTitleFontType, setHeroTitleFontType] = useState<string>("Outfit");
@@ -314,6 +328,8 @@ export default function AdminDashboard() {
   const hasUnsavedChanges = originalSettings ? (
     tickerText !== (originalSettings.tickerText || "") ||
     tickerSpeed !== (originalSettings.tickerSpeed || 60) ||
+    tickerBgColor !== (originalSettings.tickerBgColor || "#ffffff") ||
+    tickerTextColor !== (originalSettings.tickerTextColor || "#000000") ||
     announcementText !== (originalSettings.announcementText || "") ||
     heroTitle !== (originalSettings.heroTitle || "") ||
     heroTitleFontType !== (originalSettings.heroTitleFontType || "Outfit") ||
@@ -402,6 +418,8 @@ export default function AdminDashboard() {
     if (!originalSettings) return changes;
     if (tickerText !== (originalSettings.tickerText || "")) changes.push("Marquee scrolling ticker text");
     if (tickerSpeed !== (originalSettings.tickerSpeed || 60)) changes.push("Marquee ticker scrolling speed");
+    if (tickerBgColor !== (originalSettings.tickerBgColor || "#ffffff")) changes.push("Marquee ticker background color");
+    if (tickerTextColor !== (originalSettings.tickerTextColor || "#000000")) changes.push("Marquee ticker text color");
     if (announcementText !== (originalSettings.announcementText || "")) changes.push("Top announcement banner copy");
     if (heroTitle !== (originalSettings.heroTitle || "")) changes.push("Hero brand header title");
     if (heroTitleFontType !== (originalSettings.heroTitleFontType || "Outfit")) changes.push("Hero title font type");
@@ -507,6 +525,8 @@ export default function AdminDashboard() {
       if (data) {
         setTickerText(data.tickerText || "");
         setTickerSpeed(data.tickerSpeed || 60);
+        setTickerBgColor(data.tickerBgColor || "#ffffff");
+        setTickerTextColor(data.tickerTextColor || "#000000");
         setAnnouncementText(data.announcementText || "");
         setHeroTitle(data.heroTitle || "");
         setHeroTitleFontType(data.heroTitleFontType || "Outfit");
@@ -570,6 +590,8 @@ export default function AdminDashboard() {
         setOriginalSettings({
           tickerText: data.tickerText || "",
           tickerSpeed: data.tickerSpeed || 60,
+          tickerBgColor: data.tickerBgColor || "#ffffff",
+          tickerTextColor: data.tickerTextColor || "#000000",
           announcementText: data.announcementText || "",
           heroTitle: data.heroTitle || "",
           heroTitleFontType: data.heroTitleFontType || "Outfit",
@@ -851,6 +873,8 @@ export default function AdminDashboard() {
         body: JSON.stringify({
           tickerText,
           tickerSpeed,
+          tickerBgColor,
+          tickerTextColor,
           announcementText,
           heroTitle,
           heroTitleFontType,
@@ -937,6 +961,8 @@ export default function AdminDashboard() {
       setOriginalSettings({
           tickerText,
           tickerSpeed,
+          tickerBgColor,
+          tickerTextColor,
           announcementText,
           heroTitle,
           heroTitleFontType,
@@ -1026,6 +1052,8 @@ export default function AdminDashboard() {
     if (originalSettings) {
       setTickerText(originalSettings.tickerText || "");
       setTickerSpeed(originalSettings.tickerSpeed || 60);
+      setTickerBgColor(originalSettings.tickerBgColor || "#ffffff");
+      setTickerTextColor(originalSettings.tickerTextColor || "#000000");
       setAnnouncementText(originalSettings.announcementText || "");
       setHeroTitle(originalSettings.heroTitle || "");
       setHeroTitleFontType(originalSettings.heroTitleFontType || "Outfit");
@@ -1109,6 +1137,8 @@ export default function AdminDashboard() {
         body: JSON.stringify({
           tickerText,
           tickerSpeed,
+          tickerBgColor,
+          tickerTextColor,
           announcementText,
           heroTitle,
           heroTitleFontType,
@@ -1196,6 +1226,8 @@ export default function AdminDashboard() {
       setOriginalSettings({
           tickerText,
           tickerSpeed,
+          tickerBgColor,
+          tickerTextColor,
           announcementText,
           heroTitle,
           heroTitleFontType,
@@ -2062,7 +2094,7 @@ export default function AdminDashboard() {
 
         {/* Top bar with search input */}
         <header className={styles.topNavbar}>
-          <div className={styles.searchBar}>
+                    <div className={styles.searchBar}>
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={styles.searchIcon}>
               <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.602 10.602Z" />
             </svg>
@@ -2071,11 +2103,30 @@ export default function AdminDashboard() {
               placeholder="Search something"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
               className={styles.searchInput}
             />
-          </div>
-          <div className={styles.navRightInfo}>
-            <div className={styles.avatar}>A</div>
+            {isSearchFocused && searchSuggestions.length > 0 && (
+              <div style={{ position: 'absolute', top: '110%', left: 0, right: 0, backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', zIndex: 50, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+                {searchSuggestions.map((s, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => {
+                      handleNavigationTrigger(s.target as any);
+                      setSearchQuery("");
+                      setIsSearchFocused(false);
+                    }}
+                    style={{ padding: '12px 18px', cursor: 'pointer', borderBottom: idx < searchSuggestions.length - 1 ? '1px solid #f3f4f6' : 'none', fontSize: '0.9rem', color: '#374151', display: 'flex', alignItems: 'center', gap: '10px' }}
+                    onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#f9fafb')}
+                    onMouseOut={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: '16px', height: '16px', color: '#9ca3af' }}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
+                    {s.label}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </header>
 
@@ -2278,11 +2329,20 @@ export default function AdminDashboard() {
             />
           <MarketingTab
               activeTab={activeTab}
+              customizeSubTab={customizeSubTab}
               showTicker={showTicker}
               setShowTicker={setShowTicker}
               saveSettingsSilent={saveSettingsSilent}
               tickerText={tickerText}
               setTickerText={setTickerText}
+              tickerSpeed={tickerSpeed}
+              setTickerSpeed={setTickerSpeed}
+              tickerBgColor={tickerBgColor}
+              setTickerBgColor={setTickerBgColor}
+              tickerTextColor={tickerTextColor}
+              setTickerTextColor={setTickerTextColor}
+              setSuccessMessage={setSuccessMessage}
+              hasUnsavedChanges={hasUnsavedChanges}
             />
           <DiscountsTab
               activeTab={activeTab}

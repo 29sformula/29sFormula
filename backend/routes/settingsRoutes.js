@@ -34,6 +34,8 @@ router.post("/api/settings", async (req, res) => {
     const { 
       tickerText, 
       tickerSpeed,
+      tickerBgColor,
+      tickerTextColor,
       announcementText, 
       heroTitle, 
       heroManifesto, 
@@ -71,6 +73,8 @@ router.post("/api/settings", async (req, res) => {
 
     if (tickerText !== undefined) settings.tickerText = tickerText;
     if (tickerSpeed !== undefined) settings.tickerSpeed = tickerSpeed;
+    if (tickerBgColor !== undefined) settings.tickerBgColor = tickerBgColor;
+    if (tickerTextColor !== undefined) settings.tickerTextColor = tickerTextColor;
     if (announcementText !== undefined) settings.announcementText = announcementText;
     if (heroTitle !== undefined) settings.heroTitle = heroTitle;
     if (req.body.heroTitleFontType !== undefined) settings.heroTitleFontType = req.body.heroTitleFontType;

@@ -92,9 +92,13 @@ export default function AdminSidebar({
                       <svg style={{ display: "block", minWidth: "28px", width: "28px", height: "36px", marginRight: "8px", color: "#d1d5db" }} viewBox="0 0 28 36" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M 12 0 L 12 36" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
-                    ) : (
-                      <div style={{ minWidth: "28px", width: "28px", height: "36px", marginRight: "8px" }} />
-                    )}
+                    ) : (activeTab === "online-store" && customizeSubTab === "marketing") ? (
+                    <svg style={{ display: "block", minWidth: "28px", width: "28px", height: "36px", marginRight: "8px", color: "#d1d5db" }} viewBox="0 0 28 36" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M 12 0 L 12 36" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ) : (
+                    <div style={{ minWidth: "28px", width: "28px", height: "36px", marginRight: "8px" }} />
+                  )}
                     <div className={`${styles.subMenuItemCapsule} ${activeTab === "orders" && activeSubTab === "all" ? styles.subMenuItemCapsuleActive : ""}`} style={{ display: "flex", alignItems: "center", width: "100%", justifyContent: "space-between" }}>
                       <div style={{ display: "flex", alignItems: "center" }}>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "13px", height: "13px", marginRight: "6px" }}>
@@ -284,17 +288,7 @@ export default function AdminSidebar({
               </div>
             </div>
 
-            <div
-              onClick={() => handleNavigationTrigger("marketing")}
-              className={`${styles.menuItem} ${activeTab === "marketing" ? styles.menuItemActive : ""}`}
-            >
-              <div className={styles.menuItemLeft}>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={styles.menuIcon}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
-                </svg>
-                <span>Marketing</span>
-              </div>
-            </div>
+            
 
             <div
               onClick={() => handleNavigationTrigger("discounts")}
@@ -338,7 +332,7 @@ export default function AdminSidebar({
                       <path d="M 12 0 L 12 14 A 4 4 0 0 0 16 18 L 24 18" strokeLinecap="round" strokeLinejoin="round" />
                       <path d="M 20 14 L 24 18 L 20 22" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                  ) : (activeTab === "online-store" && (customizeSubTab === "product" || customizeSubTab === "reviews")) ? (
+                  ) : (activeTab === "online-store" && (customizeSubTab === "product" || customizeSubTab === "reviews" || customizeSubTab === "marketing")) ? (
                     <svg style={{ display: "block", minWidth: "28px", width: "28px", height: "36px", marginRight: "8px", color: "#d1d5db" }} viewBox="0 0 28 36" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M 12 0 L 12 36" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
@@ -368,7 +362,7 @@ export default function AdminSidebar({
                       <path d="M 12 0 L 12 14 A 4 4 0 0 0 16 18 L 24 18" strokeLinecap="round" strokeLinejoin="round" />
                       <path d="M 20 14 L 24 18 L 20 22" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                  ) : (activeTab === "online-store" && customizeSubTab === "reviews") ? (
+                  ) : (activeTab === "online-store" && (customizeSubTab === "reviews" || customizeSubTab === "marketing")) ? (
                     <svg style={{ display: "block", minWidth: "28px", width: "28px", height: "36px", marginRight: "8px", color: "#d1d5db" }} viewBox="0 0 28 36" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M 12 0 L 12 36" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
@@ -398,6 +392,10 @@ export default function AdminSidebar({
                       <path d="M 12 0 L 12 14 A 4 4 0 0 0 16 18 L 24 18" strokeLinecap="round" strokeLinejoin="round" />
                       <path d="M 20 14 L 24 18 L 20 22" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
+                  ) : (activeTab === "online-store" && customizeSubTab === "marketing") ? (
+                    <svg style={{ display: "block", minWidth: "28px", width: "28px", height: "36px", marginRight: "8px", color: "#d1d5db" }} viewBox="0 0 28 36" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M 12 0 L 12 36" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   ) : (
                     <div style={{ minWidth: "28px", width: "28px", height: "36px", marginRight: "8px" }} />
                   )}
@@ -407,6 +405,32 @@ export default function AdminSidebar({
                         <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
                       </svg>
                       Customer Reviews
+                    </div>
+                  </div>
+                </div>
+
+                {/* Item 4: Marketing */}
+                <div
+                  onClick={() => {
+                    setActiveTab("online-store");
+                    setCustomizeSubTab("marketing");
+                  }}
+                  className={styles.subMenuItem}
+                >
+                  {activeTab === "online-store" && customizeSubTab === "marketing" ? (
+                    <svg style={{ display: "block", minWidth: "28px", width: "28px", height: "36px", marginRight: "8px", color: "#d1d5db" }} viewBox="0 0 28 36" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M 12 0 L 12 14 A 4 4 0 0 0 16 18 L 24 18" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M 20 14 L 24 18 L 20 22" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ) : (
+                    <div style={{ minWidth: "28px", width: "28px", height: "36px", marginRight: "8px" }} />
+                  )}
+                  <div className={`${styles.subMenuItemCapsule} ${activeTab === "online-store" && customizeSubTab === "marketing" ? styles.subMenuItemCapsuleActive : ""}`} style={{ display: "flex", alignItems: "center", width: "100%", justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "13px", height: "13px", marginRight: "6px" }}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
+                      </svg>
+                      Marketing
                     </div>
                   </div>
                 </div>

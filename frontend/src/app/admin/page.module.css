@@ -234,7 +234,7 @@
   background-color: #f3f4f6; /* Soft light gray background */
   border-radius: 30px;
   padding: 8px 18px;
-  width: 320px;
+  flex: 1;
 }
 
 .searchIcon {

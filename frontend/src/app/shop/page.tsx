@@ -6,6 +6,7 @@ import styles from "./page.module.css";
 import Footer from "@/components/Footer";
 
 import Navbar from "@/components/Navbar/Navbar";
+import CheckoutDrawer from "@/components/CheckoutDrawer";
 
 interface Variant {
   size: string;
@@ -77,28 +78,8 @@ export default function Shop() {
     }, 300);
   };
 
-  const initiateCheckout = async () => {
-    try {
-      const res = await fetch("http://127.0.0.1:5001/api/gokwik/create-checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          cartItems: cartItems,
-          discountCode: isDiscountExpanded ? "DISCOUNT10" : ""
-        })
-      });
-      const data = await res.json();
-      if (data.redirect_url) {
-        window.location.href = data.redirect_url;
-      } else {
-        alert("Checkout failed to initialize.");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error connecting to checkout gateway.");
-    }
+  const initiateCheckout = () => {
+    setShowCheckoutDrawer(true);
   };
 
   const loadCart = () => {
@@ -820,6 +801,19 @@ export default function Shop() {
           </div>
         </div>
       )}
+      <CheckoutDrawer
+        isOpen={showCheckoutDrawer}
+        onClose={() => setShowCheckoutDrawer(false)}
+        cartItems={cartItems}
+        primaryColor="#d0d0d0"
+        onOrderSuccess={(orderId: string, orderDetails: any) => {
+          localStorage.removeItem("cart");
+          setCartItems([]);
+          window.dispatchEvent(new Event("cartUpdated"));
+          setShowCheckoutDrawer(false);
+          alert("Order Placed Successfully! Order ID: " + orderId);
+        }}
+      />
     </div>
   );
 }

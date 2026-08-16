@@ -14,7 +14,6 @@ import authRoutes from "./routes/authRoutes.js";
 import storefrontRoutes from "./routes/storefrontRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
-import checkoutRoutes from "./routes/checkoutRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
 import discountRoutes from "./routes/discountRoutes.js";
 
@@ -36,7 +35,6 @@ app.use("/", authRoutes);
 app.use("/", storefrontRoutes);
 app.use("/", adminRoutes);
 app.use("/", productRoutes);
-app.use("/", checkoutRoutes);
 app.use("/", reviewRoutes);
 app.use("/", discountRoutes);
 
