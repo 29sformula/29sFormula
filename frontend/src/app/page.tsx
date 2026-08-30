@@ -905,21 +905,39 @@ export default function Home() {
                         {product.description || "Signature Fragrance"}
                       </p>
                     )}
-                    <p className={styles.productPrice}>
-                      {product.strikePrice && product.strikePrice > product.price && (
-                        <>
-                          <del style={{ color: "#ef4444", marginRight: "8px", fontSize: "0.85em" }}>
-                            {isMobile ? '₹' : 'Rs.'} {product.strikePrice.toLocaleString("en-IN")}.00
-                          </del>
-                        </>
-                      )}
-                      {isMobile ? '₹' : 'Rs.'} {product.price.toLocaleString("en-IN")}.00
-                      {product.strikePrice && product.strikePrice > product.price && (
-                        <span className={styles.discountBadge}>
-                          -{Math.round(((product.strikePrice - product.price) / product.strikePrice) * 100)}%
-                        </span>
-                      )}
-                    </p>
+                      {(() => {
+                        const cheapestVariant = product.variants && product.variants.length > 0
+                          ? [...product.variants].sort((a, b) => a.price - b.price)[0]
+                          : null;
+
+                        const displayPrice = cheapestVariant ? cheapestVariant.price : product.price;
+                        const displayStrikePrice = cheapestVariant ? cheapestVariant.strikePrice : product.strikePrice;
+
+                        return (
+                          <p className={styles.productPrice}>
+                            {displayStrikePrice && displayStrikePrice > displayPrice && (
+                              <span style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+                                <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                                  <span style={{ color: "#ef4444", fontSize: "0.75em", fontWeight: 400 }}>
+                                    -{Math.round(((displayStrikePrice - displayPrice) / displayStrikePrice) * 100)}%
+                                  </span>
+                                  <span style={{ fontSize: "1.5em", fontWeight: 400, color: "#111" }}>
+                                    ₹ {displayPrice.toLocaleString("en-IN")}.00
+                                  </span>
+                                </span>
+                                <span style={{ color: "#9ca3af", fontSize: "0.85em" }}>
+                                  M.R.P: <del>₹ {displayStrikePrice.toLocaleString("en-IN")}.00</del>
+                                </span>
+                              </span>
+                            )}
+                            {(!displayStrikePrice || displayStrikePrice <= displayPrice) && (
+                              <span style={{ fontSize: "1.5em", fontWeight: 400, color: "#111" }}>
+                                ₹ {displayPrice.toLocaleString("en-IN")}.00
+                              </span>
+                            )}
+                          </p>
+                        );
+                      })()}
                     {product.quantity !== undefined && product.quantity <= 5 && (
                       <p style={{ color: "#dc2626", fontSize: "0.72rem", fontWeight: 700, marginTop: "4px", letterSpacing: "0.02em" }}>
                         {product.quantity === 0 ? "OUT OF STOCK" : `ONLY ${product.quantity} LEFT`}
@@ -1075,21 +1093,39 @@ export default function Home() {
                         {product.description || "Signature Fragrance"}
                       </p>
                     )}
-                    <p className={styles.productPrice}>
-                      {product.strikePrice && product.strikePrice > product.price && (
-                        <>
-                          <del style={{ color: "#ef4444", marginRight: "8px", fontSize: "0.85em" }}>
-                            {isMobile ? '₹' : 'Rs.'} {product.strikePrice.toLocaleString("en-IN")}.00
-                          </del>
-                        </>
-                      )}
-                      {isMobile ? '₹' : 'Rs.'} {product.price.toLocaleString("en-IN")}.00
-                      {product.strikePrice && product.strikePrice > product.price && (
-                        <span className={styles.discountBadge}>
-                          -{Math.round(((product.strikePrice - product.price) / product.strikePrice) * 100)}%
-                        </span>
-                      )}
-                    </p>
+                      {(() => {
+                        const cheapestVariant = product.variants && product.variants.length > 0
+                          ? [...product.variants].sort((a, b) => a.price - b.price)[0]
+                          : null;
+
+                        const displayPrice = cheapestVariant ? cheapestVariant.price : product.price;
+                        const displayStrikePrice = cheapestVariant ? cheapestVariant.strikePrice : product.strikePrice;
+
+                        return (
+                          <p className={styles.productPrice}>
+                            {displayStrikePrice && displayStrikePrice > displayPrice && (
+                              <span style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+                                <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                                  <span style={{ color: "#ef4444", fontSize: "0.75em", fontWeight: 400 }}>
+                                    -{Math.round(((displayStrikePrice - displayPrice) / displayStrikePrice) * 100)}%
+                                  </span>
+                                  <span style={{ fontSize: "1.5em", fontWeight: 400, color: "#111" }}>
+                                    ₹ {displayPrice.toLocaleString("en-IN")}.00
+                                  </span>
+                                </span>
+                                <span style={{ color: "#9ca3af", fontSize: "0.85em" }}>
+                                  M.R.P: <del>₹ {displayStrikePrice.toLocaleString("en-IN")}.00</del>
+                                </span>
+                              </span>
+                            )}
+                            {(!displayStrikePrice || displayStrikePrice <= displayPrice) && (
+                              <span style={{ fontSize: "1.5em", fontWeight: 400, color: "#111" }}>
+                                ₹ {displayPrice.toLocaleString("en-IN")}.00
+                              </span>
+                            )}
+                          </p>
+                        );
+                      })()}
                     {product.quantity !== undefined && product.quantity <= 5 && (
                       <p style={{ color: "#dc2626", fontSize: "0.72rem", fontWeight: 700, marginTop: "4px", letterSpacing: "0.02em" }}>
                         {product.quantity === 0 ? "OUT OF STOCK" : `ONLY ${product.quantity} LEFT`}
@@ -1412,9 +1448,9 @@ export default function Home() {
                           <h4 className={styles.cartItemName}>{item.name.toUpperCase()}</h4>
                           <div className={styles.cartItemTotalPrice} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                             {item.strikePrice && item.strikePrice > item.price && (
-                              <del style={{ color: "#ef4444", fontSize: "0.85em" }}>
-                                Rs. {(item.strikePrice * item.quantity).toLocaleString("en-IN")}.00
-                              </del>
+                              <span style={{ color: "#9ca3af", fontSize: "0.85em" }}>
+                                M.R.P: <del>₹ {(item.strikePrice * item.quantity).toLocaleString("en-IN")}.00</del>
+                              </span>
                             )}
                             <span>Rs. {(item.price * item.quantity).toLocaleString("en-IN")}.00</span>
                           </div>
@@ -1422,13 +1458,13 @@ export default function Home() {
                         <p className={styles.cartItemSize}>{item.size}</p>
                         <div className={styles.cartItemUnitPrice} style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
                           {item.strikePrice && item.strikePrice > item.price && (
-                            <del style={{ color: "#ef4444", fontSize: "0.85em" }}>
-                              Rs. {item.strikePrice.toLocaleString("en-IN")}.00
-                            </del>
+                            <span style={{ color: "#9ca3af", fontSize: "0.85em" }}>
+                              M.R.P: <del>₹ {item.strikePrice.toLocaleString("en-IN")}.00</del>
+                            </span>
                           )}
                           <span>Rs. {item.price.toLocaleString("en-IN")}.00</span>
                           {item.strikePrice && item.strikePrice > item.price && (
-                            <span style={{ color: "#16a34a", fontSize: "0.85em", fontWeight: 700 }}>
+                            <span style={{ color: "#ef4444", fontSize: "0.85em", fontWeight: 700 }}>
                               -{Math.round(((item.strikePrice - item.price) / item.strikePrice) * 100)}%
                             </span>
                           )}

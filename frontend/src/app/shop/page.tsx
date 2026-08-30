@@ -601,9 +601,12 @@ export default function Shop() {
                     <Link href={`/product/${product._id}`} style={{ textDecoration: "none", color: "inherit", pointerEvents: product.quantity === 0 ? "none" : "auto" }}>
                       <h3 className={styles.productTitle}>{product.name.toUpperCase()}</h3>
                       {(() => {
-                        const lowestPrice = product.variants && product.variants.length > 0
-                          ? Math.min(...product.variants.map(v => v.price))
-                          : product.price;
+                        const cheapestVariant = product.variants && product.variants.length > 0
+                          ? [...product.variants].sort((a, b) => a.price - b.price)[0]
+                          : null;
+
+                        const displayPrice = cheapestVariant ? cheapestVariant.price : product.price;
+                        const displayStrikePrice = cheapestVariant ? cheapestVariant.strikePrice : (product as any).strikePrice;
 
                         const lowestQuantity = product.variants && product.variants.length > 0
                           ? Math.min(...product.variants.map(v => v.quantity))
@@ -615,20 +618,26 @@ export default function Shop() {
 
                         return (
                           <>
-                            <p className={styles.productPrice}>
-                            {(product as any).strikePrice && (product as any).strikePrice > lowestPrice && (
-                              <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                                <del style={{ color: "#ef4444", fontSize: "0.85em" }}>
-                                  Rs. {(product as any).strikePrice.toLocaleString("en-IN")}.00
-                                </del>
-                                <span>From Rs. {lowestPrice.toLocaleString("en-IN")}.00</span>
-                                <span style={{ color: "#16a34a", fontSize: "0.85em", fontWeight: 700 }}>
-                                  -{Math.round((((product as any).strikePrice - lowestPrice) / (product as any).strikePrice) * 100)}%
+                          <p className={styles.productPrice}>
+                            {displayStrikePrice && displayStrikePrice > displayPrice && (
+                              <span style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+                                <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                                  <span style={{ color: "#ef4444", fontSize: "0.75em", fontWeight: 400 }}>
+                                    -{Math.round(((displayStrikePrice - displayPrice) / displayStrikePrice) * 100)}%
+                                  </span>
+                                  <span style={{ fontSize: "1.5em", fontWeight: 400, color: "#111" }}>
+                                    ₹ {displayPrice.toLocaleString("en-IN")}.00
+                                  </span>
+                                </span>
+                                <span style={{ color: "#9ca3af", fontSize: "0.85em" }}>
+                                  M.R.P: <del>₹ {displayStrikePrice.toLocaleString("en-IN")}.00</del>
                                 </span>
                               </span>
                             )}
-                            {(!(product as any).strikePrice || (product as any).strikePrice <= lowestPrice) && (
-                              <span>From Rs. {lowestPrice.toLocaleString("en-IN")}.00</span>
+                            {(!displayStrikePrice || displayStrikePrice <= displayPrice) && (
+                              <span style={{ fontSize: "1.5em", fontWeight: 400, color: "#111" }}>
+                                ₹ {displayPrice.toLocaleString("en-IN")}.00
+                              </span>
                             )}
                           </p>
                             {availableSizes.length > 0 && (
@@ -701,9 +710,9 @@ export default function Shop() {
                           <h4 className={styles.cartItemName}>{item.name.toUpperCase()}</h4>
                           <div className={styles.cartItemTotalPrice} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                             {item.strikePrice && item.strikePrice > item.price && (
-                              <del style={{ color: "#ef4444", fontSize: "0.85em" }}>
-                                Rs. {(item.strikePrice * item.quantity).toLocaleString("en-IN")}.00
-                              </del>
+                              <span style={{ color: "#9ca3af", fontSize: "0.85em" }}>
+                                M.R.P: <del>₹ {(item.strikePrice * item.quantity).toLocaleString("en-IN")}.00</del>
+                              </span>
                             )}
                             <span>Rs. {(item.price * item.quantity).toLocaleString("en-IN")}.00</span>
                           </div>
@@ -711,13 +720,13 @@ export default function Shop() {
                         <p className={styles.cartItemSize}>{item.size}</p>
                         <div className={styles.cartItemUnitPrice} style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
                           {item.strikePrice && item.strikePrice > item.price && (
-                            <del style={{ color: "#ef4444", fontSize: "0.85em" }}>
-                              Rs. {item.strikePrice.toLocaleString("en-IN")}.00
-                            </del>
+                            <span style={{ color: "#9ca3af", fontSize: "0.85em" }}>
+                              M.R.P: <del>₹ {item.strikePrice.toLocaleString("en-IN")}.00</del>
+                            </span>
                           )}
                           <span>Rs. {item.price.toLocaleString("en-IN")}.00</span>
                           {item.strikePrice && item.strikePrice > item.price && (
-                            <span style={{ color: "#16a34a", fontSize: "0.85em", fontWeight: 700 }}>
+                            <span style={{ color: "#ef4444", fontSize: "0.85em", fontWeight: 700 }}>
                               -{Math.round(((item.strikePrice - item.price) / item.strikePrice) * 100)}%
                             </span>
                           )}

@@ -47,7 +47,16 @@ router.get("/api/products", async (req, res) => {
     });
 
     products.forEach(p => {
-      p.variants = variantsMap[String(p._id)] || [];
+      let prodVariants = variantsMap[String(p._id)] || [];
+      // Sort variants by price ascending so the cheapest is first
+      prodVariants.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
+      p.variants = prodVariants;
+      
+      if (prodVariants.length > 0) {
+        p.price = prodVariants[0].price;
+        p.strikePrice = prodVariants[0].strikePrice;
+        p.sizes = prodVariants.map(v => v.size).filter(Boolean);
+      }
     });
 
     setCachedProducts(products);
@@ -79,13 +88,13 @@ router.post("/api/products", async (req, res) => {
     let computedSizes = [];
 
     if (variants && Array.isArray(variants) && variants.length > 0) {
-      computedQuantity = variants.reduce((sum, v) => sum + (Number(v.quantity) || 0), 0);
-      computedPrice = Math.min(...variants.map(v => Number(v.price) || 0));
-      const strikePrices = variants.map(v => Number(v.strikePrice)).filter(p => p > 0);
-      if (strikePrices.length > 0) computedStrikePrice = Math.max(...strikePrices);
-      computedMakingPrice = Math.min(...variants.map(v => Number(v.makingPrice) || 0));
-      computedCategory = [...new Set(variants.flatMap(v => Array.isArray(v.category) ? v.category : [v.category]).filter(Boolean))];
-      computedSizes = variants.map(v => v.size).filter(Boolean);
+      const sortedVariants = [...variants].sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
+      computedQuantity = sortedVariants.reduce((sum, v) => sum + (Number(v.quantity) || 0), 0);
+      computedPrice = Number(sortedVariants[0].price) || 0;
+      computedStrikePrice = sortedVariants[0].strikePrice ? Number(sortedVariants[0].strikePrice) : undefined;
+      computedMakingPrice = Math.min(...sortedVariants.map(v => Number(v.makingPrice) || 0));
+      computedCategory = [...new Set(sortedVariants.flatMap(v => Array.isArray(v.category) ? v.category : [v.category]).filter(Boolean))];
+      computedSizes = sortedVariants.map(v => v.size).filter(Boolean);
     }
 
     if (!computedCategory.includes("Latest Arrivals")) {
@@ -176,13 +185,13 @@ router.put("/api/products/:id", async (req, res) => {
     let computedSizes = [];
 
     if (variants && Array.isArray(variants) && variants.length > 0) {
-      computedQuantity = variants.reduce((sum, v) => sum + (Number(v.quantity) || 0), 0);
-      computedPrice = Math.min(...variants.map(v => Number(v.price) || 0));
-      const strikePrices = variants.map(v => Number(v.strikePrice)).filter(p => p > 0);
-      if (strikePrices.length > 0) computedStrikePrice = Math.max(...strikePrices);
-      computedMakingPrice = Math.min(...variants.map(v => Number(v.makingPrice) || 0));
-      computedCategory = [...new Set(variants.flatMap(v => Array.isArray(v.category) ? v.category : [v.category]).filter(Boolean))];
-      computedSizes = variants.map(v => v.size).filter(Boolean);
+      const sortedVariants = [...variants].sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
+      computedQuantity = sortedVariants.reduce((sum, v) => sum + (Number(v.quantity) || 0), 0);
+      computedPrice = Number(sortedVariants[0].price) || 0;
+      computedStrikePrice = sortedVariants[0].strikePrice ? Number(sortedVariants[0].strikePrice) : undefined;
+      computedMakingPrice = Math.min(...sortedVariants.map(v => Number(v.makingPrice) || 0));
+      computedCategory = [...new Set(sortedVariants.flatMap(v => Array.isArray(v.category) ? v.category : [v.category]).filter(Boolean))];
+      computedSizes = sortedVariants.map(v => v.size).filter(Boolean);
     }
 
     if (oldProduct.category && oldProduct.category.includes("Latest Arrivals") && !computedCategory.includes("Latest Arrivals")) {
@@ -331,8 +340,16 @@ router.get("/api/products/:id", async (req, res) => {
     if (!product) {
       return res.status(404).json({ error: "Product not found" });
     }
-    const variants = await ProductVariant.find({ productId: id }).lean();
+    let variants = await ProductVariant.find({ productId: id }).lean();
+    variants.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
     product.variants = variants;
+    
+    if (variants.length > 0) {
+      product.price = variants[0].price;
+      product.strikePrice = variants[0].strikePrice;
+      product.sizes = variants.map(v => v.size).filter(Boolean);
+    }
+
     cachedProductDetails.set(id, product);
     res.json(product);
   } catch (error) {

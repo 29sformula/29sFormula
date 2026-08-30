@@ -461,7 +461,39 @@ export default function Collections() {
                   <div className={styles.productInfo} style={product.quantity === 0 ? { pointerEvents: "none" } : {}}>
                     <Link href={`/product/${product._id}`} style={{ textDecoration: "none", color: "inherit", pointerEvents: product.quantity === 0 ? "none" : "auto" }}>
                       <h3 className={styles.productTitle}>{product.name.toUpperCase()}</h3>
-                      <p className={styles.productPrice}>Rs. {product.price.toLocaleString("en-IN")}.00</p>
+                      {(() => {
+                        const cheapestVariant = product.variants && product.variants.length > 0
+                          ? [...product.variants].sort((a, b) => a.price - b.price)[0]
+                          : null;
+
+                        const displayPrice = cheapestVariant ? cheapestVariant.price : product.price;
+                        const displayStrikePrice = cheapestVariant ? cheapestVariant.strikePrice : product.strikePrice;
+
+                        return (
+                          <p className={styles.productPrice}>
+                            {displayStrikePrice && displayStrikePrice > displayPrice && (
+                              <span style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+                                <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                                  <span style={{ color: "#ef4444", fontSize: "0.75em", fontWeight: 400 }}>
+                                    -{Math.round(((displayStrikePrice - displayPrice) / displayStrikePrice) * 100)}%
+                                  </span>
+                                  <span style={{ fontSize: "1.5em", fontWeight: 400, color: "#111" }}>
+                                    ₹ {displayPrice.toLocaleString("en-IN")}.00
+                                  </span>
+                                </span>
+                                <span style={{ color: "#9ca3af", fontSize: "0.85em" }}>
+                                  M.R.P: <del>₹ {displayStrikePrice.toLocaleString("en-IN")}.00</del>
+                                </span>
+                              </span>
+                            )}
+                            {(!displayStrikePrice || displayStrikePrice <= displayPrice) && (
+                              <span style={{ fontSize: "1.5em", fontWeight: 400, color: "#111" }}>
+                                ₹ {displayPrice.toLocaleString("en-IN")}.00
+                              </span>
+                            )}
+                          </p>
+                        );
+                      })()}
                     </Link>
                     {product.quantity !== undefined && product.quantity <= 5 && (
                       <p style={{ color: "#dc2626", fontSize: "0.72rem", fontWeight: 700, marginTop: "4px", letterSpacing: "0.02em" }}>
@@ -522,9 +554,9 @@ export default function Collections() {
                           <h4 className={styles.cartItemName}>{item.name.toUpperCase()}</h4>
                           <div className={styles.cartItemTotalPrice} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                             {item.strikePrice && item.strikePrice > item.price && (
-                              <del style={{ color: "#ef4444", fontSize: "0.85em" }}>
-                                Rs. {(item.strikePrice * item.quantity).toLocaleString("en-IN")}.00
-                              </del>
+                              <span style={{ color: "#9ca3af", fontSize: "0.85em" }}>
+                                M.R.P: <del>₹ {(item.strikePrice * item.quantity).toLocaleString("en-IN")}.00</del>
+                              </span>
                             )}
                             <span>Rs. {(item.price * item.quantity).toLocaleString("en-IN")}.00</span>
                           </div>
@@ -532,13 +564,13 @@ export default function Collections() {
                         <p className={styles.cartItemSize}>{item.size}</p>
                         <div className={styles.cartItemUnitPrice} style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
                           {item.strikePrice && item.strikePrice > item.price && (
-                            <del style={{ color: "#ef4444", fontSize: "0.85em" }}>
-                              Rs. {item.strikePrice.toLocaleString("en-IN")}.00
-                            </del>
+                            <span style={{ color: "#9ca3af", fontSize: "0.85em" }}>
+                              M.R.P: <del>₹ {item.strikePrice.toLocaleString("en-IN")}.00</del>
+                            </span>
                           )}
                           <span>Rs. {item.price.toLocaleString("en-IN")}.00</span>
                           {item.strikePrice && item.strikePrice > item.price && (
-                            <span style={{ color: "#16a34a", fontSize: "0.85em", fontWeight: 700 }}>
+                            <span style={{ color: "#ef4444", fontSize: "0.85em", fontWeight: 700 }}>
                               -{Math.round(((item.strikePrice - item.price) / item.strikePrice) * 100)}%
                             </span>
                           )}
