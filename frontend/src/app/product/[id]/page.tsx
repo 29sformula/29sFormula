@@ -59,6 +59,18 @@ export default function ProductDetailPage() {
   const [isDiscountExpanded, setIsDiscountExpanded] = useState<boolean>(false);
   const [isCartClosing, setIsCartClosing] = useState<boolean>(false);
 
+  // Prevent background scrolling when cart is open
+  useEffect(() => {
+    if (showCartDrawer) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showCartDrawer]);
+
   // Session is now handled by Navbar
 
   const handleCloseCart = () => {
@@ -1165,40 +1177,23 @@ export default function ProductDetailPage() {
       {/* FREQUENTLY ASKED QUESTIONS Section */}
       {showProductFaq && (
         <section className={styles.faqSection}>
-        <div className={styles.faqContainer}>
-          <h2 className={styles.faqSectionTitle}>FREQUENTLY ASKED QUESTIONS</h2>
-          <p className={styles.faqSectionSubtitle}>Everything you need to know about our handcrafted luxury perfume formulations.</p>
-          
-          <div className={styles.faqAccordionList}>
-            {faqsList.map((faq, index) => {
-              const isOpen = activeFaqIndex === index;
-              return (
-                <div key={index} className={`${styles.faqAccordionItem} ${isOpen ? styles.faqAccordionItemOpen : ""}`}>
-                  <button 
-                    className={styles.faqQuestionBtn} 
-                    onClick={() => setActiveFaqIndex(isOpen ? null : index)}
-                    aria-expanded={isOpen}
-                  >
-                    <span className={styles.faqQuestionText}>{faq.question}</span>
-                    <span 
-                      className={styles.faqToggleIcon}
-                      style={{ color: isOpen ? (primaryColor || "#57bc74") : "#111827" }}
-                    >
-                      {isOpen ? "−" : "+"}
-                    </span>
-                  </button>
-
-                  {isOpen && (
-                    <div className={styles.faqAnswerBody}>
-                      <p className={styles.faqAnswerText}>{faq.answer}</p>
-                    </div>
-                  )}
+          <h2 className={styles.faqTitle}>FREQUENTLY ASKED QUESTIONS</h2>
+          <div className={styles.faqList}>
+            {faqsList.map((faq, index) => (
+              <div key={index} className={styles.faqItem} onClick={() => setActiveFaqIndex(activeFaqIndex === index ? null : index)}>
+                <div className={styles.faqItemHeader}>
+                  <span className={styles.faqQuestion}>{faq.question.toUpperCase()}</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className={`${styles.faqChevron} ${activeFaqIndex === index ? styles.faqChevronActive : ""}`}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                  </svg>
                 </div>
-              );
-            })}
+                <div className={`${styles.faqItemContent} ${activeFaqIndex === index ? styles.faqItemContentActive : ""}`}>
+                  <p className={styles.faqAnswerText}>{faq.answer}</p>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
-      </section>
+        </section>
       )}
 
       {/* Footer Section */}
@@ -1243,26 +1238,30 @@ export default function ProductDetailPage() {
                       <div className={styles.cartItemInfo}>
                         <div className={styles.cartItemHeaderRow}>
                           <h4 className={styles.cartItemName}>{item.name.toUpperCase()}</h4>
-                          <div className={styles.cartItemTotalPrice} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                            {item.strikePrice && item.strikePrice > item.price && (
-                              <del style={{ color: "#ef4444", fontSize: "0.85em" }}>
-                                Rs. {(item.strikePrice * item.quantity).toLocaleString("en-IN")}.00
-                              </del>
-                            )}
-                            <span>Rs. {(item.price * item.quantity).toLocaleString("en-IN")}.00</span>
+                          <div style={{ fontWeight: 400, color: "#111827", fontSize: "1rem", whiteSpace: "nowrap", marginLeft: "10px" }}>
+                            ₹ {(item.price * item.quantity).toLocaleString("en-IN")}
                           </div>
                         </div>
-                        <p className={styles.cartItemSize}>{item.size}</p>
-                        <div className={styles.cartItemUnitPrice} style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
-                          {item.strikePrice && item.strikePrice > item.price && (
-                            <del style={{ color: "#ef4444", fontSize: "0.85em" }}>
-                              Rs. {item.strikePrice.toLocaleString("en-IN")}.00
-                            </del>
-                          )}
-                          <span>Rs. {item.price.toLocaleString("en-IN")}.00</span>
-                          {item.strikePrice && item.strikePrice > item.price && (
-                            <span style={{ color: "#16a34a", fontSize: "0.85em", fontWeight: 700 }}>
-                              -{Math.round(((item.strikePrice - item.price) / item.strikePrice) * 100)}%
+                        <p className={styles.cartItemSize} style={{ marginTop: "4px" }}>{item.size}</p>
+                        
+                        <div className={styles.cartItemPriceBlock} style={{ display: "flex", flexDirection: "column", gap: "2px", marginTop: "8px", marginBottom: "8px" }}>
+                          {item.strikePrice && item.strikePrice > item.price ? (
+                            <>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <span style={{ color: "#ef4444", fontSize: "0.85em", fontWeight: 400 }}>
+                                  -{Math.round(((item.strikePrice - item.price) / item.strikePrice) * 100)}%
+                                </span>
+                                <span style={{ fontWeight: 400, color: "#111827", fontSize: "1rem" }}>
+                                  ₹ {item.price.toLocaleString("en-IN")}
+                                </span>
+                              </div>
+                              <span style={{ color: "#9ca3af", fontSize: "0.8em" }}>
+                                M.R.P: <del>₹ {item.strikePrice.toLocaleString("en-IN")}</del>
+                              </span>
+                            </>
+                          ) : (
+                            <span style={{ fontWeight: 400, color: "#111827", fontSize: "1rem" }}>
+                              ₹ {item.price.toLocaleString("en-IN")}
                             </span>
                           )}
                         </div>

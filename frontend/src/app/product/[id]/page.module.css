@@ -540,6 +540,7 @@
 
 .cartDrawer {
   position: absolute;
+  overflow: hidden; /* added to fix scroll */
   top: 0;
   right: 0;
   width: 100%;
@@ -676,7 +677,8 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: calc(100% - 60px);
+  overflow: hidden;
+  min-height: 0;
 }
 
 .cartItemsList {
@@ -686,6 +688,7 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  min-height: 0;
 }
 
 .cartItemRow {
@@ -1315,508 +1318,96 @@
   }
 }
 
-@media (max-width: 640px) {
-  .reviewsGrid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.reviewGridCard {
-  position: relative;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
-  padding: 20px 18px 16px 18px;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
-  margin-top: 15px;
-}
-
-.cardTopStarBadge {
-  position: absolute;
-  top: -14px;
-  right: 24px;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
-  padding: 3px 10px;
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  z-index: 2;
-}
-
-.cardHeaderRow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 4px;
-}
-
-.cardAvatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 2px;
-  font-weight: 700;
-  font-size: 0.88rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.cardAuthorMeta {
-  display: flex;
-  flex-direction: column;
-}
-
-.cardAuthorName {
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: #111827;
-  margin: 0;
-  line-height: 1.2;
-}
-
-.cardLocation {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.75rem;
-  color: #4b5563;
-  font-weight: 500;
-  margin-top: 3px;
-}
-
-.cardCommentBody {
-  font-size: 0.85rem;
-  line-height: 1.55;
-  color: #4b5563;
-  margin: 18px 0 18px 0;
-  flex: 1;
-}
-
-.cardFooterRow {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  font-size: 0.78rem;
-  color: #6b7280;
-  margin-top: auto;
-}
-
-.thumbsBtn {
-  background: none;
-  border: none;
-  padding: 0;
-  font-size: 0.85rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: #4b5563;
-  transition: color 0.2s ease;
-}
-
-.thumbsBtn:hover {
-  color: var(--primary-brand-color, #ff0000);
-}
-
-.reportBtn {
-  background: none;
-  border: none;
-  padding: 0;
-  font-size: 0.78rem;
-  color: #6b7280;
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.reportBtn:hover {
-  color: #111827;
-  text-decoration: underline;
-}
-
-/* Review Modal Styles */
-.modalOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  z-index: 13000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  box-sizing: border-box;
-  overflow: hidden;
-  touch-action: none;
-}
-
-
-.modalCard {
-  background-color: #ffffff;
-  width: 100%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
-  border-radius: 8px;
-  padding: 28px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  box-sizing: border-box;
-  scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 transparent;
-}
-
-.modalCard::-webkit-scrollbar {
-  width: 6px;
-}
-
-.modalCard::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.modalCard::-webkit-scrollbar-thumb {
-  background-color: #cbd5e1;
-  border-radius: 3px;
-}
-
-.modalHeader {
-  position: sticky;
-  top: -28px;
-  background-color: #ffffff;
-  z-index: 10;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #e5e7eb;
-  padding-bottom: 12px;
-  margin-top: -8px;
-  padding-top: 8px;
-}
-
-
-.modalTitle {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0;
-}
-
-.modalCloseBtn {
-  background: none;
-  border: none;
-  font-size: 1.2rem;
-  cursor: pointer;
-  color: #6b7280;
-}
-
-.modalForm {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.formGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.formLabel {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #374151;
-}
-
-.starSelector {
-  display: flex;
-  gap: 8px;
-  cursor: pointer;
-}
-
-.formInput, .formTextarea {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  font-size: 0.88rem;
-  font-family: inherit;
-  outline: none;
-  box-sizing: border-box;
-}
-
-.formInput:focus, .formTextarea:focus {
-  border-color: var(--primary-brand-color, #57bc74);
-}
-
-.submitReviewBtn {
-  background-color: var(--primary-brand-color, #57bc74);
-  color: #ffffff;
-  border: none;
-  padding: 12px;
-  font-size: 0.88rem;
-  font-weight: 700;
-  cursor: pointer;
-  border-radius: 4px;
-  margin-top: 10px;
-  transition: opacity 0.2s ease;
-}
-
-.submitReviewBtn:hover {
-  opacity: 0.9;
-}
-
-.successAlert {
-  background-color: #ecfdf5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
-  padding: 10px 14px;
-  border-radius: 4px;
-  font-size: 0.85rem;
-}
-
-/* Card Review Images */
-.cardImageGrid {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 14px;
-}
-
-.cardReviewImg {
-  width: 55px;
-  height: 55px;
-  object-fit: cover;
-  border-radius: 4px;
-  border: 1px solid #e5e7eb;
-  cursor: pointer;
-  transition: transform 0.2s ease, border-color 0.2s ease;
-}
-
-.cardReviewImg:hover {
-  transform: scale(1.05);
-  border-color: var(--primary-brand-color, #57bc74);
-}
-
-/* Image Upload in Review Modal */
-.imageUploadWrapper {
-  margin-top: 4px;
-}
-
-.uploadBoxLabel {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 14px;
-  border: 1.5px dashed #d1d5db;
-  border-radius: 6px;
-  background-color: #fafafa;
-  cursor: pointer;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
-}
-
-.uploadBoxLabel:hover {
-  border-color: var(--primary-brand-color, #57bc74);
-  background-color: #f9fafb;
-}
-
-.imagePreviewGrid {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 10px;
-}
-
-.imagePreviewThumb {
-  position: relative;
-  width: 60px;
-  height: 60px;
-  border-radius: 6px;
-  overflow: hidden;
-  border: 1px solid #e5e7eb;
-}
-
-.imagePreviewThumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.removeImgBtn {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  background-color: rgba(0, 0, 0, 0.6);
-  color: #ffffff;
-  border: none;
-  border-radius: 50%;
-  width: 18px;
-  height: 18px;
-  font-size: 0.65rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-/* Lightbox Modal */
-.lightboxOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(5px);
-  z-index: 15000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  box-sizing: border-box;
-}
-
-.lightboxImg {
-  max-width: 90vw;
-  max-height: 85vh;
-  object-fit: contain;
-  border-radius: 6px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-}
-
-.lightboxCloseBtn {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: none;
-  border: none;
-  color: #ffffff;
-  font-size: 2rem;
-  cursor: pointer;
-  line-height: 1;
-}
-
 /* FREQUENTLY ASKED QUESTIONS Section */
 .faqSection {
+  background-color: #191919;
+  color: #ffffff;
+  padding: 80px 10%;
   width: 100%;
-  background-color: #fcfcfc;
-  border-top: 1px solid #e5e7eb;
-  border-bottom: 1px solid #e5e7eb;
-  padding: 70px 20px;
   box-sizing: border-box;
-}
-
-.faqContainer {
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.faqSectionTitle {
-  font-size: 1.6rem;
-  font-family: var(--font-outfit), sans-serif;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  color: #111827;
-  text-transform: uppercase;
-  margin: 0 0 10px 0;
-  text-align: center;
-}
-
-.faqSectionSubtitle {
-  font-size: 0.9rem;
-  color: #6b7280;
-  text-align: center;
-  margin: 0 0 40px 0;
-  line-height: 1.5;
-}
-
-.faqAccordionList {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  align-items: flex-start;
+  gap: 35px;
 }
 
-.faqAccordionItem {
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  overflow: hidden;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.faqAccordionItem:hover {
-  border-color: #d1d5db;
-}
-
-.faqAccordionItemOpen {
-  border-color: var(--primary-brand-color, #57bc74);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-}
-
-.faqQuestionBtn {
-  width: 100%;
-  padding: 18px 22px;
-  background: none;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  text-align: left;
-  gap: 16px;
-}
-
-.faqQuestionText {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #111827;
-  letter-spacing: 0.01em;
-  line-height: 1.4;
-}
-
-.faqToggleIcon {
-  font-size: 1.4rem;
+.faqTitle {
+  font-size: 1.85rem;
   font-weight: 400;
-  line-height: 1;
-  flex-shrink: 0;
-  transition: transform 0.2s ease;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+  margin: 0;
+  text-transform: uppercase;
 }
 
-.faqAnswerBody {
-  padding: 0 22px 20px 22px;
-  border-top: 1px solid #f3f4f6;
-  margin-top: 4px;
+.faqList {
+  width: 100%;
+  max-width: 100%;
+  border-top: 1px solid #333333;
+  display: flex;
+  flex-direction: column;
+}
+
+.faqItem {
+  border-bottom: 1px solid #333333;
+  padding: 25px 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  transition: background-color 0.2s ease;
+}
+
+.faqItem:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.faqItemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.faqQuestion {
+  font-size: 0.82rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+  text-transform: uppercase;
+}
+
+.faqChevron {
+  width: 12px;
+  height: 12px;
+  color: #ffffff;
+  opacity: 0.8;
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.faqChevronActive {
+  transform: rotate(180deg);
+}
+
+.faqItemContent {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.faqItemContentActive {
+  max-height: 200px;
 }
 
 .faqAnswerText {
-  font-size: 0.88rem;
-  line-height: 1.65;
-  color: #4b5563;
-  margin: 14px 0 0 0;
+  font-size: 0.85rem;
+  color: #cccccc;
+  line-height: 1.6;
+  margin: 0;
+  padding-top: 15px;
+  animation: fadeIn 0.4s ease-in-out;
 }
 
-@media (max-width: 640px) {
-  .faqSection {
-    padding: 50px 16px;
-  }
-  .faqSectionTitle {
-    font-size: 1.35rem;
-  }
-  .faqQuestionBtn {
-    padding: 16px 16px;
-  }
-  .faqAnswerBody {
-    padding: 0 16px 16px 16px;
-  }
-}
+
 
 
 
@@ -1834,4 +1425,12 @@
     height: auto;
     max-height: 500px;
   }
+}
+
+/* Fix cart scroll layout */
+.cartDrawer {
+  overflow: hidden !important;
+}
+.cartDrawerHeader, .cartDrawerFooter {
+  flex-shrink: 0 !important;
 }

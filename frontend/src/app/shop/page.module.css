@@ -750,6 +750,7 @@
 
 .cartDrawer {
   position: absolute;
+  overflow: hidden; /* added to fix scroll */
   top: 0;
   right: 0;
   width: 100%;
@@ -789,6 +790,7 @@
 
 .cartDrawerHeader {
   display: flex;
+  flex-shrink: 0;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 30px;
@@ -886,7 +888,8 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: calc(100% - 60px);
+  overflow: hidden;
+  min-height: 0;
 }
 
 .cartItemsList {
@@ -896,6 +899,7 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  min-height: 0;
 }
 
 .cartItemRow {
@@ -1148,4 +1152,12 @@
   .productGrid {
     grid-template-columns: 1fr !important;
   }
+}
+
+/* Fix cart scroll layout */
+.cartDrawer {
+  overflow: hidden !important;
+}
+.cartDrawerHeader, .cartDrawerFooter {
+  flex-shrink: 0 !important;
 }

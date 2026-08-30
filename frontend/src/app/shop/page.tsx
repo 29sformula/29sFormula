@@ -71,6 +71,19 @@ export default function Shop() {
   const [isDiscountExpanded, setIsDiscountExpanded] = useState<boolean>(false);
   const [isCartClosing, setIsCartClosing] = useState<boolean>(false);
 
+  // Prevent background scrolling when cart is open
+  useEffect(() => {
+    if (showCartDrawer) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showCartDrawer]);
+
+
   const handleCloseCart = () => {
     setIsCartClosing(true);
     setTimeout(() => {
@@ -587,12 +600,8 @@ export default function Shop() {
                       className={styles.addToCartCircle}
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); addToCart(product); }}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={styles.cartIcon}>
-                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <path d="M16 10a4 4 0 0 1-8 0"></path>
-                        <line x1="12" y1="13" x2="12" y2="17"></line>
-                        <line x1="10" y1="15" x2="14" y2="15"></line>
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={styles.cartIcon}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                       </svg>
                     </button>
                   </div>
@@ -708,26 +717,30 @@ export default function Shop() {
                       <div className={styles.cartItemInfo}>
                         <div className={styles.cartItemHeaderRow}>
                           <h4 className={styles.cartItemName}>{item.name.toUpperCase()}</h4>
-                          <div className={styles.cartItemTotalPrice} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                            {item.strikePrice && item.strikePrice > item.price && (
-                              <span style={{ color: "#9ca3af", fontSize: "0.85em" }}>
-                                M.R.P: <del>₹ {(item.strikePrice * item.quantity).toLocaleString("en-IN")}.00</del>
-                              </span>
-                            )}
-                            <span>Rs. {(item.price * item.quantity).toLocaleString("en-IN")}.00</span>
+                          <div style={{ fontWeight: 400, color: "#111827", fontSize: "1rem", whiteSpace: "nowrap", marginLeft: "10px" }}>
+                            ₹ {(item.price * item.quantity).toLocaleString("en-IN")}
                           </div>
                         </div>
-                        <p className={styles.cartItemSize}>{item.size}</p>
-                        <div className={styles.cartItemUnitPrice} style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
-                          {item.strikePrice && item.strikePrice > item.price && (
-                            <span style={{ color: "#9ca3af", fontSize: "0.85em" }}>
-                              M.R.P: <del>₹ {item.strikePrice.toLocaleString("en-IN")}.00</del>
-                            </span>
-                          )}
-                          <span>Rs. {item.price.toLocaleString("en-IN")}.00</span>
-                          {item.strikePrice && item.strikePrice > item.price && (
-                            <span style={{ color: "#ef4444", fontSize: "0.85em", fontWeight: 700 }}>
-                              -{Math.round(((item.strikePrice - item.price) / item.strikePrice) * 100)}%
+                        <p className={styles.cartItemSize} style={{ marginTop: "4px" }}>{item.size}</p>
+                        
+                        <div className={styles.cartItemPriceBlock} style={{ display: "flex", flexDirection: "column", gap: "2px", marginTop: "8px", marginBottom: "8px" }}>
+                          {item.strikePrice && item.strikePrice > item.price ? (
+                            <>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <span style={{ color: "#ef4444", fontSize: "0.85em", fontWeight: 400 }}>
+                                  -{Math.round(((item.strikePrice - item.price) / item.strikePrice) * 100)}%
+                                </span>
+                                <span style={{ fontWeight: 400, color: "#111827", fontSize: "1rem" }}>
+                                  ₹ {item.price.toLocaleString("en-IN")}
+                                </span>
+                              </div>
+                              <span style={{ color: "#9ca3af", fontSize: "0.8em" }}>
+                                M.R.P: <del>₹ {item.strikePrice.toLocaleString("en-IN")}</del>
+                              </span>
+                            </>
+                          ) : (
+                            <span style={{ fontWeight: 400, color: "#111827", fontSize: "1rem" }}>
+                              ₹ {item.price.toLocaleString("en-IN")}
                             </span>
                           )}
                         </div>

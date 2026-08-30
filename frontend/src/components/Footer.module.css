@@ -196,11 +196,13 @@
 }
 
 .subFooterCopyright {
-  align-self: flex-start;
+  align-self: center;
   margin-left: 10%; /* Indent to match footer column padding alignment */
   margin-right: 10%;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
   gap: 6px;
 }
 
@@ -229,13 +231,29 @@
 @media (max-width: 768px) {
   .footerContent {
     flex-direction: column;
-    align-items: center;
-    text-align: center;
+    align-items: flex-start;
+    text-align: left;
     gap: 30px;
   }
-  .footerLinks {
-    flex-direction: column;
-    align-items: center;
+  .footerCol {
+    align-items: flex-start;
+    text-align: left;
+    width: 100%;
+  }
+  .footerColTitle {
+    text-align: left;
+    width: 100%;
+  }
+  .footerLinks,
+  .footerSupportInfo,
+  .footerSecureCheckout {
+    align-items: flex-start;
+    text-align: left;
+    padding-left: 15px;
+  }
+  .footerSubscribeGroup {
+    padding-left: 15px;
+    width: calc(100% - 15px);
   }
 }
 

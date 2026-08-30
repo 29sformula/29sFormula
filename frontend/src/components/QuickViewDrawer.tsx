@@ -24,12 +24,14 @@ export default function QuickViewDrawer({
   const [fullProductData, setFullProductData] = useState<any>(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string>("");
+  const [quantity, setQuantity] = useState<number>(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
     if (product) {
       setCachedProduct(product);
+      setQuantity(1);
     }
   }, [product]);
 
@@ -186,15 +188,62 @@ export default function QuickViewDrawer({
                 )}
                 
                 <div className={styles.priceRow}>
-                  <span className={styles.price}>
-                    ₹ {activePrice.toLocaleString("en-IN")}
-                    {activeStrikePrice && activeStrikePrice > activePrice && (
-                      <del style={{ color: "#ef4444", fontSize: "0.7em", marginLeft: "8px" }}>
-                        ₹{activeStrikePrice.toLocaleString("en-IN")}
-                      </del>
+                  {/* Mobile Quantity Selector */}
+                  <div className={styles.mobileQuantity}>
+                    <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #e5e7eb', borderRadius: '4px', overflow: 'hidden' }}>
+                      <button 
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))} 
+                        style={{ padding: '6px 14px', background: '#f9fafb', border: 'none', cursor: 'pointer', fontSize: '1rem', borderRight: '1px solid #e5e7eb', color: '#000' }}
+                      >
+                        -
+                      </button>
+                      <span style={{ padding: '6px 16px', fontSize: '0.95rem', fontWeight: 500, color: '#000', minWidth: '40px', textAlign: 'center' }}>
+                        {quantity}
+                      </span>
+                      <button 
+                        onClick={() => setQuantity(quantity + 1)} 
+                        style={{ padding: '6px 14px', background: '#f9fafb', border: 'none', cursor: 'pointer', fontSize: '1rem', borderLeft: '1px solid #e5e7eb', color: '#000' }}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Desktop Price Layout */}
+                  <div className={styles.desktopPrice}>
+                    <span className={styles.price}>
+                      ₹ {activePrice.toLocaleString("en-IN")}
+                      {activeStrikePrice && activeStrikePrice > activePrice && (
+                        <del style={{ color: "#ef4444", fontSize: "0.7em", marginLeft: "8px" }}>
+                          ₹{activeStrikePrice.toLocaleString("en-IN")}
+                        </del>
+                      )}
+                      <span className={styles.taxNote}>*</span>
+                    </span>
+                  </div>
+
+                  {/* Mobile Price Layout */}
+                  <div className={styles.mobilePrice}>
+                    {activeStrikePrice && activeStrikePrice > activePrice ? (
+                      <span style={{ display: "flex", flexDirection: "column", gap: "2px", alignItems: "flex-end", textAlign: "right" }}>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{ color: "#ef4444", fontSize: "0.8em", fontWeight: 400 }}>
+                            -{Math.round(((activeStrikePrice - activePrice) / activeStrikePrice) * 100)}%
+                          </span>
+                          <span style={{ fontWeight: 400, color: "#4a5568", fontSize: "1.3rem" }}>
+                            ₹ {activePrice.toLocaleString("en-IN")}
+                          </span>
+                        </span>
+                        <span style={{ color: "#9ca3af", fontSize: "0.85em" }}>
+                          M.R.P: <del>₹ {activeStrikePrice.toLocaleString("en-IN")}</del>
+                        </span>
+                      </span>
+                    ) : (
+                      <span className={styles.price} style={{ display: "flex", justifyContent: "flex-end", width: "100%" }}>
+                        <span style={{ fontWeight: 400, color: "#4a5568" }}>₹ {activePrice.toLocaleString("en-IN")}</span>
+                      </span>
                     )}
-                    <span className={styles.taxNote}>*</span>
-                  </span>
+                  </div>
                 </div>
               </div>
             );
@@ -204,7 +253,7 @@ export default function QuickViewDrawer({
             <button 
               className={styles.addToBagBtn}
               onClick={() => {
-                onAddToCart(cachedProduct, selectedSize || undefined, 1);
+                onAddToCart(cachedProduct, selectedSize || undefined, quantity);
                 onClose();
               }}
               disabled={isLoadingDetails}

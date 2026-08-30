@@ -1298,6 +1298,7 @@
 
 .cartDrawer {
   position: absolute;
+  overflow: hidden; /* added to fix scroll */
   top: 0;
   right: 0;
   width: 100%;
@@ -1434,7 +1435,8 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: calc(100% - 60px);
+  overflow: hidden;
+  min-height: 0;
 }
 
 .cartItemsList {
@@ -1444,6 +1446,7 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  min-height: 0;
 }
 
 .cartItemRow {
@@ -1813,4 +1816,12 @@
 
 .slideBackward {
   animation: slideInBackward 0.6s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+/* Fix cart scroll layout */
+.cartDrawer {
+  overflow: hidden !important;
+}
+.cartDrawerHeader, .cartDrawerFooter {
+  flex-shrink: 0 !important;
 }

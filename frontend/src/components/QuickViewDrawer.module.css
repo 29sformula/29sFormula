@@ -305,3 +305,32 @@
 .carouselArrowRight {
   right: -12px;
 }
+
+.mobilePrice {
+  display: none;
+}
+.desktopPrice {
+  display: inline-flex;
+}
+
+@media (max-width: 768px) {
+  .mobilePrice {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    width: 100%;
+  }
+  .desktopPrice {
+    display: none !important;
+  }
+}
+
+.mobileQuantity {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobileQuantity {
+    display: block;
+  }
+}
