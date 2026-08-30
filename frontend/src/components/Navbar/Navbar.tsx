@@ -138,34 +138,20 @@ export default function Navbar({ onCartClick }: NavbarProps) {
     window.location.reload();
   };
 
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileMenuOpen]);
+
   return (
     <header className={styles.header}>
       <div className={styles.navLeft}>
-        <button className={styles.hamburgerIcon} onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" width="24" height="24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-          </svg>
-          {cartItemCount > 0 && (
-            <span style={{ 
-              position: "absolute", 
-              top: "-5px", 
-              right: "-5px", 
-              backgroundColor: "#ef4444", 
-              color: "#fff", 
-              fontSize: "0.6rem", 
-              fontWeight: "bold", 
-              borderRadius: "50%", 
-              width: "16px", 
-              height: "16px", 
-              display: "flex", 
-              alignItems: "center", 
-              justifyContent: "center",
-              lineHeight: 1
-            }}>
-              {cartItemCount}
-            </span>
-          )}
-        </button>
         <Link href="/" aria-label="Home" className={styles.logo}>
           {brandLogoType === "image" ? (
             <img 
@@ -183,14 +169,15 @@ export default function Navbar({ onCartClick }: NavbarProps) {
           <Link href="/collections" className={`${styles.navLink} ${pathname === "/collections" ? styles.activeLink : ""}`}>COLLECTIONS</Link>
           <Link href="/track" className={`${styles.navLink} ${pathname === "/track" ? styles.activeLink : ""}`}>TRACK ORDER</Link>
         </nav>
-        {isMobileMenuOpen && (
-          <nav className={styles.mobileMenu}>
-            <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className={`${styles.navLink} ${pathname === "/" ? styles.activeLink : ""}`}>HOME</Link>
-            <Link href="/shop" onClick={() => setIsMobileMenuOpen(false)} className={`${styles.navLink} ${pathname === "/shop" ? styles.activeLink : ""}`}>SHOP ALL</Link>
-            <Link href="/collections" onClick={() => setIsMobileMenuOpen(false)} className={`${styles.navLink} ${pathname === "/collections" ? styles.activeLink : ""}`}>COLLECTIONS</Link>
-            <Link href="/track" onClick={() => setIsMobileMenuOpen(false)} className={`${styles.navLink} ${pathname === "/track" ? styles.activeLink : ""}`}>TRACK ORDER</Link>
-          </nav>
-        )}
+        {/* Mobile Navigation Drawer Overlay */}
+        <div className={`${styles.mobileMenuOverlay} ${isMobileMenuOpen ? styles.mobileMenuOverlayOpen : ""}`}>
+          <div className={styles.mobileMenuContainer}>
+            <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className={`${styles.mobileMenuItem} ${styles.mobileNavLink} ${pathname === "/" ? styles.mobileNavLinkActive : ""}`}>HOME</Link>
+            <Link href="/shop" onClick={() => setIsMobileMenuOpen(false)} className={`${styles.mobileMenuItem} ${styles.mobileNavLink} ${pathname === "/shop" ? styles.mobileNavLinkActive : ""}`}>SHOP ALL</Link>
+            <Link href="/collections" onClick={() => setIsMobileMenuOpen(false)} className={`${styles.mobileMenuItem} ${styles.mobileNavLink} ${pathname === "/collections" ? styles.mobileNavLinkActive : ""}`}>COLLECTIONS</Link>
+            <Link href="/track" onClick={() => setIsMobileMenuOpen(false)} className={`${styles.mobileMenuItem} ${styles.mobileNavLink} ${pathname === "/track" ? styles.mobileNavLinkActive : ""}`}>TRACK ORDER</Link>
+          </div>
+        </div>
       </div>
       
       <div className={styles.navRight}>
@@ -321,6 +308,17 @@ export default function Navbar({ onCartClick }: NavbarProps) {
               {cartItemCount}
             </span>
           )}
+        </button>
+        <button 
+          className={`${styles.hamburgerBtn} ${isMobileMenuOpen ? styles.hamburgerBtnOpen : ''}`} 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          aria-label="Toggle menu"
+        >
+          <div className={styles.hamburgerInner}>
+            <div className={`${styles.hamburgerLine} ${isMobileMenuOpen ? styles.hamburgerLineTopOpen : ''}`} />
+            <div className={`${styles.hamburgerLine} ${isMobileMenuOpen ? styles.hamburgerLineMiddleOpen : ''}`} />
+            <div className={`${styles.hamburgerLine} ${isMobileMenuOpen ? styles.hamburgerLineBottomOpen : ''}`} />
+          </div>
         </button>
       </div>
       {/* Global Search Overlay */}

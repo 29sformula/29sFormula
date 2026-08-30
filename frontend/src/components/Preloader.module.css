@@ -99,8 +99,8 @@
   }
 
   .bottomLeftText {
-    font-size: 5rem;
-    bottom: 0px;
+    font-size: 6rem;
+    bottom: 30px;
     left: 30px;
   }
 }
@@ -112,8 +112,8 @@
   }
 
   .bottomLeftText {
-    font-size: 3.5rem;
-    bottom: 0px;
+    font-size: 4.5rem;
+    bottom: 40px;
     left: 20px;
   }
 }
