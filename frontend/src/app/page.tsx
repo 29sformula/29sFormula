@@ -10,6 +10,7 @@ import Navbar from "@/components/Navbar/Navbar";
 import Preloader from "@/components/Preloader";
 import CheckoutDrawer from "@/components/CheckoutDrawer";
 import OrderSuccessModal from "@/components/OrderSuccessModal";
+import QuickViewDrawer from "@/components/QuickViewDrawer";
 
 const defaultProducts: any[] = [];
 
@@ -72,6 +73,15 @@ export default function Home() {
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
   const [reviewFade, setReviewFade] = useState(true);
   const [slideDirection, setSlideDirection] = useState<"forward" | "backward">("forward");
+
+  const [quickViewProduct, setQuickViewProduct] = useState<any | null>(null);
+
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [arrivalsPage, setArrivalsPage] = useState<number>(1);
+  const [arrivalsDirection, setArrivalsDirection] = useState<"forward" | "backward">("forward");
+  const [bestSellersPage, setBestSellersPage] = useState<number>(1);
+  const [bestSellersDirection, setBestSellersDirection] = useState<"forward" | "backward">("forward");
+  const itemsPerPage = 2;
 
   // Hero Section State
   const [heroBgType, setHeroBgType] = useState<"color" | "image" | "video">("color");
@@ -245,9 +255,17 @@ export default function Home() {
     const handleStorageChange = () => loadCart();
     window.addEventListener("storage", handleStorageChange);
     window.addEventListener("cartUpdated", handleStorageChange);
+    
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 600); // 600px is the breakpoint for mobile grid
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    
     return () => {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("cartUpdated", handleStorageChange);
+      window.removeEventListener("resize", checkMobile);
     };
   }, []);
 
@@ -578,6 +596,11 @@ export default function Home() {
   };
 
   
+  const totalArrivalsPages = Math.ceil(arrivals.length / itemsPerPage);
+  const displayedArrivals = isMobile ? arrivals.slice((arrivalsPage - 1) * itemsPerPage, arrivalsPage * itemsPerPage) : arrivals;
+
+  const totalBestSellersPages = Math.ceil(bestSellers.length / itemsPerPage);
+  const displayedBestSellers = isMobile ? bestSellers.slice((bestSellersPage - 1) * itemsPerPage, bestSellersPage * itemsPerPage) : bestSellers;
 
   return (
     <div suppressHydrationWarning className={styles.page}>
@@ -802,9 +825,12 @@ export default function Home() {
           <h2 className={styles.arrivalsTitle}>LATEST ARRIVALS</h2>
           <Link href="/shop?category=arrivals" className={styles.viewAllLink}>VIEW ALL</Link>
         </div>
-        <div className={arrivals.length > 0 ? styles.arrivalsGrid : styles.emptyStateGrid}>
+        <div 
+          key={`arrivals-${arrivalsPage}`}
+          className={`${arrivals.length > 0 ? styles.arrivalsGrid : styles.emptyStateGrid} ${styles.slideAnimated} ${arrivalsDirection === "forward" ? styles.slideForward : styles.slideBackward}`}
+        >
           {arrivals.length > 0 ? (
-            arrivals.map((product) => (
+            displayedArrivals.map((product) => (
               <Link 
                 key={product._id} 
                 href={`/product/${product._id}`}
@@ -874,17 +900,22 @@ export default function Home() {
                   </div>
                   <div className={styles.productInfo}>
                     <h3 className={styles.productTitle}>{product.name}</h3>
+                    {isMobile && (
+                      <p className={styles.productSubtitle}>
+                        {product.description || "Signature Fragrance"}
+                      </p>
+                    )}
                     <p className={styles.productPrice}>
                       {product.strikePrice && product.strikePrice > product.price && (
                         <>
                           <del style={{ color: "#ef4444", marginRight: "8px", fontSize: "0.85em" }}>
-                            Rs. {product.strikePrice.toLocaleString("en-IN")}.00
+                            {isMobile ? '₹' : 'Rs.'} {product.strikePrice.toLocaleString("en-IN")}.00
                           </del>
                         </>
                       )}
-                      Rs. {product.price.toLocaleString("en-IN")}.00
+                      {isMobile ? '₹' : 'Rs.'} {product.price.toLocaleString("en-IN")}.00
                       {product.strikePrice && product.strikePrice > product.price && (
-                        <span style={{ color: "#16a34a", fontSize: "0.85em", fontWeight: 700, marginLeft: "8px" }}>
+                        <span className={styles.discountBadge}>
                           -{Math.round(((product.strikePrice - product.price) / product.strikePrice) * 100)}%
                         </span>
                       )}
@@ -893,6 +924,18 @@ export default function Home() {
                       <p style={{ color: "#dc2626", fontSize: "0.72rem", fontWeight: 700, marginTop: "4px", letterSpacing: "0.02em" }}>
                         {product.quantity === 0 ? "OUT OF STOCK" : `ONLY ${product.quantity} LEFT`}
                       </p>
+                    )}
+                    {isMobile && (
+                      <span 
+                        className={styles.productAddToBag}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setQuickViewProduct(product);
+                        }}
+                      >
+                        ADD TO BAG
+                      </span>
                     )}
                   </div>
                 </div>
@@ -904,6 +947,35 @@ export default function Home() {
             </div>
           )}
         </div>
+        {isMobile && totalArrivalsPages > 1 && (
+          <div className={styles.mobilePagination}>
+            <button 
+              className={styles.paginationBtn}
+              onClick={() => {
+                setArrivalsDirection("backward");
+                setArrivalsPage(p => Math.max(1, p - 1));
+              }}
+              disabled={arrivalsPage === 1}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" style={{ width: '18px', height: '18px' }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+              </svg>
+            </button>
+            <span>{arrivalsPage} / {totalArrivalsPages}</span>
+            <button 
+              className={styles.paginationBtn}
+              onClick={() => {
+                setArrivalsDirection("forward");
+                setArrivalsPage(p => Math.min(totalArrivalsPages, p + 1));
+              }}
+              disabled={arrivalsPage === totalArrivalsPages}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" style={{ width: '18px', height: '18px' }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+              </svg>
+            </button>
+          </div>
+        )}
       </section>
 
       {/* 7. Lifestyle Banner Section */}
@@ -923,9 +995,12 @@ export default function Home() {
           <h2 className={styles.arrivalsTitle}>BEST SELLERS</h2>
           <Link href="/shop?category=bestsellers" className={styles.viewAllLink}>SHOP ALL</Link>
         </div>
-        <div className={bestSellers.length > 0 ? styles.arrivalsGrid : styles.emptyStateGrid}>
+        <div 
+          key={`bestsellers-${bestSellersPage}`}
+          className={`${bestSellers.length > 0 ? styles.arrivalsGrid : styles.emptyStateGrid} ${styles.slideAnimated} ${bestSellersDirection === "forward" ? styles.slideForward : styles.slideBackward}`}
+        >
           {bestSellers.length > 0 ? (
-            bestSellers.map((product) => (
+            displayedBestSellers.map((product) => (
               <Link 
                 key={product._id} 
                 href={`/product/${product._id}`}
@@ -995,17 +1070,22 @@ export default function Home() {
                   </div>
                   <div className={styles.productInfo}>
                     <h3 className={styles.productTitle}>{product.name}</h3>
+                    {isMobile && (
+                      <p className={styles.productSubtitle}>
+                        {product.description || "Signature Fragrance"}
+                      </p>
+                    )}
                     <p className={styles.productPrice}>
                       {product.strikePrice && product.strikePrice > product.price && (
                         <>
                           <del style={{ color: "#ef4444", marginRight: "8px", fontSize: "0.85em" }}>
-                            Rs. {product.strikePrice.toLocaleString("en-IN")}.00
+                            {isMobile ? '₹' : 'Rs.'} {product.strikePrice.toLocaleString("en-IN")}.00
                           </del>
                         </>
                       )}
-                      Rs. {product.price.toLocaleString("en-IN")}.00
+                      {isMobile ? '₹' : 'Rs.'} {product.price.toLocaleString("en-IN")}.00
                       {product.strikePrice && product.strikePrice > product.price && (
-                        <span style={{ color: "#16a34a", fontSize: "0.85em", fontWeight: 700, marginLeft: "8px" }}>
+                        <span className={styles.discountBadge}>
                           -{Math.round(((product.strikePrice - product.price) / product.strikePrice) * 100)}%
                         </span>
                       )}
@@ -1014,6 +1094,18 @@ export default function Home() {
                       <p style={{ color: "#dc2626", fontSize: "0.72rem", fontWeight: 700, marginTop: "4px", letterSpacing: "0.02em" }}>
                         {product.quantity === 0 ? "OUT OF STOCK" : `ONLY ${product.quantity} LEFT`}
                       </p>
+                    )}
+                    {isMobile && (
+                      <span 
+                        className={styles.productAddToBag}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setQuickViewProduct(product);
+                        }}
+                      >
+                        ADD TO BAG
+                      </span>
                     )}
                   </div>
                 </div>
@@ -1025,6 +1117,35 @@ export default function Home() {
             </div>
           )}
         </div>
+        {isMobile && totalBestSellersPages > 1 && (
+          <div className={styles.mobilePagination}>
+            <button 
+              className={styles.paginationBtn}
+              onClick={() => {
+                setBestSellersDirection("backward");
+                setBestSellersPage(p => Math.max(1, p - 1));
+              }}
+              disabled={bestSellersPage === 1}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" style={{ width: '18px', height: '18px' }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+              </svg>
+            </button>
+            <span>{bestSellersPage} / {totalBestSellersPages}</span>
+            <button 
+              className={styles.paginationBtn}
+              onClick={() => {
+                setBestSellersDirection("forward");
+                setBestSellersPage(p => Math.min(totalBestSellersPages, p + 1));
+              }}
+              disabled={bestSellersPage === totalBestSellersPages}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" style={{ width: '18px', height: '18px' }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+              </svg>
+            </button>
+          </div>
+        )}
       </section>
 
       {/* 9. Customer Reviews Section */}
@@ -1402,6 +1523,12 @@ export default function Home() {
         orderDetails={completedOrderDetails}
         onClose={() => setShowSuccessModal(false)}
         primaryColor={primaryColor}
+      />
+      <QuickViewDrawer
+        product={quickViewProduct}
+        isOpen={!!quickViewProduct}
+        onClose={() => setQuickViewProduct(null)}
+        onAddToCart={addToCart}
       />
     </div>
   );

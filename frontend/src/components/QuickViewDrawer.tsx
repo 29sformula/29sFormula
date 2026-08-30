@@ -1,0 +1,273 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import styles from "./QuickViewDrawer.module.css";
+
+interface QuickViewDrawerProps {
+  product: any | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onAddToCart: (product: any, size?: string, qty?: number) => void;
+}
+
+export default function QuickViewDrawer({
+  product,
+  isOpen,
+  onClose,
+  onAddToCart,
+}: QuickViewDrawerProps) {
+  const [isRendered, setIsRendered] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [cachedProduct, setCachedProduct] = useState(product);
+
+  const [fullProductData, setFullProductData] = useState<any>(null);
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [selectedSize, setSelectedSize] = useState<string>("");
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    if (product) {
+      setCachedProduct(product);
+    }
+  }, [product]);
+
+  useEffect(() => {
+    if (isOpen && product?._id) {
+      setIsLoadingDetails(true);
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/products/${product._id}`)
+        .then(res => res.json())
+        .then(data => {
+          setFullProductData(data);
+          
+          // Select default size
+          let defaultSize = "";
+          if (data.variants && data.variants.length > 0) {
+            defaultSize = data.variants[0].size;
+          } else if (data.sizes && data.sizes.length > 0) {
+            defaultSize = data.sizes[0];
+          }
+          setSelectedSize(defaultSize);
+        })
+        .catch(err => console.error("Error fetching full product details:", err))
+        .finally(() => setIsLoadingDetails(false));
+    }
+  }, [isOpen, product]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsRendered(true);
+      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
+      // To ensure the animation triggers after render, we use a tiny timeout
+      setTimeout(() => setIsAnimating(true), 10);
+    } else if (isRendered) {
+      setIsAnimating(false);
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+      // Wait for animation to finish before removing from DOM
+      const timer = setTimeout(() => setIsRendered(false), 400);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
+  // Clean up overflow on unmount just in case
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    };
+  }, []);
+
+  // Compute images for carousel
+  const carouselImages = (() => {
+    if (!cachedProduct) return [];
+    const rawImages = [
+      fullProductData?.imageFront || cachedProduct.imageFront,
+      fullProductData?.imageBack,
+      ...(fullProductData?.images || [])
+    ].filter(Boolean);
+    return Array.from(new Set(rawImages));
+  })();
+
+  // Auto-scroll carousel every 2 seconds
+  useEffect(() => {
+    if (carouselImages.length <= 1) return;
+    
+    const intervalId = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev === carouselImages.length - 1 ? 0 : prev + 1));
+    }, 2000);
+
+    return () => clearInterval(intervalId);
+  }, [carouselImages.length]);
+
+  if (!isRendered) return null;
+  if (!cachedProduct) return null;
+
+  return (
+    <>
+      <div 
+        className={`${styles.overlay} ${isAnimating ? styles.open : ""}`} 
+        onClick={onClose}
+      />
+      
+      <div className={`${styles.drawer} ${isAnimating ? styles.open : ""}`}>
+        <div className={styles.header}>
+          <button onClick={onClose} className={styles.closeBtn}>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" width="24" height="24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className={styles.content}>
+          <div className={styles.titleContainer}>
+            <h2 className={styles.title}>{cachedProduct.name}</h2>
+          </div>
+          
+          <p className={styles.subtitle}>
+            {cachedProduct.description || "EAU DE PARFUM SPRAY"}
+          </p>
+
+          {/* SIZES AND PRICING */}
+          {(() => {
+            const hasVariants = fullProductData && fullProductData.variants && fullProductData.variants.length > 0;
+            
+            let activePrice = cachedProduct.price;
+            let activeStrikePrice = cachedProduct.strikePrice;
+            
+            if (hasVariants && selectedSize) {
+              const variant = fullProductData.variants.find((v: any) => v.size === selectedSize);
+              if (variant) {
+                activePrice = variant.price;
+                activeStrikePrice = variant.strikePrice;
+              }
+            }
+
+            return (
+              <div className={styles.pricingSection}>
+                {hasVariants && (
+                  <div className={styles.sizesSection}>
+                    <p className={styles.sizesLabel}>{fullProductData.variants.length} SIZES AVAILABLE</p>
+                    <div className={styles.dropdownContainer}>
+                      <button 
+                        className={styles.dropdownToggle}
+                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      >
+                        <span className={styles.dropdownLeft}>{selectedSize}</span>
+                        <div className={styles.dropdownRight}>
+                          <span>₹ {activePrice.toLocaleString("en-IN")}</span>
+                          <svg className={`${styles.dropdownIcon} ${isDropdownOpen ? styles.dropdownIconOpen : ""}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      </button>
+                      
+                      {isDropdownOpen && (
+                        <div className={styles.dropdownMenu}>
+                          {fullProductData.variants.map((v: any) => (
+                            <div 
+                              key={v.size} 
+                              className={`${styles.dropdownOption} ${selectedSize === v.size ? styles.dropdownOptionActive : ""}`}
+                              onClick={() => {
+                                setSelectedSize(v.size);
+                                setIsDropdownOpen(false);
+                              }}
+                            >
+                              <span className={styles.dropdownLeft}>{v.size}</span>
+                              <span className={styles.dropdownRight}>₹ {v.price.toLocaleString("en-IN")}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                <div className={styles.priceRow}>
+                  <span className={styles.price}>
+                    ₹ {activePrice.toLocaleString("en-IN")}
+                    {activeStrikePrice && activeStrikePrice > activePrice && (
+                      <del style={{ color: "#ef4444", fontSize: "0.7em", marginLeft: "8px" }}>
+                        ₹{activeStrikePrice.toLocaleString("en-IN")}
+                      </del>
+                    )}
+                    <span className={styles.taxNote}>*</span>
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
+
+          <div className={styles.actionButtons}>
+            <button 
+              className={styles.addToBagBtn}
+              onClick={() => {
+                onAddToCart(cachedProduct, selectedSize || undefined, 1);
+                onClose();
+              }}
+              disabled={isLoadingDetails}
+            >
+              {isLoadingDetails ? "LOADING..." : "ADD TO BAG"}
+            </button>
+            <Link href={`/product/${cachedProduct._id}`} className={styles.viewDetailsBtn}>
+              VIEW DETAILS
+            </Link>
+          </div>
+
+          <div className={styles.taxFooter}>
+            *MRP (inclusive of all taxes). <a href="#">More information</a>
+          </div>
+
+          {/* CAROUSEL */}
+          {(() => {
+            const handlePrevImage = () => {
+              setCurrentImageIndex((prev) => (prev === 0 ? carouselImages.length - 1 : prev - 1));
+            };
+            const handleNextImage = () => {
+              setCurrentImageIndex((prev) => (prev === carouselImages.length - 1 ? 0 : prev + 1));
+            };
+
+            return (
+              <div className={styles.carouselContainer}>
+                {carouselImages.length > 1 && (
+                  <button onClick={handlePrevImage} className={`${styles.carouselArrow} ${styles.carouselArrowLeft}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" width="20" height="20">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                    </svg>
+                  </button>
+                )}
+                
+                <div className={styles.imageViewport}>
+                  <div 
+                    className={styles.imageTrack}
+                    style={{ transform: `translateX(-${currentImageIndex * 100}%)` }}
+                  >
+                    {carouselImages.map((imgUrl: string, idx: number) => (
+                      <div key={idx} className={styles.imageSlide}>
+                        <img 
+                          src={imgUrl || "/placeholder.jpg"} 
+                          alt={`${cachedProduct.name} - ${idx}`} 
+                          className={styles.image} 
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {carouselImages.length > 1 && (
+                  <button onClick={handleNextImage} className={`${styles.carouselArrow} ${styles.carouselArrowRight}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" width="20" height="20">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            );
+          })()}
+        </div>
+      </div>
+    </>
+  );
+}

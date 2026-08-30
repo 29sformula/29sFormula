@@ -491,6 +491,13 @@
   line-height: 1.4;
 }
 
+.productSubtitle {
+  font-size: 0.75rem;
+  font-weight: 300;
+  color: #777777;
+  letter-spacing: 0.03em;
+}
+
 .productPrice {
   font-size: 0.8rem;
   font-weight: 500;
@@ -498,8 +505,67 @@
   letter-spacing: 0.02em;
 }
 
+.discountBadge {
+  color: #16a34a;
+  font-size: 0.85em;
+  font-weight: 700;
+  margin-left: 8px;
+}
+
+.productAddToBag {
+  margin-top: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #000000;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-bottom: 1.5px solid #000000;
+  padding-bottom: 2px;
+  display: inline-block;
+  cursor: pointer;
+}
+
 /* Media Query Overrides for Mobile */
 @media (max-width: 768px) {
+  .productCard {
+    height: 100%;
+  }
+
+  .productInfo {
+    gap: 6px;
+    align-items: center;
+    text-align: center;
+    margin-top: 12px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .productTitle {
+    font-size: 0.9rem;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    color: #000000;
+  }
+
+  .productSubtitle {
+    font-size: 0.7rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .productPrice {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #000000;
+    letter-spacing: 0.05em;
+    margin-top: auto;
+    margin-bottom: 6px;
+  }
+
   .arrivalsSection {
     padding: 40px 20px;
     gap: 20px;
@@ -510,12 +576,38 @@
     gap: 15px;
   }
 
+  .productImageContainer {
+    aspect-ratio: 4 / 5;
+  }
+
   .productTitle {
     font-size: 0.75rem;
   }
 
   .productPrice {
     font-size: 0.75rem;
+  }
+
+  .productSubtitle {
+    font-size: 0.7rem;
+  }
+
+  .discountBadge {
+    display: none !important;
+  }
+
+  /* Remove hover effects on mobile */
+  .productCard:hover .productImageFront {
+    opacity: 1 !important;
+  }
+  .productCard:hover .productImageBack {
+    opacity: 0 !important;
+    transform: none !important;
+  }
+  .productCard:hover .sliderArrow,
+  .productCard:hover .addToCartCircle {
+    opacity: 0 !important;
+    pointer-events: none !important;
   }
 }
 
@@ -1628,9 +1720,6 @@
   .videoTitle {
     font-size: 2rem !important;
   }
-  .arrivalsGrid {
-    grid-template-columns: 1fr !important;
-  }
   .categoryRow {
     flex-direction: column;
   }
@@ -1668,4 +1757,56 @@
 }
 .page {
   overflow-x: hidden;
+}
+
+/* Mobile Pagination */
+.mobilePagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 30px;
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+}
+
+.paginationBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.paginationBtn:disabled {
+  color: transparent;
+  cursor: default;
+}
+
+/* Pagination Slide Animations */
+@keyframes slideInForward {
+  from { opacity: 0; transform: translateX(100vw); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInBackward {
+  from { opacity: 0; transform: translateX(-100vw); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.slideAnimated {
+  will-change: transform, opacity;
+}
+
+.slideForward {
+  animation: slideInForward 0.6s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+.slideBackward {
+  animation: slideInBackward 0.6s cubic-bezier(0.65, 0, 0.35, 1) forwards;
 }
