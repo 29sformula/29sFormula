@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 
 import Navbar from "@/components/Navbar/Navbar";
 import CheckoutDrawer from "@/components/CheckoutDrawer";
+import NewtonsCradleLoader from "@/components/NewtonsCradleLoader";
 
 interface Variant {
   size: string;
@@ -342,12 +343,7 @@ export default function Shop() {
   });
 
   if (loading) {
-    return (
-      <div suppressHydrationWarning className={styles.loadingWrapper}>
-        <div className={styles.spinner} />
-        <p>Loading fragrance catalog...</p>
-      </div>
-    );
+    return <NewtonsCradleLoader fullScreen={true} />;
   }
 
   return (

@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import styles from "./page.module.css";
 import Footer from "@/components/Footer";
-
 import Navbar from "@/components/Navbar/Navbar";
 import CheckoutDrawer from "@/components/CheckoutDrawer";
+import NewtonsCradleLoader from "@/components/NewtonsCradleLoader";
 
 interface Product {
   _id: string;
@@ -343,12 +344,7 @@ export default function Collections() {
   }, [products]);
   
   if (loading) {
-    return (
-      <div suppressHydrationWarning className={styles.loadingWrapper}>
-        <div className={styles.spinner} />
-        <p>Loading fragrance catalog...</p>
-      </div>
-    );
+    return <NewtonsCradleLoader fullScreen={true} />;
   }
 
   return (

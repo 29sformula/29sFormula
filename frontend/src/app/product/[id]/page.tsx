@@ -6,6 +6,7 @@ import confetti from "canvas-confetti";
 import { useParams } from "next/navigation";
 import styles from "./page.module.css";
 import Footer from "@/components/Footer";
+import NewtonsCradleLoader from "@/components/NewtonsCradleLoader";
 
 import CheckoutDrawer from "@/components/CheckoutDrawer";
 import OrderSuccessModal from "@/components/OrderSuccessModal";
@@ -636,12 +637,7 @@ export default function ProductDetailPage() {
   };
 
   if (loading) {
-    return (
-      <div className={styles.loadingWrapper}>
-        <div className={styles.spinner} />
-        <p>Loading fragrance formulation details...</p>
-      </div>
-    );
+    return <NewtonsCradleLoader fullScreen={true} />;
   }
 
   if (!product) {
