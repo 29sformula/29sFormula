@@ -19,6 +19,7 @@ interface Product {
   imageFront: string;
   imageBack?: string;
   images?: string[];
+  variants?: any[];
 }
 
 const defaultProducts: Product[] = [];
