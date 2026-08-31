@@ -1434,3 +1434,9 @@
 .cartDrawerHeader, .cartDrawerFooter {
   flex-shrink: 0 !important;
 }
+
+
+/* Remove boldness from cart/buy buttons */
+.addToCartBtn, .buyNowBtn {
+  font-weight: 400 !important;
+}

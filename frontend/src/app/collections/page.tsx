@@ -469,7 +469,7 @@ export default function Collections() {
                   </div>
 
                   <div className={styles.productInfo} style={product.quantity === 0 ? { pointerEvents: "none" } : {}}>
-                    <Link href={`/product/${product._id}`} style={{ textDecoration: "none", color: "inherit", pointerEvents: product.quantity === 0 ? "none" : "auto" }}>
+                    <Link href={`/product/${product._id}`} style={{ textDecoration: "none", color: "inherit", pointerEvents: product.quantity === 0 ? "none" : "auto", display: "flex", flexDirection: "column", alignItems: "center" }}>
                       <h3 className={styles.productTitle}>{product.name.toUpperCase()}</h3>
                       {(() => {
                         const cheapestVariant = product.variants && product.variants.length > 0

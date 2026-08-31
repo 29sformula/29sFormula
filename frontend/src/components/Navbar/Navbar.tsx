@@ -293,7 +293,7 @@ export default function Navbar({ onCartClick }: NavbarProps) {
               position: "absolute", 
               top: "-5px", 
               right: "-5px", 
-              backgroundColor: "#ef4444", 
+              backgroundColor: "#000000", 
               color: "#fff", 
               fontSize: "0.6rem", 
               fontWeight: "bold", 
@@ -325,7 +325,7 @@ export default function Navbar({ onCartClick }: NavbarProps) {
       <div 
         onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }}
         style={{
-          position: 'fixed', inset: 0, top: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 9999,
+          position: 'fixed', inset: 0, top: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 10010,
           transition: 'opacity 0.4s ease-in-out',
           opacity: isSearchOpen ? 1 : 0,
           pointerEvents: isSearchOpen ? 'auto' : 'none'
@@ -333,7 +333,7 @@ export default function Navbar({ onCartClick }: NavbarProps) {
       />
 
       <div style={{
-        position: 'fixed', left: 0, right: 0, backgroundColor: '#ffffff', zIndex: 10000,
+        position: 'fixed', left: 0, right: 0, backgroundColor: '#ffffff', zIndex: 10011,
         paddingTop: '40px', paddingBottom: '30px', paddingLeft: '24px', paddingRight: '24px',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
         transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -351,7 +351,7 @@ export default function Navbar({ onCartClick }: NavbarProps) {
             <input
               ref={searchInputRef}
               type="text"
-              placeholder="Search 29sFormula..."
+              placeholder="Search Fragrance"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
@@ -368,8 +368,8 @@ export default function Navbar({ onCartClick }: NavbarProps) {
               </button>
             )}
             <div style={{ width: '1px', height: '24px', backgroundColor: '#e5e7eb', margin: '0 8px' }}></div>
-            <button onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }} style={{ background: '#f3f4f6', border: '1px solid #e5e7eb', color: '#4b5563', cursor: 'pointer', padding: '6px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e5e7eb'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'} title="Close search">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" style={{ width: '14px', height: '14px' }}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+            <button onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }} style={{ background: 'transparent', border: 'none', color: '#4b5563', cursor: 'pointer', padding: '6px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.05)'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'} title="Close search">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: '24px', height: '24px' }}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
             </button>
           </div>
 

@@ -724,10 +724,14 @@ export default function ProductDetailPage() {
 
           {/* Right Column: Checkout Options & Metadata details */}
           <div className={styles.productDetails}>
-            <h1 className={styles.productTitle}>{product.name}</h1>
+            <h1 className={styles.productTitle} style={{ fontWeight: "lighter" }}>{product.name}</h1>
             
             {/* Rating Stars Row */}
-            <div className={styles.ratingRow}>
+            <div className={styles.ratingRow} 
+                 style={{ cursor: "pointer", display: "inline-flex" }} 
+                 onClick={() => {
+                   document.getElementById("reviews-section")?.scrollIntoView({ behavior: "smooth" });
+                 }}>
               <div className={styles.stars} style={{ display: "flex", gap: "2px" }}>
                 {renderStars(reviewsData.average || 5, 18)}
               </div>
@@ -737,24 +741,26 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Price display tag */}
-            <div className={styles.priceRow}>
+            <div className={styles.priceRow} style={{ flexDirection: "column", alignItems: "flex-start", gap: "4px", marginBottom: "20px" }}>
               {(() => {
                 const currentVariant = (product as any).variants?.find((v: any) => v.size === selectedVolume) || (product as any).options?.find((v: any) => v.size === selectedVolume);
                 const currentPrice = currentVariant?.price || product.price;
                 const currentStrikePrice = currentVariant?.strikePrice || (product as any).strikePrice;
                 return (
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    {currentStrikePrice && currentStrikePrice > currentPrice && (
-                      <span style={{ color: "#ef4444", textDecoration: "line-through", fontSize: "1.1rem", fontWeight: 500 }}>
-                        Rs. {currentStrikePrice.toLocaleString("en-IN")}.00
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      {currentStrikePrice && currentStrikePrice > currentPrice && (
+                        <span style={{ color: "#ef4444", fontSize: "1.4rem", fontWeight: 400 }}>
+                          -{Math.round(((currentStrikePrice - currentPrice) / currentStrikePrice) * 100)}%
+                        </span>
+                      )}
+                      <span className={styles.priceVal} style={{ fontWeight: 400, fontSize: "1.8rem", color: "#111827" }}>
+                        ₹ {currentPrice.toLocaleString("en-IN")}.00
                       </span>
-                    )}
-                    <span className={styles.priceVal}>
-                      Rs. {currentPrice.toLocaleString("en-IN")}.00
-                    </span>
+                    </div>
                     {currentStrikePrice && currentStrikePrice > currentPrice && (
-                      <span style={{ color: "#16a34a", fontSize: "1.1rem", fontWeight: 700 }}>
-                        -{Math.round(((currentStrikePrice - currentPrice) / currentStrikePrice) * 100)}%
+                      <span style={{ color: "#6b7280", fontSize: "0.9rem" }}>
+                        M.R.P: <del>₹ {currentStrikePrice.toLocaleString("en-IN")}.00</del>
                       </span>
                     )}
                   </div>
@@ -864,7 +870,7 @@ export default function ProductDetailPage() {
 
       {/* Dynamic Reviews Section */}
       {showProductReviews && reviewsData && (
-        <section style={{
+        <section id="reviews-section" style={{
           backgroundColor: "#f9fafb",
           padding: "80px 40px",
           width: "100%",

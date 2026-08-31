@@ -61,6 +61,17 @@ export default function Shop() {
 
   // Cart Drawer State
   const [showCartDrawer, setShowCartDrawer] = useState<boolean>(false);
+  const [showMobileFilter, setShowMobileFilter] = useState<boolean>(false);
+  const [isFilterClosing, setIsFilterClosing] = useState<boolean>(false);
+
+  const handleCloseFilter = () => {
+    setIsFilterClosing(true);
+    setTimeout(() => {
+      setShowMobileFilter(false);
+      setIsFilterClosing(false);
+    }, 800);
+  };
+
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [cartError, setCartError] = useState<string | null>(null);
 
@@ -477,6 +488,17 @@ export default function Shop() {
             </div>
 
             {/* Layout Toggles */}
+            
+            {/* Mobile Filter Trigger */}
+            <button 
+              className={styles.mobileFilterBtn}
+              onClick={() => setShowMobileFilter(true)}
+            >
+              FILTER & SORT
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: "16px", height: "16px" }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
+              </svg>
+            </button>
             <div className={styles.layoutToggles}>
               {/* Grid Toggle */}
               <button 
@@ -607,7 +629,7 @@ export default function Shop() {
                   </div>
 
                   <div className={styles.productInfo} style={product.quantity === 0 ? { pointerEvents: "none" } : {}}>
-                    <Link href={`/product/${product._id}`} style={{ textDecoration: "none", color: "inherit", pointerEvents: product.quantity === 0 ? "none" : "auto" }}>
+                    <Link href={`/product/${product._id}`} style={{ textDecoration: "none", color: "inherit", pointerEvents: product.quantity === 0 ? "none" : "auto", display: "flex", flexDirection: "column", alignItems: "center" }}>
                       <h3 className={styles.productTitle}>{product.name.toUpperCase()}</h3>
                       {(() => {
                         const cheapestVariant = product.variants && product.variants.length > 0
@@ -819,7 +841,86 @@ export default function Shop() {
           </div>
         </div>
       )}
+      
+      {/* Mobile Filter Drawer */}
+      {showMobileFilter && (
+        <div className={`${styles.mobileFilterOverlay} ${isFilterClosing ? styles.mobileFilterOverlayClosing : ""}`} onClick={handleCloseFilter}>
+          <div className={`${styles.mobileFilterDrawer} ${isFilterClosing ? styles.mobileFilterDrawerClosing : ""}`} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.mobileFilterHeader}>
+              <h2 className={styles.mobileFilterTitle}>FILTER & SORT</h2>
+              <button className={styles.closeCartBtn} onClick={handleCloseFilter}>✕</button>
+            </div>
+            <div className={styles.mobileFilterBody}>
+              
+              <div className={styles.mobileFilterGroup}>
+                <h3 className={styles.mobileFilterGroupTitle}>SORT BY</h3>
+                <div className={styles.mobileFilterOptions}>
+                  {[
+                    { val: "featured", label: "Featured" },
+                    { val: "low-to-high", label: "Price: Low to High" },
+                    { val: "high-to-low", label: "Price: High to Low" },
+                    { val: "a-z", label: "Alphabetically: A-Z" },
+                    { val: "z-a", label: "Alphabetically: Z-A" }
+                  ].map((sortOpt) => (
+                    <label key={sortOpt.val} className={styles.radioLabel}>
+                      <input 
+                        type="radio" 
+                        name="mobileSort" 
+                        checked={sortBy === sortOpt.val}
+                        onChange={() => setSortBy(sortOpt.val)}
+                      />
+                      {sortOpt.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className={styles.mobileFilterGroup}>
+                <h3 className={styles.mobileFilterGroupTitle}>PRICE</h3>
+                <div className={styles.mobileFilterOptions}>
+                  {[
+                    { val: "all", label: "All Prices" },
+                    { val: "under-1500", label: "Under Rs. 1,500" },
+                    { val: "1500-2000", label: "Rs. 1,500 - Rs. 2,000" },
+                    { val: "over-2000", label: "Over Rs. 2,000" }
+                  ].map((pr) => (
+                    <label key={pr.val} className={styles.radioLabel}>
+                      <input 
+                        type="radio" 
+                        name="mobilePrice" 
+                        checked={priceRange === pr.val}
+                        onChange={() => setPriceRange(pr.val)}
+                      />
+                      {pr.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className={styles.mobileFilterGroup}>
+                <h3 className={styles.mobileFilterGroupTitle}>AVAILABILITY</h3>
+                <label className={styles.checkboxLabel}>
+                  <input 
+                    type="checkbox" 
+                    checked={inStockOnly}
+                    onChange={(e) => setInStockOnly(e.target.checked)}
+                  />
+                  In Stock Only
+                </label>
+              </div>
+
+            </div>
+            <div className={styles.mobileFilterFooter}>
+              <button className={styles.applyFilterBtn} onClick={handleCloseFilter}>
+                APPLY ({sortedProducts.length} ITEMS)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <CheckoutDrawer
+
         isOpen={showCheckoutDrawer}
         onClose={() => setShowCheckoutDrawer(false)}
         cartItems={cartItems}

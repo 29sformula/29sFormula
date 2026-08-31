@@ -306,10 +306,10 @@
 }
 
 .productTitle {
-  font-size: 1.1rem;
+  font-size: 1.4rem;
   font-weight: 400;
   color: #1a1a1a;
-  margin: 0 0 12px 0;
+  margin: 0 0 20px 0;
   letter-spacing: 0.05em;
 }
 
@@ -317,7 +317,7 @@
   font-size: 0.85rem;
   color: #4a5568;
   font-weight: 500;
-  margin: 0 0 16px 0;
+  margin: 0 0 24px 0;
 }
 
 
@@ -763,11 +763,11 @@
   display: flex;
   flex-direction: column;
   box-shadow: -5px 0 25px rgba(0, 0, 0, 0.08);
-  animation: slideInCart 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: slideInCart 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
 .cartDrawerClosing {
-  animation: slideOutCart 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: slideOutCart 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
 @keyframes slideInCart {
@@ -1161,3 +1161,125 @@
 .cartDrawerHeader, .cartDrawerFooter {
   flex-shrink: 0 !important;
 }
+
+
+/* Mobile Filter Drawer Styles */
+.mobileFilterBtn {
+  display: none; /* hidden on desktop */
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid #e5e7eb;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 400;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.mobileFilterOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9990;
+  display: flex;
+  justify-content: flex-end;
+  animation: fadeInCart 0.8s ease-out forwards;
+}
+
+.mobileFilterDrawer {
+  width: 90%;
+  max-width: 400px;
+  height: 100%;
+  padding-top: 80px; /* navbar offset */
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  animation: slideInCart 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.mobileFilterHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.mobileFilterTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.mobileFilterBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.mobileFilterGroup {
+  margin-bottom: 25px;
+  border-bottom: 1px solid #f3f4f6;
+  padding-bottom: 20px;
+}
+
+.mobileFilterGroupTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0 0 15px 0;
+  color: #111827;
+}
+
+.mobileFilterOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mobileFilterFooter {
+  padding: 20px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.applyFilterBtn {
+  width: 100%;
+  padding: 15px;
+  background-color: #000;
+  color: #fff;
+  border: none;
+  font-weight: 700;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .mobileFilterBtn {
+    display: flex;
+  }
+  
+  .filtersLeft,
+  .dropdownWrapper,
+  .layoutToggles {
+    display: none !important;
+  }
+
+  .filtersRight {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+}
+
+.mobileFilterOverlayClosing {
+  animation: fadeOutCart 0.8s ease-in forwards;
+}
+
+.mobileFilterDrawerClosing {
+  animation: slideOutCart 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.radioLabel input, .checkboxLabel input { accent-color: #000; }
