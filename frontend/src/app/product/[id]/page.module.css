@@ -2465,3 +2465,9 @@
 .helpfulIcon:hover {
   opacity: 0.7;
 }
+
+@media (max-width: 900px) {
+  .mediaGallery {
+    margin-top: 40px;
+  }
+}

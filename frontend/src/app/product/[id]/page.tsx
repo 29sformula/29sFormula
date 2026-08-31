@@ -5,6 +5,7 @@ import Link from "next/link";
 import confetti from "canvas-confetti";
 import { useParams } from "next/navigation";
 import styles from "./page.module.css";
+import homeStyles from "@/app/page.module.css";
 import Footer from "@/components/Footer";
 import NewtonsCradleLoader from "@/components/NewtonsCradleLoader";
 
@@ -27,6 +28,7 @@ interface Product {
   additionalInformation?: string;
   artOfWrapping?: string;
   onlineOrder?: string;
+  variants?: any[];
 }
 
 const defaultProducts: Product[] = [];
@@ -68,6 +70,48 @@ export default function ProductDetailPage() {
   const [isSizeDropdownOpen, setIsSizeDropdownOpen] = useState<boolean>(false);
   const [reviewSort, setReviewSort] = useState<string>("Most recent");
   const [isReviewSortOpen, setIsReviewSortOpen] = useState<boolean>(false);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [explorePage, setExplorePage] = useState<number>(1);
+  const [exploreDirection, setExploreDirection] = useState<string>("forward");
+  const [recentlyViewedIds, setRecentlyViewedIds] = useState<string[]>([]);
+  const [recentPage, setRecentPage] = useState<number>(1);
+  const [recentDirection, setRecentDirection] = useState<string>("forward");
+
+  useEffect(() => {
+    if (product && product._id) {
+      try {
+        const match = document.cookie.match(/(^| )recently_viewed=([^;]+)/);
+        let viewed = match ? JSON.parse(decodeURIComponent(match[2])) : [];
+        if (!Array.isArray(viewed)) viewed = [];
+        
+        // Fallback for sandboxed IDE preview if cookies are failing to persist
+        if (viewed.length === 0 && typeof window !== "undefined" && window.sessionStorage) {
+           const sessionStored = window.sessionStorage.getItem("recently_viewed");
+           if (sessionStored) viewed = JSON.parse(sessionStored);
+        }
+        
+        viewed = viewed.filter((i: string) => i !== product._id);
+        setRecentlyViewedIds([...viewed]);
+        
+        viewed.unshift(product._id);
+        viewed = viewed.slice(0, 10);
+        
+        document.cookie = `recently_viewed=${encodeURIComponent(JSON.stringify(viewed))};path=/;max-age=${60*60*24*30}`;
+        if (typeof window !== "undefined" && window.sessionStorage) {
+           window.sessionStorage.setItem("recently_viewed", JSON.stringify(viewed));
+        }
+      } catch (e) {
+        console.error("Error managing recently viewed cookie", e);
+      }
+    }
+  }, [product]);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 900);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const toggleAccordion = (id: string) => {
     setOpenAccordion(prev => (prev === id ? null : id));
@@ -1053,54 +1097,138 @@ export default function ProductDetailPage() {
       )}
 
       {/* Explore More Section */}
-      {showProductExploreMore && (
-        <section className={styles.exploreMoreSection}>
-          <h2 className={styles.exploreMoreTitle}>{exploreMoreTitle}</h2>
-        
-        <div className={styles.exploreMoreGrid}>
-          {allProducts.filter(p => p._id !== id).slice(0, 5).map((item) => {
-            const hasSale = item.name.toLowerCase().includes("chausar");
-            const displayComparePrice = 10004;
+      {showProductExploreMore && (() => {
+        const exploreProducts = allProducts.filter(p => p._id !== id);
+        const itemsPerPage = isMobile ? 2 : 4;
+        const totalExplorePages = Math.ceil(exploreProducts.length / itemsPerPage);
+        const displayedExplore = exploreProducts.slice((explorePage - 1) * itemsPerPage, explorePage * itemsPerPage);
 
-            return (
-              <div key={item._id} className={styles.exploreCard}>
-                <Link href={`/product/${item._id}`} style={{ textDecoration: "none", color: "inherit" }}>
-                  <div className={styles.exploreImageWrapper}>
-                    <img 
-                      src={item.imageFront} 
-                      alt={item.name} 
-                      className={styles.exploreImage}
-                    />
-                    {hasSale && (
-                      <span className={styles.saleBadge}>Sale</span>
-                    )}
-                  </div>
-                  
-                  <div className={styles.exploreProductInfo}>
-                    <h3 className={styles.exploreProductTitle}>{item.name.toUpperCase()}</h3>
-                    <p className={styles.exploreProductPrice}>
-                      Rs. {item.price.toLocaleString("en-IN")}.00
-                      {hasSale && (
-                        <span className={styles.exploreComparePrice}>
-                          Rs. {displayComparePrice.toLocaleString("en-IN")}.00
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                </Link>
+        return (
+          <section className={homeStyles.arrivalsSection} style={{ width: "100%", boxSizing: "border-box" }}>
+            <div className={homeStyles.arrivalsHeader}>
+              <h2 className={homeStyles.arrivalsTitle}>{exploreMoreTitle.toUpperCase()}</h2>
+            </div>
+            <div 
+              key={`explore-${explorePage}`}
+              className={`${homeStyles.arrivalsGrid} ${homeStyles.slideAnimated} ${exploreDirection === "forward" ? homeStyles.slideForward : homeStyles.slideBackward}`}
+            >
+              {displayedExplore.map((item) => {
+                const cheapestVariant = item.variants && item.variants.length > 0
+                  ? [...item.variants].sort((a, b) => a.price - b.price)[0]
+                  : null;
+                const displayPrice = cheapestVariant ? cheapestVariant.price : item.price;
+                const displayStrikePrice = cheapestVariant ? cheapestVariant.strikePrice : item.strikePrice;
                 
+                return (
+                  <Link 
+                    key={item._id} 
+                    href={`/product/${item._id}`}
+                    onClick={(e) => {
+                      if (item.quantity === 0) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }
+                    }}
+                    style={{ 
+                      textDecoration: "none", 
+                      color: "inherit", 
+                      display: "block",
+                      cursor: item.quantity === 0 ? "not-allowed" : "pointer"
+                    }}
+                  >
+                    <div className={homeStyles.productCard} style={item.quantity === 0 ? { pointerEvents: "none" } : {}}>
+                      <div className={homeStyles.productImageContainer} style={item.quantity === 0 ? { filter: "grayscale(1)", opacity: 0.7 } : {}}>
+                        <img 
+                          className={`${homeStyles.productImage} ${homeStyles.productImageFront}`} 
+                          src={item.imageFront} 
+                          alt={item.name}
+                          loading="lazy"
+                        />
+                        {item.imageBack && (
+                          <img 
+                            className={`${homeStyles.productImage} ${homeStyles.productImageBack}`} 
+                            src={item.imageBack} 
+                            alt={`${item.name} Alternate`}
+                            loading="lazy"
+                          />
+                        )}
+                        
+                        <button 
+                          aria-label="Add to cart" 
+                          className={homeStyles.addToCartCircle}
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); addToCart(item, item.sizes?.[0] || "50ml", 1); }}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={homeStyles.cartIcon} style={{ width: "20px", height: "20px" }}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                          </svg>
+                        </button>
+                      </div>
+                      <div className={homeStyles.productInfo}>
+                        <h3 className={homeStyles.productTitle}>{item.name}</h3>
+                        {(() => {
+                          return (
+                            <p className={homeStyles.productPrice}>
+                              {displayStrikePrice && displayStrikePrice > displayPrice && (
+                                <span style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                                  <span style={{ display: "inline-flex", gap: "8px" }}>
+                                    <span style={{ color: "#ef4444", fontSize: "0.85em", fontWeight: 400 }}>
+                                      -{Math.round(((displayStrikePrice - displayPrice) / displayStrikePrice) * 100)}%
+                                    </span>
+                                    <span style={{ fontSize: "1.2em", fontWeight: 400, color: "#111" }}>
+                                      ₹ {displayPrice.toLocaleString("en-IN")}.00
+                                    </span>
+                                  </span>
+                                  <span style={{ color: "#9ca3af", fontSize: "0.85em" }}>
+                                    M.R.P: <del>₹ {displayStrikePrice.toLocaleString("en-IN")}.00</del>
+                                  </span>
+                                </span>
+                              )}
+                              {(!displayStrikePrice || displayStrikePrice <= displayPrice) && (
+                                <span style={{ fontSize: "1.2em", fontWeight: 400, color: "#111" }}>
+                                  ₹ {displayPrice.toLocaleString("en-IN")}.00
+                                </span>
+                              )}
+                            </p>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+            {isMobile && totalExplorePages > 1 && (
+              <div className={homeStyles.mobilePagination}>
                 <button 
-                  onClick={() => addToCart(item, item.sizes?.[0] || "50ml", 1)}
-                  className={styles.exploreAddToCartBtn}
+                  className={homeStyles.paginationBtn}
+                  onClick={() => {
+                    setExploreDirection("backward");
+                    setExplorePage(p => Math.max(1, p - 1));
+                  }}
+                  disabled={explorePage === 1}
                 >
-                  Add to cart
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" style={{ width: '18px', height: '18px' }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                  </svg>
+                </button>
+                <span>{explorePage} / {totalExplorePages}</span>
+                <button 
+                  className={homeStyles.paginationBtn}
+                  onClick={() => {
+                    setExploreDirection("forward");
+                    setExplorePage(p => Math.min(totalExplorePages, p + 1));
+                  }}
+                  disabled={explorePage === totalExplorePages}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" style={{ width: '18px', height: '18px' }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                  </svg>
                 </button>
               </div>
-            );
-          })}
-        </div>
-      </section>
-      )}
+            )}
+          </section>
+        );
+      })()}
 
       {/* FREQUENTLY ASKED QUESTIONS Section */}
       {showProductFaq && (
@@ -1123,6 +1251,144 @@ export default function ProductDetailPage() {
           </div>
         </section>
       )}
+
+      {/* Recently Viewed Section */}
+      {recentlyViewedIds.length > 0 && (() => {
+        const recentProducts = allProducts.filter(p => recentlyViewedIds.includes(p._id));
+        recentProducts.sort((a, b) => recentlyViewedIds.indexOf(a._id) - recentlyViewedIds.indexOf(b._id));
+        
+        if (recentProducts.length === 0) return null;
+
+        const itemsPerPage = isMobile ? 2 : 4;
+        const totalRecentPages = Math.ceil(recentProducts.length / itemsPerPage);
+        const displayedRecent = recentProducts.slice((recentPage - 1) * itemsPerPage, recentPage * itemsPerPage);
+
+        return (
+          <section className={homeStyles.arrivalsSection} style={{ width: "100%", boxSizing: "border-box" }}>
+            <div className={homeStyles.arrivalsHeader}>
+              <h2 className={homeStyles.arrivalsTitle}>RECENTLY VIEWED</h2>
+            </div>
+            <div 
+              key={`recent-${recentPage}`}
+              className={`${homeStyles.arrivalsGrid} ${homeStyles.slideAnimated} ${recentDirection === "forward" ? homeStyles.slideForward : homeStyles.slideBackward}`}
+            >
+              {displayedRecent.map((item) => {
+                const cheapestVariant = item.variants && item.variants.length > 0
+                  ? [...item.variants].sort((a, b) => a.price - b.price)[0]
+                  : null;
+                const displayPrice = cheapestVariant ? cheapestVariant.price : item.price;
+                const displayStrikePrice = cheapestVariant ? cheapestVariant.strikePrice : item.strikePrice;
+                
+                return (
+                  <Link 
+                    key={item._id} 
+                    href={`/product/${item._id}`}
+                    onClick={(e) => {
+                      if (item.quantity === 0) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }
+                    }}
+                    style={{ 
+                      textDecoration: "none", 
+                      color: "inherit", 
+                      display: "block",
+                      cursor: item.quantity === 0 ? "not-allowed" : "pointer"
+                    }}
+                  >
+                    <div className={homeStyles.productCard} style={item.quantity === 0 ? { pointerEvents: "none" } : {}}>
+                      <div className={homeStyles.productImageContainer} style={item.quantity === 0 ? { filter: "grayscale(1)", opacity: 0.7 } : {}}>
+                        <img 
+                          className={`${homeStyles.productImage} ${homeStyles.productImageFront}`} 
+                          src={item.imageFront} 
+                          alt={item.name}
+                          loading="lazy"
+                        />
+                        {item.imageBack && (
+                          <img 
+                            className={`${homeStyles.productImage} ${homeStyles.productImageBack}`} 
+                            src={item.imageBack} 
+                            alt={`${item.name} Alternate`}
+                            loading="lazy"
+                          />
+                        )}
+                        
+                        <button 
+                          aria-label="Add to cart" 
+                          className={homeStyles.addToCartCircle}
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); addToCart(item, item.sizes?.[0] || "50ml", 1); }}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={homeStyles.cartIcon} style={{ width: "20px", height: "20px" }}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                          </svg>
+                        </button>
+                      </div>
+                      <div className={homeStyles.productInfo}>
+                        <h3 className={homeStyles.productTitle}>{item.name}</h3>
+                        {(() => {
+                          return (
+                            <p className={homeStyles.productPrice}>
+                              {displayStrikePrice && displayStrikePrice > displayPrice && (
+                                <span style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                                  <span style={{ display: "inline-flex", gap: "8px" }}>
+                                    <span style={{ color: "#ef4444", fontSize: "0.85em", fontWeight: 400 }}>
+                                      -{Math.round(((displayStrikePrice - displayPrice) / displayStrikePrice) * 100)}%
+                                    </span>
+                                    <span style={{ fontSize: "1.2em", fontWeight: 400, color: "#111" }}>
+                                      ₹ {displayPrice.toLocaleString("en-IN")}.00
+                                    </span>
+                                  </span>
+                                  <span style={{ color: "#9ca3af", fontSize: "0.85em" }}>
+                                    M.R.P: <del>₹ {displayStrikePrice.toLocaleString("en-IN")}.00</del>
+                                  </span>
+                                </span>
+                              )}
+                              {(!displayStrikePrice || displayStrikePrice <= displayPrice) && (
+                                <span style={{ fontSize: "1.2em", fontWeight: 400, color: "#111" }}>
+                                  ₹ {displayPrice.toLocaleString("en-IN")}.00
+                                </span>
+                              )}
+                            </p>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+            {isMobile && totalRecentPages > 1 && (
+              <div className={homeStyles.mobilePagination}>
+                <button 
+                  className={homeStyles.paginationBtn}
+                  onClick={() => {
+                    setRecentDirection("backward");
+                    setRecentPage(p => Math.max(1, p - 1));
+                  }}
+                  disabled={recentPage === 1}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" style={{ width: '18px', height: '18px' }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                  </svg>
+                </button>
+                <span>{recentPage} / {totalRecentPages}</span>
+                <button 
+                  className={homeStyles.paginationBtn}
+                  onClick={() => {
+                    setRecentDirection("forward");
+                    setRecentPage(p => Math.min(totalRecentPages, p + 1));
+                  }}
+                  disabled={recentPage === totalRecentPages}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" style={{ width: '18px', height: '18px' }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                  </svg>
+                </button>
+              </div>
+            )}
+          </section>
+        );
+      })()}
 
       {/* Footer Section */}
       <Footer />
