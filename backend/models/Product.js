@@ -7,6 +7,9 @@ const productSchema = new mongoose.Schema({
   imageFront: { type: String, required: true },
   imageBack: { type: String },
   images: { type: [String], default: [] },
+  additionalInformation: { type: String, default: "" },
+  artOfWrapping: { type: String, default: "" },
+  onlineOrder: { type: String, default: "" },
   
   // Denormalized computed values for fast storefront query rendering
   price: { type: Number },

@@ -24,6 +24,9 @@ interface Product {
   imageBack?: string;
   images?: string[];
   sizes?: string[];
+  additionalInformation?: string;
+  artOfWrapping?: string;
+  onlineOrder?: string;
 }
 
 const defaultProducts: Product[] = [];
@@ -58,6 +61,17 @@ export default function ProductDetailPage() {
   };
   const [isDiscountExpanded, setIsDiscountExpanded] = useState<boolean>(false);
   const [isCartClosing, setIsCartClosing] = useState<boolean>(false);
+
+  // Accordion State
+  const [openAccordion, setOpenAccordion] = useState<string | null>(null);
+  const [showModerationChart, setShowModerationChart] = useState<boolean>(false);
+  const [isSizeDropdownOpen, setIsSizeDropdownOpen] = useState<boolean>(false);
+  const [reviewSort, setReviewSort] = useState<string>("Most recent");
+  const [isReviewSortOpen, setIsReviewSortOpen] = useState<boolean>(false);
+
+  const toggleAccordion = (id: string) => {
+    setOpenAccordion(prev => (prev === id ? null : id));
+  };
 
   // Prevent background scrolling when cart is open
   useEffect(() => {
@@ -682,450 +696,358 @@ export default function ProductDetailPage() {
                 className={styles.mainImage}
               />
               
-              {allImages.length > 1 && (
-                <>
-                  <button 
-                    onClick={handlePrevImage} 
-                    className={`${styles.navArrow} ${styles.navArrowLeft}`}
-                    aria-label="Previous image"
-                  >
-                    ←
-                  </button>
-                  <button 
-                    onClick={handleNextImage} 
-                    className={`${styles.navArrow} ${styles.navArrowRight}`}
-                    aria-label="Next image"
-                  >
-                    →
-                  </button>
-                </>
-              )}
+
             </div>
 
             {/* Thumbnail Navigation Row */}
             {allImages.length > 1 && (
-              <div className={styles.thumbnailRow}>
-                {allImages.map((url, idx) => (
-                  <div 
-                    key={idx} 
-                    onClick={() => setActiveImg(url)}
-                    className={`${styles.thumbWrapper} ${activeImg === url ? styles.thumbActive : ""}`}
-                  >
-                    <img 
-                      src={url} 
-                      alt={`${product.name} angle ${idx + 1}`} 
-                      className={styles.thumbImage}
+              <>
+                <div className={styles.thumbnailRow}>
+                  {allImages.map((url, idx) => (
+                    <div 
+                      key={idx} 
+                      onClick={() => setActiveImg(url)}
+                      className={`${styles.thumbWrapper} ${activeImg === url ? styles.thumbActive : ""}`}
+                    >
+                      <img 
+                        src={url} 
+                        alt={`${product.name} angle ${idx + 1}`} 
+                        className={styles.thumbImage}
+                      />
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Mobile Carousel Dots */}
+                <div className={styles.carouselDots}>
+                  {allImages.map((url, idx) => (
+                    <div 
+                      key={idx}
+                      onClick={() => setActiveImg(url)}
+                      className={`${styles.carouselDot} ${activeImg === url ? styles.carouselDotActive : ""}`}
                     />
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
 
           {/* Right Column: Checkout Options & Metadata details */}
           <div className={styles.productDetails}>
-            <h1 className={styles.productTitle} style={{ fontWeight: "lighter" }}>{product.name}</h1>
-            
-            {/* Rating Stars Row */}
-            <div className={styles.ratingRow} 
-                 style={{ cursor: "pointer", display: "inline-flex" }} 
-                 onClick={() => {
-                   document.getElementById("reviews-section")?.scrollIntoView({ behavior: "smooth" });
-                 }}>
-              <div className={styles.stars} style={{ display: "flex", gap: "2px" }}>
-                {renderStars(reviewsData.average || 5, 18)}
-              </div>
-              <span className={styles.reviewsCount}>
-                {reviewsData.total} {reviewsData.total === 1 ? 'review' : 'reviews'}
-              </span>
-            </div>
+            {(() => {
+              const currentVariant = (product as any).variants?.find((v: any) => v.size === selectedVolume) || (product as any).options?.find((v: any) => v.size === selectedVolume);
+              const currentPrice = currentVariant?.price || product.price;
+              const currentStrikePrice = currentVariant?.strikePrice || (product as any).strikePrice;
+              
+              return (
+                <>
+                  <div className={styles.productHeaderArea}>
+                    <h1 className={styles.productTitleChanel}>{product.name}</h1>
+                    <div className={styles.titleSeparator}></div>
+                    <p className={styles.productSubtitle}>Parfum Spray</p>
+                    <a 
+                      href="#product-info-section" 
+                      className={styles.moreDetailsLink}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setOpenAccordion("description");
+                        document.getElementById("product-info-section")?.scrollIntoView({ behavior: "smooth" });
+                      }}
+                    >
+                      More details
+                    </a>
+                  </div>
 
-            {/* Price display tag */}
-            <div className={styles.priceRow} style={{ flexDirection: "column", alignItems: "flex-start", gap: "4px", marginBottom: "20px" }}>
-              {(() => {
-                const currentVariant = (product as any).variants?.find((v: any) => v.size === selectedVolume) || (product as any).options?.find((v: any) => v.size === selectedVolume);
-                const currentPrice = currentVariant?.price || product.price;
-                const currentStrikePrice = currentVariant?.strikePrice || (product as any).strikePrice;
-                return (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <div className={styles.priceRowChanel}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
+                        {currentStrikePrice && currentStrikePrice > currentPrice && (
+                          <span style={{ color: "#ef4444", fontSize: "0.9rem", fontWeight: 400 }}>
+                            -{Math.round(((currentStrikePrice - currentPrice) / currentStrikePrice) * 100)}%
+                          </span>
+                        )}
+                        <span className={styles.priceValChanel}>
+                          ₹ {currentPrice.toLocaleString("en-IN")}*
+                        </span>
+                      </div>
                       {currentStrikePrice && currentStrikePrice > currentPrice && (
-                        <span style={{ color: "#ef4444", fontSize: "1.4rem", fontWeight: 400 }}>
-                          -{Math.round(((currentStrikePrice - currentPrice) / currentStrikePrice) * 100)}%
+                        <span style={{ color: "#6b7280", fontSize: "0.95rem" }}>
+                          M.R.P: <del>₹ {currentStrikePrice.toLocaleString("en-IN")}</del>
                         </span>
                       )}
-                      <span className={styles.priceVal} style={{ fontWeight: 400, fontSize: "1.8rem", color: "#111827" }}>
-                        ₹ {currentPrice.toLocaleString("en-IN")}.00
-                      </span>
                     </div>
-                    {currentStrikePrice && currentStrikePrice > currentPrice && (
-                      <span style={{ color: "#6b7280", fontSize: "0.9rem" }}>
-                        M.R.P: <del>₹ {currentStrikePrice.toLocaleString("en-IN")}.00</del>
-                      </span>
-                    )}
                   </div>
-                );
-              })()}
-              <span className={styles.taxSubtext}>{deliverySubtext.toUpperCase()}</span>
-            </div>
-            {product.quantity !== undefined && product.quantity <= 5 && (
-              <div style={{
-                color: "#dc2626",
-                fontSize: "0.82rem",
-                fontWeight: 700,
-                marginBottom: "16px",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                letterSpacing: "0.03em"
-              }}>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" style={{ width: "16px", height: "16px" }}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                </svg>
-                <span>{product.quantity === 0 ? "OUT OF STOCK" : `ONLY ${product.quantity} BOTTLES LEFT IN STOCK`}</span>
-              </div>
-            )}
 
-            {/* Bottle Volume Picker */}
-            <div className={styles.pickerSection}>
-              <span className={styles.pickerLabel}>Bottle Volume</span>
-              <div className={styles.volumeOptionsGrid}>
-                {(product.sizes && product.sizes.length > 0 ? product.sizes : ["50ml", "100ml", "150ml"]).map((size) => {
-                  const displaySize = size.toLowerCase().endsWith("ml") ? size : `${size}ml`;
-                  const variantPrice = 
-                    (product as any).variants?.find((v: any) => v.size === size)?.price || 
-                    (product as any).options?.find((v: any) => v.size === size)?.price || 
-                    product.price;
+                  <div className={styles.sizeSectionChanel}>
+                    <p className={styles.sizeHeaderChanel}>
+                      {product.sizes?.length || 3} SIZES AVAILABLE
+                    </p>
                     
-                  return (
-                    <button 
-                      key={size}
-                      onClick={() => setSelectedVolume(size)}
-                      className={`${styles.volumeOptionBtn} ${selectedVolume === size ? styles.volumeActive : ""}`}
-                      style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "10px 4px", gap: "4px" }}
+                    <div className={styles.sizeDropdownWrapper}>
+                      <div className={styles.sizeSelectDisplay} onClick={() => setIsSizeDropdownOpen(!isSizeDropdownOpen)}>
+                        <span>{selectedVolume.toLowerCase().endsWith("ml") ? selectedVolume : `${selectedVolume}ml`}</span>
+                        <div className={styles.selectChevron}>
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: "16px", height: "16px", transform: isSizeDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                          </svg>
+                        </div>
+                      </div>
+                      
+                      {isSizeDropdownOpen && (
+                        <>
+                          <div className={styles.dropdownBackdrop} onClick={() => setIsSizeDropdownOpen(false)} />
+                          <div className={styles.sizeDropdownMenu}>
+                            {(product.sizes && product.sizes.length > 0 ? product.sizes : ["50ml", "100ml", "150ml"]).map(size => {
+                              const variantPrice = (product as any).variants?.find((v: any) => v.size === size)?.price || (product as any).options?.find((v: any) => v.size === size)?.price || product.price;
+                              const isSelected = selectedVolume === size;
+                              return (
+                                <div 
+                                  key={size} 
+                                  className={styles.sizeDropdownItem}
+                                  onClick={() => { setSelectedVolume(size); setIsSizeDropdownOpen(false); }}
+                                >
+                                  <span style={{ fontWeight: isSelected ? 700 : 400, color: isSelected ? '#111827' : '#4b5563' }}>
+                                    {size.toLowerCase().endsWith("ml") ? size : `${size}ml`}
+                                  </span>
+                                  <span style={{ fontWeight: isSelected ? 700 : 400, color: isSelected ? '#111827' : '#4b5563' }}>
+                                    ₹ {variantPrice.toLocaleString("en-IN")}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <button 
+                    className={styles.addToBagBtnChanel}
+                    onClick={() => addToCart(product, selectedVolume, 1)}
+                    disabled={product.quantity === 0}
+                  >
+                    {product.quantity === 0 ? "OUT OF STOCK" : "ADD TO BAG"}
+                  </button>
+
+                  <div className={styles.taxInfoChanel}>
+                    *MRP (inclusive of all taxes).
+                  </div>
+
+                  <div className={styles.clientReviewsLinkChanel}>
+                    <a 
+                      href="#product-info-section" 
+                      onClick={(e) => { 
+                        e.preventDefault(); 
+                        setOpenAccordion("reviews");
+                        document.getElementById("product-info-section")?.scrollIntoView({ behavior: "smooth" }); 
+                      }}
                     >
-                      <span style={{ fontWeight: 600 }}>{displaySize}</span>
-                      <span style={{ fontSize: "0.75rem", opacity: selectedVolume === size ? 0.9 : 0.65 }}>
-                        ₹{variantPrice.toLocaleString("en-IN")}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Warning / Fit details note */}
-            <p className={styles.sizeHelperNote}>
-              {usageGuideText}
-            </p>
-
-            {/* Buy and Add count selectors */}
-            <div className={styles.checkoutActionsRow}>
-              <div className={styles.quantityCounter}>
-                <button onClick={handleQuantityDecrease} className={styles.qtyBtn} disabled={product.quantity === 0}>−</button>
-                <span className={styles.qtyVal}>{product.quantity === 0 ? 0 : quantity}</span>
-                <button onClick={handleQuantityIncrease} className={styles.qtyBtn} disabled={product.quantity === 0}>+</button>
-              </div>
-
-              <button 
-                onClick={() => addToCart(product, selectedVolume, quantity)} 
-                className={styles.addToCartBtn}
-                disabled={product.quantity === 0}
-                style={{
-                  opacity: product.quantity === 0 ? 0.5 : 1,
-                  cursor: product.quantity === 0 ? "not-allowed" : "pointer"
-                }}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" style={{ width: "16px", height: "16px", marginRight: "8px" }}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-                </svg>
-                {product.quantity === 0 ? "Out of stock" : "Add to cart"}
-              </button>
-            </div>
-
-            <button 
-              onClick={handleBuyNow} 
-              className={styles.buyNowBtn}
-              disabled={product.quantity === 0}
-              style={{
-                opacity: product.quantity === 0 ? 0.5 : 1,
-                cursor: product.quantity === 0 ? "not-allowed" : "pointer"
-              }}
-            >
-              {product.quantity === 0 ? "OUT OF STOCK" : "Buy It Now"}
-            </button>
-
-            <span className={styles.freeShippingBanner}>
-              FREE SHIPPING ACROSS INDIA
-            </span>
-
-
-            {/* Long description text */}
-            <div className={styles.descriptionSection}>
-              <p>{product.description || "No detailed description cataloged for this perfume yet. Handcrafted by PhD students using premium raw materials for exceptional longevity."}</p>
-            </div>
+                      Client reviews
+                    </a>
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </div>
       </main>
 
-      {/* Dynamic Reviews Section */}
-      {showProductReviews && reviewsData && (
-        <section id="reviews-section" style={{
-          backgroundColor: "#f9fafb",
-          padding: "80px 40px",
-          width: "100%",
-          boxSizing: "border-box",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center"
-        }}>
-          <div style={{
-            width: "100%",
-            maxWidth: "1100px",
-            display: "flex",
-            flexDirection: "column",
-            gap: "35px"
-          }}>
-            {/* Header Title & Write Review Button */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", margin: "0 0 10px 0" }}>
-              <h2 style={{
-                fontSize: "2.2rem",
-                fontWeight: 600,
-                fontFamily: "Outfit, Inter, sans-serif",
-                color: "#111827",
-                margin: 0
-              }}>
-                Rating & Reviews
-              </h2>
-              <button 
-                style={{
-                  backgroundColor: "#111827",
-                  color: "#ffffff",
-                  border: "none",
-                  borderRadius: "8px",
-                  padding: "10px 20px",
-                  fontSize: "0.9rem",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  fontFamily: "Outfit, sans-serif",
-                  transition: "background-color 0.2s"
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#374151"}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#111827"}
-                onClick={() => setShowReviewModal(true)}
-              >
-                Write a review
+      {/* Product Information Accordion */}
+      {product && (
+        <section id="product-info-section" className={styles.productInfoSection}>
+          <h2 className={styles.productInfoTitle}>PRODUCT INFORMATION</h2>
+          
+          <div className={styles.accordionContainer}>
+            {/* Description */}
+            <div className={styles.accordionItem}>
+              <button className={styles.accordionHeader} onClick={() => toggleAccordion("description")}>
+                <span className={styles.accordionTitle}>DESCRIPTION</span>
+                <svg className={`${styles.accordionIcon} ${openAccordion === "description" ? styles.accordionIconOpen : ""}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                </svg>
               </button>
-            </div>
-
-            {/* Grid Layout containing rating summary on left and review card on right */}
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "minmax(300px, 1fr) 1.2fr",
-              gap: "60px",
-              alignItems: "center",
-              width: "100%"
-            }}>
-              {/* Left Column: Summary Rating */}
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "40px",
-                justifyContent: "space-between"
-              }}>
-                {/* Overall Score */}
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-                  <div style={{ display: "flex", alignItems: "baseline" }}>
-                    <span style={{
-                      fontSize: "7.5rem",
-                      fontWeight: 700,
-                      color: "#111827",
-                      fontFamily: "Outfit, sans-serif",
-                      lineHeight: "0.9"
-                    }}>
-                      {reviewsData.average}
-                    </span>
-                    <span style={{
-                      fontSize: "2.2rem",
-                      color: "#9ca3af",
-                      fontWeight: 500,
-                      marginLeft: "4px"
-                    }}>
-                      /5
-                    </span>
+              <div className={`${styles.accordionContent} ${openAccordion === "description" ? styles.accordionContentOpen : ""}`}>
+                <div className={styles.accordionInnerWrapper}>
+                  <div className={styles.accordionInner}>
+                    {product.description || "Detailed description for this exquisite fragrance goes here."}
                   </div>
-                  <span style={{
-                    fontSize: "1rem",
-                    color: "#9ca3af",
-                    fontWeight: 500,
-                    marginTop: "16px",
-                    fontFamily: "Inter, sans-serif"
-                  }}>
-                    ({reviewsData.total} Reviews)
-                  </span>
-                </div>
-
-                {/* Progress Bars */}
-                <div style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "8px",
-                  flexGrow: 1,
-                  maxWidth: "240px"
-                }}>
-                  {reviewsData.breakdown.map((item: any) => (
-                    <div key={item.stars} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span style={{ color: "#d97706", fontSize: "1.1rem" }}>★</span>
-                      <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#111827", width: "12px" }}>{item.stars}</span>
-                      <div style={{ flexGrow: 1, height: "8px", backgroundColor: "#e5e7eb", borderRadius: "4px", position: "relative" }}>
-                        <div style={{ position: "absolute", top: 0, left: 0, height: "100%", width: `${item.percentage}%`, backgroundColor: "#111827", borderRadius: "4px" }} />
-                      </div>
-                    </div>
-                  ))}
                 </div>
               </div>
+            </div>
 
-              {/* Right Column: Review Card */}
-              {displayReviews.length > 0 ? (
-                <div style={{
-                  backgroundColor: "#ffffff",
-                  border: "1px solid #e5e7eb",
-                  borderRadius: "16px",
-                  padding: "32px",
-                  boxShadow: "0 4px 12px -2px rgba(0, 0, 0, 0.03)",
-                  minHeight: "220px",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  opacity: reviewFade ? 1 : 0,
-                  transform: reviewFade ? "translateY(0)" : "translateY(5px)",
-                  transition: "opacity 0.3s ease, transform 0.3s ease",
-                  position: "relative"
-                }}>
-                  <div>
-                    {/* Reviewer Name */}
-                    <h3 style={{
-                      fontSize: "1.15rem",
-                      fontWeight: 700,
-                      color: "#111827",
-                      margin: "0 0 8px 0",
-                      fontFamily: "Outfit, Inter, sans-serif"
-                    }}>
-                      {displayReviews[currentReviewIndex]?.author || displayReviews[currentReviewIndex]?.name}
-                    </h3>
+            {/* Additional Information */}
+            <div className={styles.accordionItem}>
+              <button className={styles.accordionHeader} onClick={() => toggleAccordion("additionalInfo")}>
+                <span className={styles.accordionTitle}>ADDITIONAL INFORMATION</span>
+                <svg className={`${styles.accordionIcon} ${openAccordion === "additionalInfo" ? styles.accordionIconOpen : ""}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                </svg>
+              </button>
+              <div className={`${styles.accordionContent} ${openAccordion === "additionalInfo" ? styles.accordionContentOpen : ""}`}>
+                <div className={styles.accordionInnerWrapper}>
+                  <div className={styles.accordionInner}>
+                    {product.additionalInformation || "Key ingredients, scent notes, and other additional product details."}
+                  </div>
+                </div>
+              </div>
+            </div>
 
-                    {/* Stars and Date Row */}
-                    <div style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginBottom: "20px"
-                    }}>
-                      {/* Gold Stars */}
-                      <div style={{
-                        color: "#111827",
-                        fontSize: "0.95rem",
-                        letterSpacing: "0.15em"
-                      }}>
-                        {"★".repeat(displayReviews[currentReviewIndex]?.rating || 5)}
+            {/* Reviews */}
+            <div className={styles.accordionItem}>
+              <button className={styles.accordionHeader} onClick={() => toggleAccordion("reviews")}>
+                <span className={styles.accordionTitle} style={{ flexGrow: 1, display: "flex", alignItems: "center" }}>
+                  REVIEWS
+                  {openAccordion !== "reviews" && (
+                    <span className={styles.reviewsRatingPreview} style={{ marginLeft: "auto", marginRight: "16px", textTransform: "none", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <div className={styles.starsPreview} style={{ display: "flex", gap: "2px" }}>
+                        {renderStars(reviewsList.length > 0 ? (reviewsList.reduce((acc, rev) => acc + (rev.rating || 5), 0) / reviewsList.length) : 0, 20)}
                       </div>
-                      {/* Date */}
-                      <span style={{
-                        fontSize: "0.82rem",
-                        color: "#9ca3af",
-                        fontWeight: 500,
-                        fontFamily: "Inter, sans-serif"
-                      }}>
-                        {displayReviews[currentReviewIndex]?.createdAt 
-                          ? new Date(displayReviews[currentReviewIndex].createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) 
-                          : (displayReviews[currentReviewIndex]?.date || "13 Oct 2024")}
-                      </span>
+                      <span style={{ fontSize: "15px", fontWeight: 600, fontFamily: "Outfit, sans-serif" }}>{reviewsList.length > 0 ? (reviewsList.reduce((acc, rev) => acc + (rev.rating || 5), 0) / reviewsList.length).toFixed(1) : "0.0"}/5</span>
+                    </span>
+                  )}
+                </span>
+                <svg className={`${styles.accordionIcon} ${openAccordion === "reviews" ? styles.accordionIconOpen : ""}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                </svg>
+              </button>
+              <div className={`${styles.accordionContent} ${openAccordion === "reviews" ? styles.accordionContentOpen : ""}`}>
+                <div className={styles.accordionInnerWrapper}>
+                  <div className={styles.accordionInner} style={{ padding: "40px 0" }}>
+                    
+                    <div className={styles.reviewsGridContainer}>
+                      {/* Left side: Summary */}
+                      <div className={styles.reviewsSummaryLeft}>
+                        <div style={{ fontSize: "5.5rem", fontWeight: 700, fontFamily: "Outfit, sans-serif", color: "#111827", lineHeight: 1 }}>
+                          {reviewsList.length > 0 ? (reviewsList.reduce((acc, rev) => acc + (rev.rating || 5), 0) / reviewsList.length).toFixed(1) : "0.0"}
+                        </div>
+                        <div style={{ display: "flex", gap: "6px", margin: "20px 0 8px 0" }}>
+                          {renderStars(reviewsList.length > 0 ? (reviewsList.reduce((acc, rev) => acc + (rev.rating || 5), 0) / reviewsList.length) : 0, 24)}
+                        </div>
+                        <div style={{ fontSize: "1.1rem", color: "#4b5563", marginBottom: "40px", fontFamily: "Inter, sans-serif" }}>
+                          {reviewsList.length} reviews
+                        </div>
+                        <button 
+                          onClick={() => setShowReviewModal(true)}
+                          className={styles.writeReviewBtn}
+                        >
+                          WRITE A REVIEW
+                        </button>
+                        <button 
+                          onClick={(e) => { e.preventDefault(); setShowModerationChart(true); }}
+                          style={{ background: "transparent", border: "none", cursor: "pointer", color: "#111827", textDecoration: "underline", fontSize: "1rem", fontFamily: "Inter, sans-serif" }}
+                        >
+                          Moderation chart
+                        </button>
+                      </div>
+
+                      {/* Right side: Reviews List */}
+                      <div className={styles.reviewsListRight}>
+                        <div className={styles.sortDropdownContainer} onClick={() => setIsReviewSortOpen(!isReviewSortOpen)}>
+                           <span className={styles.sortLabel}>Sort by:</span>
+                           <div className={styles.sortSelectWrapper}>
+                             <span className={styles.sortSelectDisplayValue}>{reviewSort}</span>
+                             <div className={styles.sortSelectChevron}>
+                               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: "20px", height: "20px", transform: isReviewSortOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+                                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                               </svg>
+                             </div>
+                           </div>
+                           
+                           {isReviewSortOpen && (
+                             <>
+                               <div className={styles.reviewSortBackdrop} onClick={(e) => { e.stopPropagation(); setIsReviewSortOpen(false); }} />
+                               <div className={styles.reviewSortMenu}>
+                                  <div className={styles.reviewSortMobileHeader}>
+                                    <span>SORT BY:</span>
+                                    <button onClick={(e) => { e.stopPropagation(); setIsReviewSortOpen(false); }}>
+                                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                    </button>
+                                  </div>
+                                  <div className={styles.reviewSortMobileDivider}></div>
+                                  {["Most recent", "Highest to lowest", "Lowest to highest", "Most helpful"].map(opt => (
+                                    <div 
+                                      key={opt}
+                                      className={`${styles.reviewSortOption} ${reviewSort === opt ? styles.reviewSortOptionActive : ""}`}
+                                      onClick={(e) => { e.stopPropagation(); setReviewSort(opt); setIsReviewSortOpen(false); }}
+                                    >
+                                      {opt}
+                                    </div>
+                                  ))}
+                               </div>
+                             </>
+                           )}
+                        </div>
+                        
+                        <div className={styles.reviewsListWrapper}>
+                           {reviewsList.length === 0 && (
+                             <p style={{ color: "#6b7280", fontStyle: "italic", marginTop: "20px" }}>No reviews available.</p>
+                           )}
+                           {[...reviewsList]
+                             .sort((a, b) => {
+                               if (reviewSort === "Highest to lowest") return (b.rating || 5) - (a.rating || 5);
+                               if (reviewSort === "Lowest to highest") return (a.rating || 5) - (b.rating || 5);
+                               if (reviewSort === "Most helpful") return (b.helpful || 0) - (a.helpful || 0);
+                               // Most recent
+                               const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                               const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                               return dateB - dateA;
+                             })
+                             .map((review, idx) => (
+                               <div key={review._id || idx} className={styles.reviewCard}>
+                                 <div className={styles.reviewCardHeader}>
+                                    <div className={styles.reviewAuthorBlock}>
+                                      <span className={styles.reviewAuthor}>{review.author || review.name}</span>
+                                      {review.createdAt && (
+                                        <span className={styles.reviewDate}>
+                                          {new Date(review.createdAt).toLocaleDateString("en-GB")}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className={styles.reviewStarsBlock}>
+                                      <div style={{ display: "flex", gap: "4px" }}>
+                                        {renderStars(review.rating || 5, 20)}
+                                      </div>
+                                      <span className={styles.reviewRatingNumber}>{review.rating || 5}</span>
+                                    </div>
+                                 </div>
+                                 {review.purchaseDate && (
+                                   <div className={styles.reviewPurchaseDate}>
+                                      Purchase date: {new Date(review.purchaseDate).toLocaleDateString("en-GB")}
+                                   </div>
+                                 )}
+                                 <p className={styles.reviewText}>
+                                   {review.comment || review.text}
+                                 </p>
+                              </div>
+                           ))}
+                        </div>
+                      </div>
                     </div>
 
-                    {/* Review text */}
-                    <p style={{
-                      fontSize: "0.95rem",
-                      color: "#4b5563",
-                      lineHeight: "1.6",
-                      margin: 0,
-                      fontFamily: "Inter, sans-serif",
-                      fontStyle: "normal"
-                    }}>
-                      &ldquo;{displayReviews[currentReviewIndex]?.comment || displayReviews[currentReviewIndex]?.text}&rdquo;
-                    </p>
-
-                    {/* Review Images */}
-                    {displayReviews[currentReviewIndex]?.images && displayReviews[currentReviewIndex].images.length > 0 && (
-                      <div style={{ display: "flex", gap: "10px", marginTop: "16px", flexWrap: "wrap" }}>
-                        {displayReviews[currentReviewIndex].images.map((imgUrl: string, idx: number) => (
-                          <img 
-                            key={idx} 
-                            src={imgUrl} 
-                            alt={`Review photo ${idx + 1}`} 
-                            style={{ 
-                              width: "70px", 
-                              height: "70px", 
-                              objectFit: "cover", 
-                              borderRadius: "6px", 
-                              cursor: "pointer", 
-                              border: "1px solid #e5e7eb" 
-                            }}
-                            onClick={() => setLightboxImg(imgUrl)}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Capsule Tracker at the bottom of the card */}
-                  <div style={{
-                    width: "120px",
-                    height: "4px",
-                    backgroundColor: "#e5e7eb",
-                    borderRadius: "2px",
-                    margin: "24px auto 0 auto",
-                    position: "relative",
-                    overflow: "hidden"
-                  }}>
-                    <div style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      height: "100%",
-                      width: `${100 / displayReviews.length}%`,
-                      backgroundColor: "#111827",
-                      borderRadius: "2px",
-                      transform: `translateX(${currentReviewIndex * 100}%)`,
-                      transition: "transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)"
-                    }} />
                   </div>
                 </div>
-              ) : (
-                <div style={{
-                  backgroundColor: "#ffffff",
-                  border: "1px solid #e5e7eb",
-                  borderRadius: "16px",
-                  padding: "32px",
-                  boxShadow: "0 4px 12px -2px rgba(0, 0, 0, 0.03)",
-                  minHeight: "220px",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  textAlign: "center"
-                }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: "40px", height: "40px", color: "#9ca3af", marginBottom: "16px" }}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a.75.75 0 0 1-1.074-.83l1.246-3.535C4.163 15.3 3.75 13.7 3.75 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
-                  </svg>
-                  <p style={{ fontSize: "0.95rem", color: "#4b5563", margin: "0 0 4px 0", fontWeight: 600, fontFamily: "Outfit, sans-serif" }}>
-                    No reviews yet
-                  </p>
-                  <p style={{ fontSize: "0.85rem", color: "#9ca3af", margin: 0, fontFamily: "Inter, sans-serif" }}>
-                    Be the first to share your experience with this fragrance!
-                  </p>
-                </div>
-              )}
+              </div>
             </div>
+
+
+
+            {/* Online Order */}
+            <div className={styles.accordionItem}>
+              <button className={styles.accordionHeader} onClick={() => toggleAccordion("onlineOrder")}>
+                <span className={styles.accordionTitle}>ONLINE ORDER</span>
+                <svg className={`${styles.accordionIcon} ${openAccordion === "onlineOrder" ? styles.accordionIconOpen : ""}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                </svg>
+              </button>
+              <div className={`${styles.accordionContent} ${openAccordion === "onlineOrder" ? styles.accordionContentOpen : ""}`}>
+                <div className={styles.accordionInnerWrapper}>
+                  <div className={styles.accordionInner}>
+                    {product.onlineOrder || "Fast shipping and simple returns on all online orders. Contact support for any order inquiries."}
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </section>
       )}
@@ -1378,9 +1300,8 @@ export default function ProductDetailPage() {
       />
 
       {/* Write a Review Modal */}
-      {showReviewModal && (
-        <div className={styles.modalOverlay} onClick={() => setShowReviewModal(false)}>
-          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+      <div className={`${styles.modalOverlay} ${showReviewModal ? styles.modalOverlayOpen : ""}`} onClick={() => setShowReviewModal(false)}>
+        <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h3 className={styles.modalTitle}>Write a Review for {product?.name}</h3>
               <button className={styles.modalCloseBtn} onClick={() => setShowReviewModal(false)}>✕</button>
@@ -1390,21 +1311,6 @@ export default function ProductDetailPage() {
               <div className={styles.successAlert}>{reviewSuccessMsg}</div>
             ) : (
               <form onSubmit={handleSubmitReview} className={styles.modalForm}>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Rating</label>
-                  <div className={styles.starSelector}>
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <span 
-                        key={star} 
-                        onClick={() => setUserRating(star)}
-                        style={{ cursor: "pointer", fontSize: "1.85rem", color: star <= userRating ? "#000000" : "#d1d5db" }}
-                      >
-                        ★
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Your Name</label>
                   <input 
@@ -1439,6 +1345,21 @@ export default function ProductDetailPage() {
                     onChange={(e) => setReviewComment(e.target.value)} 
                     className={styles.formTextarea} 
                   />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Rating</label>
+                  <div className={styles.starSelector}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <span 
+                        key={star} 
+                        onClick={() => setUserRating(star)}
+                        style={{ cursor: "pointer", fontSize: "1.85rem", color: star <= userRating ? "#000000" : "#d1d5db" }}
+                      >
+                        ★
+                      </span>
+                    ))}
+                  </div>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -1485,7 +1406,6 @@ export default function ProductDetailPage() {
                 <button 
                   type="submit" 
                   className={styles.submitReviewBtn}
-                  style={{ backgroundColor: primaryColor || "#57bc74" }}
                   disabled={uploadingImage}
                 >
                   {uploadingImage ? "Uploading..." : "Submit Review"}
@@ -1494,7 +1414,6 @@ export default function ProductDetailPage() {
             )}
           </div>
         </div>
-      )}
 
       {/* Image Lightbox Overlay */}
       {lightboxImg && (
@@ -1503,6 +1422,22 @@ export default function ProductDetailPage() {
           <img src={lightboxImg} alt="Enlarged review photo" className={styles.lightboxImg} onClick={(e) => e.stopPropagation()} />
         </div>
       )}
+      {/* Moderation Chart Drawer */}
+      <div className={`${styles.moderationOverlay} ${showModerationChart ? styles.moderationOverlayOpen : ""}`} onClick={() => setShowModerationChart(false)}>
+        <div className={styles.moderationDrawer} onClick={(e) => e.stopPropagation()}>
+          <button className={styles.moderationCloseBtn} onClick={() => setShowModerationChart(false)}>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: "28px", height: "28px" }}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <h3 className={styles.moderationTitle}>MODERATION CHART</h3>
+          <p className={styles.moderationText}>
+            Each review is moderated manually by our Customer Service before its publication to verify its compliance with our publication criteria addressed in <a href="#" style={{ textDecoration: "underline", color: "#111827" }}>legal mentions</a>.<br /><br />
+            Reviews will be published regardless of their rating as long as they meet all the publication criteria. To be able to write a review on one of our products, the customer must have previously purchased the product on <a href="#" style={{ textDecoration: "underline", color: "#111827" }}>29sformula.com</a> in the last year.<br /><br />
+            Reviews are posted on our site in chronological order.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
