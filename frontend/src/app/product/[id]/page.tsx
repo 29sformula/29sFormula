@@ -47,6 +47,10 @@ export default function ProductDetailPage() {
   const [activeImg, setActiveImg] = useState<string>("");
   const [allImages, setAllImages] = useState<string[]>([]);
   
+  // Swipe handling state
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  
   // Customizer option choices
   const [selectedVolume, setSelectedVolume] = useState<string>("100ml");
   const [quantity, setQuantity] = useState<number>(1);
@@ -689,6 +693,28 @@ export default function ProductDetailPage() {
     setActiveImg(allImages[prevIdx]);
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+    
+    if (isLeftSwipe) {
+      handleNextImage();
+    } else if (isRightSwipe) {
+      handlePrevImage();
+    }
+  };
+
   const handleQuantityIncrease = () => {
     if (!product) return;
     const maxStock = ((product as any).variants && (product as any).variants.find((v: any) => v.size === selectedVolume)?.quantity) ?? (product as any).quantity;
@@ -733,7 +759,12 @@ export default function ProductDetailPage() {
         <div className={styles.detailGrid}>
           {/* Left Column: Interactive Media Gallery */}
           <div className={styles.mediaGallery}>
-            <div className={styles.mainImageWrapper}>
+            <div 
+              className={styles.mainImageWrapper}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
               <img 
                 src={activeImg} 
                 alt={product.name} 

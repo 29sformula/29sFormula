@@ -6,12 +6,13 @@
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(4px);
-  z-index: 1000;
+  z-index: 100000;
   display: flex;
   justify-content: flex-end;
 }
 
 .drawer {
+  position: relative;
   width: 100%;
   max-width: 520px;
   height: 100%;
@@ -49,13 +50,17 @@
 }
 
 .closeBtn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
   background: none;
   border: none;
-  font-size: 1.2rem;
-  color: #6b7280;
+  font-size: 1.8rem;
+  color: #000000;
   cursor: pointer;
   padding: 4px;
-  transition: color 0.2s ease;
+  transition: opacity 0.2s ease;
+  line-height: 1;
 }
 
 .closeBtn:hover {
@@ -237,6 +242,28 @@
   padding: 20px 30px;
   border-top: 1px solid #eaeaea;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cancelBtn {
+  width: 100%;
+  background-color: transparent;
+  color: #000000;
+  border: 1px solid #000000;
+  border-radius: 4px;
+  padding: 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelBtn:hover {
+  background-color: #f9fafb;
 }
 
 .submitBtn {
@@ -362,5 +389,9 @@
 @media (max-width: 600px) {
   .drawer {
     width: 100vw;
+  }
+  .inputRow {
+    flex-direction: column;
+    gap: 15px;
   }
 }

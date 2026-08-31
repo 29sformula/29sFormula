@@ -459,7 +459,7 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
             {/* Returning Customer Section */}
             {!loggedInUser && (
               <div className={styles.section} style={{ backgroundColor: "#f9fafb", padding: "16px", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
-                <label className={styles.checkboxLabel} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontWeight: 600, fontSize: "0.95rem" }}>
+                <label className={styles.checkboxLabel} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontWeight: 600, fontSize: "0.95rem", color: "#000000" }}>
                 <input
                   type="checkbox"
                   checked={isReturningCustomer}
@@ -772,6 +772,9 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
           <div className={styles.footer}>
             <button type="submit" disabled={isSubmitting || !(name.trim() && email.trim() && phone.trim() && address.trim() && city.trim() && stateVal.trim() && pinCode.trim())} className={styles.submitBtn}>
               {isSubmitting ? "Processing Order..." : "Confirm & Place Order"}
+            </button>
+            <button type="button" onClick={onClose} className={styles.cancelBtn}>
+              Cancel Checkout
             </button>
           </div>
         </form>
