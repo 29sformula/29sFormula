@@ -60,6 +60,16 @@ export default function AdminDashboard() {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    // Set the body background color to match the admin layout
+    // This prevents the global black background from showing in the iOS safe area (bottom notch)
+    const originalBg = document.body.style.backgroundColor;
+    document.body.style.backgroundColor = "#f8f9fa";
+    return () => {
+      document.body.style.backgroundColor = originalBg;
+    };
+  }, []);
+
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
