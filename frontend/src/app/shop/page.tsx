@@ -867,7 +867,7 @@ export default function Shop() {
                         type="radio" 
                         name="mobileSort" 
                         checked={sortBy === sortOpt.val}
-                        onChange={() => setSortBy(sortOpt.val)}
+                        onChange={() => setSortBy(sortOpt.val as any)}
                       />
                       {sortOpt.label}
                     </label>
@@ -889,7 +889,7 @@ export default function Shop() {
                         type="radio" 
                         name="mobilePrice" 
                         checked={priceRange === pr.val}
-                        onChange={() => setPriceRange(pr.val)}
+                        onChange={() => setPriceRange(pr.val as any)}
                       />
                       {pr.label}
                     </label>
