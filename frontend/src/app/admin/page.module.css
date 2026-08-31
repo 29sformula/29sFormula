@@ -1454,15 +1454,26 @@
   }
   .sidebar {
     position: fixed;
-    left: -260px;
-    top: 0;
-    bottom: 0;
-    z-index: 1000;
-    transition: transform 0.3s ease;
-    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    inset: 0;
+    z-index: 10001;
+    background-color: rgba(0, 0, 0, 0.98);
+    backdrop-filter: blur(24px);
+    display: flex;
+    flex-direction: column;
+    padding: 80px 24px 40px 24px;
+    pointer-events: none;
+    overflow-y: auto;
+    clip-path: circle(0px at calc(100% - 40px) 40px);
+    transition: clip-path 0.5s cubic-bezier(0.76, 0, 0.24, 1);
+    box-shadow: none;
+    transform: none;
+    width: 100%;
+    left: 0;
   }
   .sidebarOpen {
-    transform: translateX(260px);
+    pointer-events: auto;
+    clip-path: circle(150% at calc(100% - 40px) 40px);
+    transform: none;
   }
   .hamburgerBtn {
     display: flex;
@@ -1472,6 +1483,10 @@
     border: none;
     cursor: pointer;
     padding: 10px;
+    z-index: 10002;
+    position: fixed;
+    top: 15px;
+    right: 15px;
   }
   .mobileHeader {
     display: flex;
@@ -1480,15 +1495,78 @@
     padding: 15px 20px;
     background-color: #ffffff;
     border-bottom: 1px solid #e5e7eb;
+    position: relative;
+    z-index: 10000;
   }
   .sidebarOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0,0,0,0.5);
-    z-index: 999;
+    display: none;
+  }
+  /* Stagger animations for mobile menu items */
+  .sidebar .menuItem, .sidebar .logoutLink, .sidebar .subMenuItem {
+    opacity: 0;
+    transform: translateX(80px);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .sidebarOpen .menuItem, .sidebarOpen .logoutLink, .sidebarOpen .subMenuItem {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  /* All menu items slide in simultaneously on mobile */
+  .sidebarOpen .navMenu > div .menuItem, .sidebarOpen .logoutLink, .sidebarOpen .subMenuItem {
+    transition-delay: 0.10s;
+  }
+  
+  /* Text colors for dark mode mobile menu */
+  .sidebar .menuItemLeft span {
+    color: #a1a1aa; /* Gray by default */
+    font-size: 1.4rem; /* Increased font size for mobile menu */
+  }
+  .sidebar .menuItemActive .menuItemLeft span {
+    color: #ffffff; /* White when active */
+  }
+  .sidebar .logoutLink span {
+    color: #f87171; /* Light red color for logout */
+    font-size: 1.4rem;
+  }
+  /* Disable hover effects on mobile */
+  .sidebar .menuItem:hover:not(.menuItemActive),
+  .sidebar .logoutLink:hover {
+    background-color: transparent !important;
+  }
+  .sidebar .subMenuItem:hover .subMenuItemCapsule:not(.subMenuItemCapsuleActive) {
+    color: #a1a1aa !important; /* Keep it gray on hover */
+    background-color: transparent !important; /* Remove background on hover */
+  }
+  .sidebar .subMenuItemCapsule {
+    font-size: 1.15rem; /* Increased font size slightly */
+  }
+  .sidebar .subMenuItemCapsuleActive {
+    background-color: transparent !important;
+    font-weight: 500 !important; /* Keep font-weight consistent to prevent text jumping */
+    color: #ffffff !important;
+  }
+  .sidebar svg {
+    display: none !important;
+  }
+  /* Hide the spacer div in submenus to prevent layout shifting */
+  .sidebar .subMenuItem > div:first-child {
+    display: none !important;
+  }
+  .sidebar .menuItemActive {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  .sidebar .subMenuContainer {
+    background-color: transparent;
+  }
+  .sidebar .subMenuItemCapsule {
+    color: #a1a1aa;
+  }
+  .sidebar .subMenuItemCapsuleActive {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+  .sidebarTop .brandRow {
+    display: none; /* Hide brand row in mobile menu to match landing page */
   }
   .statsRow {
     grid-template-columns: repeat(2, 1fr) !important;
@@ -1499,6 +1577,26 @@
   .chartContainerCard, .topProductsCard {
     width: 100%;
   }
+  .topNavbar {
+    display: none;
+    padding: 12px 20px;
+  }
+  .scrollableContent {
+    padding: 16px;
+  }
+  .tableWrapper {
+    overflow-x: auto;
+  }
+  .tablePanelFull {
+    padding: 16px;
+  }
+  /* Fix customizer and forms overflowing on mobile */
+  .gridContainer {
+    grid-template-columns: 1fr;
+  }
+  .inputRow {
+    grid-template-columns: 1fr;
+  }
 }
 @media (max-width: 600px) {
   .statsRow {
@@ -1508,6 +1606,86 @@
     overflow-x: auto;
   }
 }
-.mobileHeader {
-  display: none;
+@media (min-width: 901px) {
+  .mobileHeader {
+    display: none;
+  }
+  .hamburgerBtn {
+    display: none;
+  }
 }
+
+/* Hamburger Animations for Admin Mobile */
+.hamburgerInner {
+  position: relative;
+  width: 20px;
+  height: 14px;
+}
+.hamburgerLine {
+  position: absolute;
+  left: 0;
+  width: 20px;
+  height: 2px;
+  background-color: #121212;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 1px;
+}
+.hamburgerLine:nth-child(1) { top: 0; }
+.hamburgerLine:nth-child(2) { top: 6px; }
+.hamburgerLine:nth-child(3) { top: 12px; }
+
+.hamburgerLineTopOpen {
+  transform: translateY(6px) rotate(45deg);
+  background-color: #ffffff;
+}
+.hamburgerLineMiddleOpen {
+  opacity: 0;
+}
+.hamburgerLineBottomOpen {
+  transform: translateY(-6px) rotate(-45deg);
+  background-color: #ffffff;
+}
+
+/* Landing Page 'More Menu' Style for Admin Sidebar */
+.mobileMenuOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10001; 
+  background-color: rgba(0, 0, 0, 0.98);
+  backdrop-filter: blur(24px);
+  display: flex;
+  flex-direction: column;
+  padding: 80px 32px 80px 32px;
+  pointer-events: none;
+  overflow-y: auto;
+  clip-path: circle(0px at calc(100% - 40px) 40px);
+  transition: clip-path 0.5s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.mobileMenuOverlayOpen {
+  pointer-events: auto;
+  clip-path: circle(150% at calc(100% - 40px) 40px);
+}
+
+.mobileMenuItem {
+  opacity: 0;
+  transform: translateX(80px);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mobileMenuOverlayOpen .mobileMenuItem {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Staggered transition delays for menu items */
+.mobileMenuOverlayOpen .mobileMenuItem:nth-child(1) { transition-delay: 0.20s; }
+.mobileMenuOverlayOpen .mobileMenuItem:nth-child(2) { transition-delay: 0.25s; }
+.mobileMenuOverlayOpen .mobileMenuItem:nth-child(3) { transition-delay: 0.30s; }
+.mobileMenuOverlayOpen .mobileMenuItem:nth-child(4) { transition-delay: 0.35s; }
+.mobileMenuOverlayOpen .mobileMenuItem:nth-child(5) { transition-delay: 0.40s; }
+.mobileMenuOverlayOpen .mobileMenuItem:nth-child(6) { transition-delay: 0.45s; }
+.mobileMenuOverlayOpen .mobileMenuItem:nth-child(7) { transition-delay: 0.50s; }
+
+.mobileMenuOverlay:not(.mobileMenuOverlayOpen) .mobileMenuItem { transition-duration: 0.25s; }
+

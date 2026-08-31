@@ -2132,12 +2132,23 @@ const getSearchResults = () => {
       {/* Mobile Header */}
       <div className={styles.mobileHeader}>
         <span className={styles.brandName}>29sFORMULA</span>
-        <button className={styles.hamburgerBtn} onClick={() => setIsMobileMenuOpen(true)}>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" width="24" height="24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-          </svg>
-        </button>
       </div>
+
+      <button className={styles.hamburgerBtn} onClick={() => {
+        if (!isMobileMenuOpen) {
+          // Open the dropdown for the active tab, close others
+          setOrdersDropdownOpen(activeTab === "orders");
+          setProductsDropdownOpen(activeTab === "products");
+          setOnlineStoreDropdownOpen(activeTab === "online-store");
+        }
+        setIsMobileMenuOpen(!isMobileMenuOpen);
+      }}>
+        <div className={styles.hamburgerInner}>
+          <div className={`${styles.hamburgerLine} ${isMobileMenuOpen ? styles.hamburgerLineTopOpen : ''}`} />
+          <div className={`${styles.hamburgerLine} ${isMobileMenuOpen ? styles.hamburgerLineMiddleOpen : ''}`} />
+          <div className={`${styles.hamburgerLine} ${isMobileMenuOpen ? styles.hamburgerLineBottomOpen : ''}`} />
+        </div>
+      </button>
 
       {/* Sidebar Overlay for Mobile */}
       {isMobileMenuOpen && (
@@ -2160,6 +2171,7 @@ const getSearchResults = () => {
         setActiveSubTab={setActiveSubTab}
         setSelectedCategoryView={setSelectedCategoryView}
         handleNavigationTrigger={handleNavigationTrigger}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
       />
 
       {/* 2. Main Page Content Wrapper */}

@@ -230,7 +230,7 @@ export default function AdminModals(props: any) {
                 <div style={{ backgroundColor: "#ffffff", border: "1px solid #e5e7eb", borderRadius: "10px", padding: "18px", marginBottom: "14px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
                   <h4 style={{ fontSize: "0.92rem", fontWeight: 700, color: "#111827", textTransform: "uppercase", letterSpacing: "0.03em", margin: "0 0 14px 0" }}>Product Variants & Sizing</h4>
 
-                  <div style={{ overflow: "visible" }}>
+                  <div style={{ overflowX: "auto" }}>
                     <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "500px" }}>
                       <thead>
                         <tr style={{ borderBottom: "2px solid #e5e7eb", textAlign: "left" }}>

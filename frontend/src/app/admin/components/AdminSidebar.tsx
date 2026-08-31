@@ -18,6 +18,7 @@ interface AdminSidebarProps {
   setActiveSubTab: (val: any) => void;
   setSelectedCategoryView: (val: string | null) => void;
   handleNavigationTrigger: (tab: any) => void;
+  setIsMobileMenuOpen?: (val: boolean) => void;
 }
 
 export default function AdminSidebar({
@@ -35,7 +36,8 @@ export default function AdminSidebar({
   setActiveTab,
   setActiveSubTab,
   setSelectedCategoryView,
-  handleNavigationTrigger
+  handleNavigationTrigger,
+  setIsMobileMenuOpen
 }: AdminSidebarProps) {
   return (
       <aside className={`${styles.sidebar} ${isMobileMenuOpen ? styles.sidebarOpen : ''}`}>
@@ -45,22 +47,29 @@ export default function AdminSidebar({
           </div>
 
           <nav className={styles.navMenu}>
-            <div
-              onClick={() => handleNavigationTrigger("home")}
-              className={`${styles.menuItem} ${activeTab === "home" ? styles.menuItemActive : ""}`}
-            >
-              <div className={styles.menuItemLeft}>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={styles.menuIcon}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-                </svg>
-                <span>Dashboard</span>
+            <div>
+              <div
+                onClick={() => handleNavigationTrigger("home")}
+                className={`${styles.menuItem} ${activeTab === "home" ? styles.menuItemActive : ""}`}
+              >
+                <div className={styles.menuItemLeft}>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={styles.menuIcon}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                  </svg>
+                  <span>Dashboard</span>
+                </div>
               </div>
             </div>
 
             <div>
               <div
                 onClick={() => {
-                  handleNavigationTrigger("orders");
+                  if (!isMobileMenuOpen) {
+                    handleNavigationTrigger("orders");
+                  } else {
+                    setProductsDropdownOpen(false);
+                    setOnlineStoreDropdownOpen(false);
+                  }
                   setOrdersDropdownOpen(!ordersDropdownOpen);
                 }}
                 className={`${styles.menuItem} ${activeTab === "orders" ? styles.menuItemActive : ""}`}
@@ -73,13 +82,14 @@ export default function AdminSidebar({
                 </div>
               </div>
 
-              {(ordersDropdownOpen || activeTab === "orders") && (
+              {((ordersDropdownOpen) || (!isMobileMenuOpen && activeTab === "orders")) && (
                 <div className={styles.subMenuContainer}>
                   {/* Item 1: Active Orders */}
                   <div
                     onClick={() => {
                       setActiveTab("orders");
                       setActiveSubTab("all");
+                      if (isMobileMenuOpen && setIsMobileMenuOpen) setIsMobileMenuOpen(false);
                     }}
                     className={styles.subMenuItem}
                   >
@@ -114,6 +124,7 @@ export default function AdminSidebar({
                     onClick={() => {
                       setActiveTab("orders");
                       setActiveSubTab("returns");
+                      if (isMobileMenuOpen && setIsMobileMenuOpen) setIsMobileMenuOpen(false);
                     }}
                     className={styles.subMenuItem}
                   >
@@ -144,6 +155,7 @@ export default function AdminSidebar({
                     onClick={() => {
                       setActiveTab("orders");
                       setActiveSubTab("cancelled");
+                      if (isMobileMenuOpen && setIsMobileMenuOpen) setIsMobileMenuOpen(false);
                     }}
                     className={styles.subMenuItem}
                   >
@@ -174,6 +186,7 @@ export default function AdminSidebar({
                     onClick={() => {
                       setActiveTab("orders");
                       setActiveSubTab("completed");
+                      if (isMobileMenuOpen && setIsMobileMenuOpen) setIsMobileMenuOpen(false);
                     }}
                     className={styles.subMenuItem}
                   >
@@ -201,7 +214,12 @@ export default function AdminSidebar({
             <div>
               <div
                 onClick={() => {
-                  handleNavigationTrigger("products");
+                  if (!isMobileMenuOpen) {
+                    handleNavigationTrigger("products");
+                  } else {
+                    setOrdersDropdownOpen(false);
+                    setOnlineStoreDropdownOpen(false);
+                  }
                   setProductsDropdownOpen(!productsDropdownOpen);
                 }}
                 className={`${styles.menuItem} ${activeTab === "products" ? styles.menuItemActive : ""}`}
@@ -215,13 +233,14 @@ export default function AdminSidebar({
               </div>
 
               {/* Sub-menu dropdown */}
-              {(productsDropdownOpen || activeTab === "products") && (
+              {((productsDropdownOpen) || (!isMobileMenuOpen && activeTab === "products")) && (
                 <div className={styles.subMenuContainer}>
                   {/* Item 1: All Products */}
                   <div
                     onClick={() => {
                       setActiveTab("products");
                       setActiveSubTab("all");
+                      if (isMobileMenuOpen && setIsMobileMenuOpen) setIsMobileMenuOpen(false);
                     }}
                     className={styles.subMenuItem}
                   >
@@ -251,6 +270,10 @@ export default function AdminSidebar({
                       setActiveTab("products");
                       setActiveSubTab("categories");
                       setSelectedCategoryView(null);
+                      if (isMobileMenuOpen && setIsMobileMenuOpen) {
+                        setIsMobileMenuOpen(false);
+                        setProductsDropdownOpen(false);
+                      }
                     }}
                     className={styles.subMenuItem}
                   >
@@ -304,7 +327,12 @@ export default function AdminSidebar({
 
             <div
               onClick={() => {
-                handleNavigationTrigger("online-store");
+                if (!isMobileMenuOpen) {
+                  handleNavigationTrigger("online-store");
+                } else {
+                  setOrdersDropdownOpen(false);
+                  setProductsDropdownOpen(false);
+                }
                 setOnlineStoreDropdownOpen(!onlineStoreDropdownOpen);
               }}
               className={`${styles.menuItem} ${activeTab === "online-store" ? styles.menuItemActive : ""}`}
@@ -317,13 +345,14 @@ export default function AdminSidebar({
               </div>
             </div>
 
-            {(onlineStoreDropdownOpen || activeTab === "online-store") && (
+            {((onlineStoreDropdownOpen) || (!isMobileMenuOpen && activeTab === "online-store")) && (
               <div className={styles.subMenuContainer}>
                 {/* Item 1: Landing Page */}
                 <div
                   onClick={() => {
                     setActiveTab("online-store");
                     setCustomizeSubTab("landing");
+                    if (isMobileMenuOpen && setIsMobileMenuOpen) setIsMobileMenuOpen(false);
                   }}
                   className={styles.subMenuItem}
                 >
@@ -354,6 +383,7 @@ export default function AdminSidebar({
                   onClick={() => {
                     setActiveTab("online-store");
                     setCustomizeSubTab("product");
+                    if (isMobileMenuOpen && setIsMobileMenuOpen) setIsMobileMenuOpen(false);
                   }}
                   className={styles.subMenuItem}
                 >
@@ -384,6 +414,7 @@ export default function AdminSidebar({
                   onClick={() => {
                     setActiveTab("online-store");
                     setCustomizeSubTab("reviews");
+                    if (isMobileMenuOpen && setIsMobileMenuOpen) setIsMobileMenuOpen(false);
                   }}
                   className={styles.subMenuItem}
                 >
@@ -414,6 +445,7 @@ export default function AdminSidebar({
                   onClick={() => {
                     setActiveTab("online-store");
                     setCustomizeSubTab("marketing");
+                    if (isMobileMenuOpen && setIsMobileMenuOpen) setIsMobileMenuOpen(false);
                   }}
                   className={styles.subMenuItem}
                 >
