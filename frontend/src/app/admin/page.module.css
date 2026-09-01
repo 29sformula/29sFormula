@@ -1,5 +1,5 @@
 .adminPageWrapper {
-  min-height: 100dvh;
+  min-height: 100vh;
   background-color: #f8f9fa; /* Light off-white background */
   color: #1f2937; /* Dark charcoal text */
   display: flex;
@@ -16,7 +16,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 100dvh;
+  height: 100vh;
   box-sizing: border-box;
   flex-shrink: 0;
 }
@@ -213,7 +213,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100dvh;
+  height: 100vh;
   overflow: hidden;
 }
 
@@ -1100,7 +1100,7 @@
 }
 
 .authCheckingWrapper {
-  min-height: 100dvh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;

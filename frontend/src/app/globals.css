@@ -14,18 +14,18 @@
 
 html {
   scroll-behavior: smooth;
+  background-color: #ffffff; /* Top overscroll color for iOS Safari */
 }
 
-html,
 body {
   max-width: 100vw;
   overflow-x: hidden;
-  background: var(--background);
+  background-color: #f6f6f6; /* Bottom overscroll color (matches footer) */
   color: var(--foreground);
   font-family: var(--font-outfit), sans-serif;
   margin: 0;
   padding: 0;
-  min-height: 100dvh;
+  min-height: 100vh;
 }
 
 * {
