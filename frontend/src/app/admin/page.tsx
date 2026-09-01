@@ -1872,12 +1872,25 @@ export default function AdminDashboard() {
         if (!prod) continue;
         const existingCats = Array.isArray(prod.category) ? prod.category : [prod.category].filter(Boolean);
         const updatedCats = Array.from(new Set([...existingCats, name]));
+
+        const updatedVariants = (prod.variants || []).map((v: any) => ({
+          ...v,
+          category: Array.from(new Set([...(Array.isArray(v.category) ? v.category : [v.category].filter(Boolean)), name]))
+        }));
+
+        const updatedOptions = (prod.options || []).map((o: any) => ({
+          ...o,
+          category: Array.from(new Set([...(Array.isArray(o.category) ? o.category : [o.category].filter(Boolean)), name]))
+        }));
+
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/products/${prodId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             ...prod,
-            category: updatedCats
+            category: updatedCats,
+            variants: updatedVariants,
+            options: updatedOptions
           })
         });
         if (!res.ok) {
@@ -2007,12 +2020,24 @@ export default function AdminDashboard() {
         const existingCats = Array.isArray(prod.category) ? prod.category : [prod.category].filter(Boolean);
         const updatedCats = Array.from(new Set([...existingCats, selectedCategoryView]));
 
+        const updatedVariants = (prod.variants || []).map((v: any) => ({
+          ...v,
+          category: Array.from(new Set([...(Array.isArray(v.category) ? v.category : [v.category].filter(Boolean)), selectedCategoryView]))
+        }));
+
+        const updatedOptions = (prod.options || []).map((o: any) => ({
+          ...o,
+          category: Array.from(new Set([...(Array.isArray(o.category) ? o.category : [o.category].filter(Boolean)), selectedCategoryView]))
+        }));
+
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/products/${prodId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             ...prod,
-            category: updatedCats
+            category: updatedCats,
+            variants: updatedVariants,
+            options: updatedOptions
           })
         });
         if (!res.ok) {
