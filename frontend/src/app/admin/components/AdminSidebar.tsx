@@ -335,7 +335,7 @@ export default function AdminSidebar({
                 }
                 setOnlineStoreDropdownOpen(!onlineStoreDropdownOpen);
               }}
-              className={`${styles.menuItem} ${activeTab === "online-store" ? styles.menuItemActive : ""}`}
+              className={`${styles.menuItem} ${styles.hideOnMobile} ${activeTab === "online-store" ? styles.menuItemActive : ""}`}
             >
               <div className={styles.menuItemLeft}>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={styles.menuIcon}>
@@ -346,7 +346,7 @@ export default function AdminSidebar({
             </div>
 
             {((onlineStoreDropdownOpen) || (!isMobileMenuOpen && activeTab === "online-store")) && (
-              <div className={styles.subMenuContainer}>
+              <div className={`${styles.subMenuContainer} ${styles.hideOnMobile}`}>
                 {/* Item 1: Landing Page */}
                 <div
                   onClick={() => {

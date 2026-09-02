@@ -1689,3 +1689,9 @@
 
 .mobileMenuOverlay:not(.mobileMenuOverlayOpen) .mobileMenuItem { transition-duration: 0.25s; }
 
+
+@media (max-width: 900px) {
+  .hideOnMobile {
+    display: none !important;
+  }
+}
