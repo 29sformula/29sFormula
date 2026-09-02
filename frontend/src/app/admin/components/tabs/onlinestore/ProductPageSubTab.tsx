@@ -389,7 +389,7 @@ export default function ProductPageSubTab({
                               {heroBgType === "video" && (
                                 <div className={styles.inputGroup}>
                                   <label className={styles.inputLabel}>Background Video URL (MP4 / WebM)</label>
-                                  <div style={{ display: "flex", gap: "8px" }}>
+                                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                                     <input
                                       type="text"
                                       value={heroBgVideo}

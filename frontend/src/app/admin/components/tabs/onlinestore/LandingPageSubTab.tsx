@@ -370,7 +370,7 @@ export default function LandingPageSubTab({
                               {heroBgType === "video" && (
                                 <div className={styles.inputGroup}>
                                   <label className={styles.inputLabel}>Background Video URL (MP4 / WebM)</label>
-                                  <div style={{ display: "flex", gap: "8px" }}>
+                                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                                     <input
                                       type="text"
                                       value={heroBgVideo}
@@ -676,7 +676,7 @@ export default function LandingPageSubTab({
                               {videoBgType === "video" && (
                                 <div className={styles.inputGroup}>
                                   <label className={styles.inputLabel}>Background Video URL</label>
-                                  <div style={{ display: "flex", gap: "8px" }}>
+                                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                                     <input
                                       type="text"
                                       value={videoUrl || ""}
