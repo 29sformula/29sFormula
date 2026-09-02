@@ -1634,14 +1634,14 @@
 .hamburgerLine:nth-child(2) { top: 6px; }
 .hamburgerLine:nth-child(3) { top: 12px; }
 
-.hamburgerLineTopOpen {
+.hamburgerLine.hamburgerLineTopOpen {
   transform: translateY(6px) rotate(45deg);
   background-color: #ffffff;
 }
-.hamburgerLineMiddleOpen {
+.hamburgerLine.hamburgerLineMiddleOpen {
   opacity: 0;
 }
-.hamburgerLineBottomOpen {
+.hamburgerLine.hamburgerLineBottomOpen {
   transform: translateY(-6px) rotate(-45deg);
   background-color: #ffffff;
 }
