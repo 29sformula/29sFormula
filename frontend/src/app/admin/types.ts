@@ -30,6 +30,7 @@ export interface Product {
   makingPrice?: number;
   quantity?: number;
   description: string;
+  additionalInformation?: string;
   category: string | string[];
   imageFront: string;
   imageBack?: string;

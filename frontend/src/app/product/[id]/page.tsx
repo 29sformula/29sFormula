@@ -943,8 +943,12 @@ export default function ProductDetailPage() {
               </button>
               <div className={`${styles.accordionContent} ${openAccordion === "description" ? styles.accordionContentOpen : ""}`}>
                 <div className={styles.accordionInnerWrapper}>
-                  <div className={styles.accordionInner}>
-                    {product.description || "Detailed description for this exquisite fragrance goes here."}
+                  <div className={styles.accordionContentInner}>
+                    {product.description ? (
+                      <div dangerouslySetInnerHTML={{ __html: product.description }} />
+                    ) : (
+                      <p>Detailed description for this exquisite fragrance goes here.</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -960,8 +964,12 @@ export default function ProductDetailPage() {
               </button>
               <div className={`${styles.accordionContent} ${openAccordion === "additionalInfo" ? styles.accordionContentOpen : ""}`}>
                 <div className={styles.accordionInnerWrapper}>
-                  <div className={styles.accordionInner}>
-                    {product.additionalInformation || "Key ingredients, scent notes, and other additional product details."}
+                  <div className={styles.accordionContentInner}>
+                    {product.additionalInformation ? (
+                      <div dangerouslySetInnerHTML={{ __html: product.additionalInformation }} />
+                    ) : (
+                      <p>Key ingredients, scent notes, and other additional product details.</p>
+                    )}
                   </div>
                 </div>
               </div>

@@ -27,7 +27,7 @@ export default function LoginPageClient({ initialColor }: { initialColor: string
       .then(data => {
         if (data) {
           if (data.primaryColor) setPrimaryColor(data.primaryColor);
-              if (typeof document !== "undefined") document.documentElement.style.setProperty("--primary-brand-color", data.primaryColor);
+          if (typeof document !== "undefined") document.documentElement.style.setProperty("--primary-brand-color", data.primaryColor);
         }
       })
       .catch(err => console.error("Error querying settings:", err));
@@ -111,10 +111,10 @@ export default function LoginPageClient({ initialColor }: { initialColor: string
       setError("Please enter both email and password.");
       return;
     }
-    
+
     setIsLoading(true);
     setError(null);
-    
+
     const isSystemAdmin = email.toLowerCase().trim() === "admin" && password === "admin";
     setIsAdmin(isSystemAdmin);
 
@@ -206,14 +206,14 @@ export default function LoginPageClient({ initialColor }: { initialColor: string
 
             <div className={styles.inputGroup}>
               <label htmlFor="email" className={styles.inputLabel}>
-                Username or Email Address
+                Email
               </label>
               <input
                 type="text"
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="e.g. admin or hello@29sformula.in"
+                placeholder="e.g. user@gmail.com"
                 className={styles.textInput}
                 required
               />

@@ -1,6 +1,10 @@
 import React from "react";
 import styles from "../../page.module.css";
 import CustomCheckbox from "@/components/CustomCheckbox/CustomCheckbox";
+import dynamic from 'next/dynamic';
+
+const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
+import 'react-quill-new/dist/quill.snow.css';
 
 export default function AdminModals(props: any) {
   const {
@@ -20,6 +24,7 @@ export default function AdminModals(props: any) {
     deleteReviewTarget,
     deleteTargetId,
     description,
+    additionalInformation,
     editReviewTarget,
     error,
     executeReturnStatusUpdate,
@@ -108,6 +113,7 @@ export default function AdminModals(props: any) {
     setDeleteReviewTarget,
     setDeleteTargetId,
     setDescription,
+    setAdditionalInformation,
     setEditReviewTarget,
     setExistingProductIdsToAssign,
     setHeroButtonColor,
@@ -217,15 +223,28 @@ export default function AdminModals(props: any) {
                     />
                   </div>
 
+                  <div className={styles.inputGroup} style={{ marginBottom: "14px" }}>
+                    <label className={styles.inputLabel}>Description *</label>
+                    <div style={{ backgroundColor: "#ffffff" }}>
+                      <ReactQuill
+                        theme="snow"
+                        value={description}
+                        onChange={setDescription}
+                        style={{ height: "150px", marginBottom: "40px" }}
+                      />
+                    </div>
+                  </div>
+
                   <div className={styles.inputGroup}>
-                    <label className={styles.inputLabel}>Description</label>
-                    <textarea
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      className={styles.textareaInput}
-                      style={{ padding: "10px 12px", fontSize: "0.85rem" }}
-                      rows={2}
-                    />
+                    <label className={styles.inputLabel}>Additional Information *</label>
+                    <div style={{ backgroundColor: "#ffffff" }}>
+                      <ReactQuill
+                        theme="snow"
+                        value={additionalInformation}
+                        onChange={setAdditionalInformation}
+                        style={{ height: "150px", marginBottom: "40px" }}
+                      />
+                    </div>
                   </div>
                 </div>
 

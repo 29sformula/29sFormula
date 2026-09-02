@@ -229,6 +229,7 @@ export default function AdminDashboard() {
   const [makingPrice, setMakingPrice] = useState<string>("");
   const [quantity, setQuantity] = useState<string>("");
   const [description, setDescription] = useState<string>("");
+  const [additionalInformation, setAdditionalInformation] = useState<string>("");
   const [category, setCategory] = useState<string[]>([]);
   const [imageFront, setImageFront] = useState<string>("");
   const [imageBack, setImageBack] = useState<string>("");
@@ -1777,6 +1778,7 @@ export default function AdminDashboard() {
     setMakingPrice("");
     setQuantity("");
     setDescription("");
+    setAdditionalInformation("");
     setCategory([]);
     setImageFront("");
     setImageBack("");
@@ -1791,8 +1793,10 @@ export default function AdminDashboard() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name) {
-      setError("Please complete all required parameters (Name).");
+    const isQuillEmpty = (html: string) => !html || html.replace(/<[^>]*>?/gm, '').trim() === '';
+
+    if (!name || isQuillEmpty(description) || isQuillEmpty(additionalInformation)) {
+      setError("Please complete all required parameters (Name, Description, Additional Information).");
       return;
     }
     if (options.length === 0) {
@@ -1825,6 +1829,7 @@ export default function AdminDashboard() {
     const payload = {
       name,
       description,
+      additionalInformation,
       imageFront,
       imageBack: alternateImage || undefined,
       images,
@@ -1865,6 +1870,7 @@ export default function AdminDashboard() {
     setMakingPrice(product.makingPrice ? product.makingPrice.toString() : "0");
     setQuantity(product.quantity !== undefined ? product.quantity.toString() : "0");
     setDescription(product.description || "");
+    setAdditionalInformation(product.additionalInformation || "");
     setCategory(Array.isArray(product.category) ? product.category : [product.category].filter(Boolean));
     setImageFront(product.imageFront);
     setImageBack(product.imageBack || "");
@@ -2871,6 +2877,7 @@ const getSearchResults = () => {
           deleteReviewTarget={deleteReviewTarget}
           deleteTargetId={deleteTargetId}
           description={description}
+          additionalInformation={additionalInformation}
           editReviewTarget={editReviewTarget}
           error={error}
           executeReturnStatusUpdate={executeReturnStatusUpdate}
@@ -2947,6 +2954,7 @@ const getSearchResults = () => {
           setDeleteReviewTarget={setDeleteReviewTarget}
           setDeleteTargetId={setDeleteTargetId}
           setDescription={setDescription}
+          setAdditionalInformation={setAdditionalInformation}
           setEditReviewTarget={setEditReviewTarget}
           setExistingProductIdsToAssign={setExistingProductIdsToAssign}
           setHeroButtonColor={setHeroButtonColor}
