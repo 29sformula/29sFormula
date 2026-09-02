@@ -252,7 +252,7 @@ export default function AdminModals(props: any) {
                 <div style={{ backgroundColor: "#ffffff", border: "1px solid #e5e7eb", borderRadius: "10px", padding: "18px", marginBottom: "14px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
                   <h4 style={{ fontSize: "0.92rem", fontWeight: 700, color: "#111827", textTransform: "uppercase", letterSpacing: "0.03em", margin: "0 0 14px 0" }}>Product Variants & Sizing</h4>
 
-                  <div style={{ overflowX: "auto" }}>
+                  <div style={{ overflow: "visible" }}>
                     <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "500px" }}>
                       <thead>
                         <tr style={{ borderBottom: "2px solid #e5e7eb", textAlign: "left" }}>
@@ -343,7 +343,7 @@ export default function AdminModals(props: any) {
                                 style={{ padding: "6px 8px", fontSize: "0.8rem", width: "100%", boxSizing: "border-box" }}
                               />
                             </td>
-                            <td style={{ padding: "8px 4px", position: "relative" }}>
+                            <td style={{ padding: "8px 4px", position: "relative", zIndex: openCategoryIndex === index ? 60 : 1 }}>
                               <div
                                 className={styles.selectInput}
                                 style={{ padding: "6px 8px", fontSize: "0.8rem", width: "100%", height: "34px", boxSizing: "border-box", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}
@@ -618,7 +618,6 @@ export default function AdminModals(props: any) {
                   type="submit"
                   className={styles.primaryActionBtn}
                   style={{ padding: "8px 16px", fontSize: "0.85rem" }}
-                  disabled={!name.trim() || images.length < 3 || images.length > 6 || !imageFront || options.length === 0 || options.some((opt: any) => !opt.size.trim() || opt.quantity === "" || opt.price === "" || !opt.category || opt.category.length === 0)}
                 >
                   {isEditing ? "Save Changes" : "Create Product"}
                 </button>

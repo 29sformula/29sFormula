@@ -110,7 +110,7 @@ export default function CatalogSubTab({
                           <tr>
                             <th style={{ width: '40px' }}></th>
                             <th>Cover</th>
-                            <th>ProductDetails</th>
+                            <th>Product</th>
                             <th>Category</th>
                             <th>Price</th>
                             <th>Stock</th>
@@ -155,7 +155,6 @@ export default function CatalogSubTab({
                                   </td>
                                   <td>
                                     <span className={styles.tableName}>{product.name}</span>
-                                    <span className={styles.tableDesc}>{product.description || "No description set"}</span>
                                   </td>
                                   <td>
                                     <div style={{ fontSize: "0.82rem", color: "#374151" }}>
@@ -394,7 +393,7 @@ export default function CatalogSubTab({
                             <tr>
                               <th style={{ width: '40px' }}></th>
                               <th>Cover</th>
-                              <th>ProductDetails</th>
+                              <th>Product</th>
                               <th>Category</th>
                               <th>Price</th>
                               <th>Making Price</th>
@@ -443,7 +442,6 @@ export default function CatalogSubTab({
                                       </td>
                                       <td>
                                         <span className={styles.tableName}>{product.name}</span>
-                                        <span className={styles.tableDesc}>{product.description || "No description set"}</span>
                                       </td>
                                       <td>
                                         <div style={{ fontSize: "0.82rem", color: "#374151" }}>

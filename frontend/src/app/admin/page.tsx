@@ -1807,8 +1807,12 @@ export default function AdminDashboard() {
       setError("Please specify sizes for all variants.");
       return;
     }
-    if (options.some(opt => opt.quantity === "" || opt.price === "" || opt.makingPrice === "" || !opt.category || opt.category.length === 0)) {
-      setError("Please specify valid quantity, price, making price, and category for all variants.");
+    if (options.some(opt => !opt.category || opt.category.length === 0)) {
+      setError("Please select at least one Category for every product variant in the table.");
+      return;
+    }
+    if (options.some(opt => opt.quantity === "" || opt.quantity == null || opt.price === "" || opt.price == null || opt.makingPrice === "" || opt.makingPrice == null)) {
+      setError("Please specify valid Quantity, Price, and Making Price for all variants in the table.");
       return;
     }
 

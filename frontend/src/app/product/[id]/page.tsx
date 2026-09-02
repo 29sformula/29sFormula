@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
 import { useParams } from "next/navigation";
@@ -119,6 +119,33 @@ export default function ProductDetailPage() {
 
   const toggleAccordion = (id: string) => {
     setOpenAccordion(prev => (prev === id ? null : id));
+  };
+
+  const [activeScrollIdx, setActiveScrollIdx] = useState(0);
+  const imageRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    if (isMobile || allImages.length === 0) return;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const index = imageRefs.current.findIndex(ref => ref === entry.target);
+          if (index !== -1) setActiveScrollIdx(index);
+        }
+      });
+    }, { rootMargin: "-30% 0px -30% 0px", threshold: 0 });
+    
+    imageRefs.current.forEach(ref => {
+      if (ref) observer.observe(ref);
+    });
+    
+    return () => observer.disconnect();
+  }, [allImages, isMobile]);
+
+  const scrollToImage = (index: number) => {
+    if (imageRefs.current[index]) {
+      imageRefs.current[index]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   };
 
   // Prevent background scrolling when cart is open
@@ -759,50 +786,69 @@ export default function ProductDetailPage() {
         <div className={styles.detailGrid}>
           {/* Left Column: Interactive Media Gallery */}
           <div className={styles.mediaGallery}>
-            <div 
-              className={styles.mainImageWrapper}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-            >
-              <img 
-                src={activeImg} 
-                alt={product.name} 
-                className={styles.mainImage}
-              />
-              
-
-            </div>
-
-            {/* Thumbnail Navigation Row */}
-            {allImages.length > 1 && (
-              <>
-                <div className={styles.thumbnailRow}>
+            {/* Desktop View: Sticky Dots & Vertical Images */}
+            {!isMobile ? (
+              <div className={styles.desktopGalleryWrapper}>
+                <div className={styles.desktopDotNav}>
+                  {allImages.map((_, idx) => (
+                    <div 
+                      key={idx}
+                      className={`${styles.desktopDot} ${activeScrollIdx === idx ? styles.desktopDotActive : ""}`}
+                      onClick={() => scrollToImage(idx)}
+                    />
+                  ))}
+                </div>
+                <div className={styles.desktopImagesContainer}>
                   {allImages.map((url, idx) => (
                     <div 
-                      key={idx} 
-                      onClick={() => setActiveImg(url)}
-                      className={`${styles.thumbWrapper} ${activeImg === url ? styles.thumbActive : ""}`}
+                      key={idx}
+                      className={styles.desktopImageWrapper}
+                      ref={el => { imageRefs.current[idx] = el; }}
                     >
                       <img 
                         src={url} 
                         alt={`${product.name} angle ${idx + 1}`} 
-                        className={styles.thumbImage}
+                        className={styles.desktopImage}
                       />
                     </div>
                   ))}
-                </div>
-                
-                {/* Mobile Carousel Dots */}
-                <div className={styles.carouselDots}>
-                  {allImages.map((url, idx) => (
+
+                  {allImages.length > 1 && (
                     <div 
-                      key={idx}
-                      onClick={() => setActiveImg(url)}
-                      className={`${styles.carouselDot} ${activeImg === url ? styles.carouselDotActive : ""}`}
-                    />
-                  ))}
+                      className={`${styles.stickyBottomBar} ${activeScrollIdx === allImages.length - 1 ? styles.stickyBottomBarHidden : ""}`} 
+                      onClick={() => scrollToImage(activeScrollIdx + 1)}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </div>
+                  )}
                 </div>
+              </div>
+            ) : (
+              /* Mobile View: Swipeable Carousel */
+              <>
+                <div 
+                  className={styles.mainImageWrapper}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                >
+                  <img 
+                    src={activeImg} 
+                    alt={product.name} 
+                    className={styles.mainImage}
+                  />
+                </div>
+                {allImages.length > 1 && (
+                  <div className={styles.carouselDots}>
+                    {allImages.map((url, idx) => (
+                      <div 
+                        key={idx}
+                        onClick={() => setActiveImg(url)}
+                        className={`${styles.carouselDot} ${activeImg === url ? styles.carouselDotActive : ""}`}
+                      />
+                    ))}
+                  </div>
+                )}
               </>
             )}
           </div>

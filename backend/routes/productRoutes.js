@@ -68,7 +68,7 @@ router.get("/api/products", async (req, res) => {
 
 router.post("/api/products", async (req, res) => {
   try {
-    let { name, description, imageFront, imageBack, images, variants } = req.body;
+    let { name, description, additionalInformation, imageFront, imageBack, images, variants } = req.body;
     if (!name || !imageFront) {
       return res.status(400).json({ error: "Name and cover image are required" });
     }
@@ -104,6 +104,7 @@ router.post("/api/products", async (req, res) => {
     const newProduct = new Product({
       name,
       description,
+      additionalInformation,
       imageFront,
       imageBack,
       images,
@@ -148,7 +149,7 @@ router.post("/api/products", async (req, res) => {
 
 router.put("/api/products/:id", async (req, res) => {
   try {
-    let { name, description, imageFront, imageBack, images, variants } = req.body;
+    let { name, description, additionalInformation, imageFront, imageBack, images, variants } = req.body;
     
     // Fetch the existing product to check for deleted images
     const oldProduct = await Product.findById(req.params.id);
@@ -203,6 +204,7 @@ router.put("/api/products/:id", async (req, res) => {
       {
         name,
         description,
+        additionalInformation,
         imageFront,
         imageBack,
         images,
