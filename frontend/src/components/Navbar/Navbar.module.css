@@ -140,6 +140,7 @@
 
 .hamburgerLineTopOpen {
   transform: translateY(7px) rotate(45deg);
+  background-color: #ffffff !important;
 }
 
 .hamburgerLineMiddleOpen {
@@ -149,6 +150,7 @@
 
 .hamburgerLineBottomOpen {
   transform: translateY(-7px) rotate(-45deg);
+  background-color: #ffffff !important;
 }
 .mobileMenuOverlay {
   position: fixed;
