@@ -248,7 +248,7 @@ export default function LandingPageSubTab({
                               <label className={styles.inputLabel} style={{ fontWeight: 700 }}>Hero Background Customization</label>
 
                               {/* Background Type Selection */}
-                              <div style={{ display: "flex", gap: "8px" }}>
+                              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                                 {["color", "image", "video"].map((type) => {
                                   const label = type === "color" ? "Solid Color" : type === "image" ? "Image Background" : "Video Background";
                                   const isActive = heroBgType === type;
@@ -320,6 +320,7 @@ export default function LandingPageSubTab({
                                       style={{ flex: 1 }}
                                     />
                                     <label style={{
+                                      flexShrink: 0,
                                       padding: "10px 14px",
                                       backgroundColor: "#ffffff",
                                       border: "1px solid #d1d5db",
@@ -331,10 +332,10 @@ export default function LandingPageSubTab({
                                       alignItems: "center",
                                       gap: "6px"
                                     }}>
-                                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "16px", height: "16px" }}>
+                                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "16px", height: "16px", flexShrink: 0 }}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
                                       </svg>
-                                      <span>Upload</span>
+                                      <span style={{ whiteSpace: "nowrap" }}>Upload</span>
                                       <input
                                         type="file"
                                         accept="image/*"
@@ -379,6 +380,7 @@ export default function LandingPageSubTab({
                                       style={{ flex: 1 }}
                                     />
                                     <label style={{
+                                      flexShrink: 0,
                                       padding: "10px 14px",
                                       backgroundColor: "#ffffff",
                                       border: "1px solid #d1d5db",
@@ -390,10 +392,10 @@ export default function LandingPageSubTab({
                                       alignItems: "center",
                                       gap: "6px"
                                     }}>
-                                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "16px", height: "16px" }}>
+                                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "16px", height: "16px", flexShrink: 0 }}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
                                       </svg>
-                                      <span>Upload</span>
+                                      <span style={{ whiteSpace: "nowrap" }}>Upload</span>
                                       <input
                                         type="file"
                                         accept="video/*"
@@ -552,7 +554,7 @@ export default function LandingPageSubTab({
                               <label className={styles.inputLabel} style={{ fontWeight: 700 }}>Video Background Customization</label>
 
                               {/* Background Type Selection */}
-                              <div style={{ display: "flex", gap: "8px" }}>
+                              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                                 {["color", "image", "video"].map((type) => {
                                   const label = type === "color" ? "Solid Color" : type === "image" ? "Image Background" : "Video Background";
                                   const isActive = videoBgType === type;
@@ -624,6 +626,7 @@ export default function LandingPageSubTab({
                                       style={{ flex: 1 }}
                                     />
                                     <label style={{
+                                      flexShrink: 0,
                                       padding: "10px 14px",
                                       backgroundColor: "#ffffff",
                                       border: "1px solid #d1d5db",
@@ -635,10 +638,10 @@ export default function LandingPageSubTab({
                                       alignItems: "center",
                                       gap: "6px"
                                     }}>
-                                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "16px", height: "16px" }}>
+                                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "16px", height: "16px", flexShrink: 0 }}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
                                       </svg>
-                                      <span>Upload</span>
+                                      <span style={{ whiteSpace: "nowrap" }}>Upload</span>
                                       <input
                                         type="file"
                                         accept="image/*"
@@ -683,6 +686,7 @@ export default function LandingPageSubTab({
                                       style={{ flex: 1 }}
                                     />
                                     <label style={{
+                                      flexShrink: 0,
                                       padding: "10px 14px",
                                       backgroundColor: "#ffffff",
                                       border: "1px solid #d1d5db",
@@ -694,10 +698,10 @@ export default function LandingPageSubTab({
                                       alignItems: "center",
                                       gap: "6px"
                                     }}>
-                                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "16px", height: "16px" }}>
+                                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "16px", height: "16px", flexShrink: 0 }}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
                                       </svg>
-                                      <span>{uploadingVideo ? `Uploading... ${videoProgress !== null ? `${videoProgress}%` : ""}` : "Upload"}</span>
+                                      <span style={{ whiteSpace: "nowrap" }}>{uploadingVideo ? `Uploading... ${videoProgress !== null ? `${videoProgress}%` : ""}` : "Upload"}</span>
                                       <input
                                         type="file"
                                         accept="video/*"

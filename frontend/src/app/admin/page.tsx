@@ -2017,12 +2017,25 @@ export default function AdminDashboard() {
       for (const prod of productsToUpdate) {
         const existingCats = Array.isArray(prod.category) ? prod.category : [prod.category].filter(Boolean);
         const updatedCats = existingCats.filter(c => c !== deleteCategoryTarget);
+        
+        const updatedVariants = (prod.variants || []).map((v: any) => ({
+          ...v,
+          category: (Array.isArray(v.category) ? v.category : [v.category]).filter(Boolean).filter((c: any) => c !== deleteCategoryTarget)
+        }));
+        
+        const updatedOptions = (prod.options || []).map((o: any) => ({
+          ...o,
+          category: (Array.isArray(o.category) ? o.category : [o.category]).filter(Boolean).filter((c: any) => c !== deleteCategoryTarget)
+        }));
+
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/products/${prod._id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             ...prod,
-            category: updatedCats
+            category: updatedCats,
+            variants: updatedVariants,
+            options: updatedOptions
           })
         });
         if (!res.ok) {

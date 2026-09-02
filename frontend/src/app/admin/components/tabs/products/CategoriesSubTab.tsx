@@ -743,8 +743,6 @@ export default function CategoriesSubTab({
                                       justifyContent: "center",
                                       transition: "background-color 0.2s, color 0.2s"
                                     }}
-                                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f3f4f6"; }}
-                                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                                     title="Edit Category"
                                   >
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" style={{ width: "16px", height: "16px" }}>
@@ -766,8 +764,6 @@ export default function CategoriesSubTab({
                                         justifyContent: "center",
                                         transition: "background-color 0.2s, color 0.2s"
                                       }}
-                                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#fee2e2"; }}
-                                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                                       title="Delete Category"
                                     >
                                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "18px", height: "18px" }}>
