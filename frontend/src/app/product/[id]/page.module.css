@@ -188,15 +188,14 @@
   flex-direction: column;
   flex: 1;
   padding-top: 80px;
-  padding-bottom: 80px;
+  padding-bottom: 40px;
 }
 
 .desktopImageWrapper {
   position: relative;
   width: 100%;
   background-color: #f9fafb;
-  border: 1px solid #f3f4f6;
-  aspect-ratio: 1.15;
+  aspect-ratio: 0.85;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -266,10 +265,9 @@
   position: relative;
   width: 100%;
   background-color: #f9fafb;
-  border: 1px solid #f3f4f6;
   border-radius: 0;
   overflow: hidden;
-  aspect-ratio: 1.15;
+  aspect-ratio: 0.85;
   display: flex;
   align-items: center;
   justify-content: center;

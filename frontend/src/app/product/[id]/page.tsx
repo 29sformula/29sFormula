@@ -803,6 +803,7 @@ export default function ProductDetailPage() {
                     <div 
                       key={idx}
                       className={styles.desktopImageWrapper}
+                      style={{ marginBottom: idx === allImages.length - 1 ? 0 : undefined }}
                       ref={el => { imageRefs.current[idx] = el; }}
                     >
                       <img 
