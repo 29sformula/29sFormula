@@ -1,7 +1,6 @@
-import React from 'react';
-import styles from '../../../page.module.css';
-
-
+import React, { useState } from "react";
+import styles from "../../../page.module.css";
+import CustomCheckbox from "@/components/CustomCheckbox/CustomCheckbox";
 export default function ProductPageSubTab({
   heroButtonColor,
   heroButtonSize,
@@ -500,14 +499,11 @@ export default function ProductPageSubTab({
                           <div className={styles.accordionContent}>
                             <div className={styles.toggleRow} style={{ marginBottom: "15px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                               <span className={styles.toggleLabel} style={{ fontWeight: 600, fontSize: "0.85rem", color: "#374151" }}>Display Video Section on Storefront</span>
-                              <label className={styles.switch}>
-                                <input
-                                  type="checkbox"
-                                  checked={showVideo}
-                                  onChange={(e: any) => setShowVideo(e.target.checked)}
-                                />
-                                <span className={styles.slider} />
-                              </label>
+                              <CustomCheckbox
+                                checked={showVideo}
+                                onChange={(e: any) => setShowVideo(e.target.checked)}
+                                style={{ '--checkbox-color': '#111827' } as React.CSSProperties}
+                              />
                             </div>
                             <div className={styles.inputRow} style={{ marginBottom: "15px" }}>
                               <div className={styles.inputGroup}>
@@ -680,14 +676,11 @@ export default function ProductPageSubTab({
                           <div className={styles.accordionContent}>
                             <div className={styles.toggleRow} style={{ marginBottom: "15px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                               <span className={styles.toggleLabel} style={{ fontWeight: 600, fontSize: "0.85rem", color: "#374151" }}>Display Lifestyle Banner on Storefront</span>
-                              <label className={styles.switch}>
-                                <input
-                                  type="checkbox"
-                                  checked={showLifestyle}
-                                  onChange={(e: any) => setShowLifestyle(e.target.checked)}
-                                />
-                                <span className={styles.slider} />
-                              </label>
+                              <CustomCheckbox
+                                checked={showLifestyle}
+                                onChange={(e: any) => setShowLifestyle(e.target.checked)}
+                                style={{ '--checkbox-color': '#111827' } as React.CSSProperties}
+                              />
                             </div>
                             <div className={styles.inputGroup}>
                               <label className={styles.inputLabel}>Lifestyle Overlay Text Copy</label>
@@ -1185,38 +1178,29 @@ export default function ProductPageSubTab({
                           <div className={styles.accordionContent}>
                             <div className={styles.toggleRow} style={{ marginBottom: "15px" }}>
                               <span className={styles.toggleLabel}>Show Customer Reviews Section</span>
-                              <label className={styles.switch}>
-                                <input
-                                  type="checkbox"
-                                  checked={showProductReviews}
-                                  onChange={(e: any) => setShowProductReviews(e.target.checked)}
-                                />
-                                <span className={styles.slider} />
-                              </label>
+                              <CustomCheckbox
+                                checked={showProductReviews}
+                                onChange={(e: any) => setShowProductReviews(e.target.checked)}
+                                style={{ '--checkbox-color': '#111827' } as React.CSSProperties}
+                              />
                             </div>
 
                             <div className={styles.toggleRow} style={{ marginBottom: "15px" }}>
                               <span className={styles.toggleLabel}>Show Recommended &ldquo;Explore More&rdquo; Section</span>
-                              <label className={styles.switch}>
-                                <input
-                                  type="checkbox"
-                                  checked={showProductExploreMore}
-                                  onChange={(e: any) => setShowProductExploreMore(e.target.checked)}
-                                />
-                                <span className={styles.slider} />
-                              </label>
+                              <CustomCheckbox
+                                checked={showProductExploreMore}
+                                onChange={(e: any) => setShowProductExploreMore(e.target.checked)}
+                                style={{ '--checkbox-color': '#111827' } as React.CSSProperties}
+                              />
                             </div>
 
                             <div className={styles.toggleRow} style={{ marginBottom: "20px" }}>
                               <span className={styles.toggleLabel}>Show Frequently Asked Questions (FAQ) Section</span>
-                              <label className={styles.switch}>
-                                <input
-                                  type="checkbox"
-                                  checked={showProductFaq}
-                                  onChange={(e: any) => setShowProductFaq(e.target.checked)}
-                                />
-                                <span className={styles.slider} />
-                              </label>
+                              <CustomCheckbox
+                                checked={showProductFaq}
+                                onChange={(e: any) => setShowProductFaq(e.target.checked)}
+                                style={{ '--checkbox-color': '#111827' } as React.CSSProperties}
+                              />
                             </div>
 
                             <div className={styles.inputGroup} style={{ marginBottom: "15px" }}>

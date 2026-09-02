@@ -48,6 +48,7 @@ export default function AdminDashboard() {
   const [renameCategoryTarget, setRenameCategoryTarget] = useState<string | null>(null);
   const [renameCategoryNewName, setRenameCategoryNewName] = useState<string>("");
   const [isRenamingCategory, setIsRenamingCategory] = useState<boolean>(false);
+  const [editCategorySelectedProductIds, setEditCategorySelectedProductIds] = useState<string[]>([]);
   const [selectedCategoryView, setSelectedCategoryView] = useState<string | null>(null);
   const [showCategoryAddOptionsModal, setShowCategoryAddOptionsModal] = useState<boolean>(false);
   const [showAddExistingToCategoryModal, setShowAddExistingToCategoryModal] = useState<boolean>(false);
@@ -1919,39 +1920,84 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleRenameCategorySubmit = async () => {
-    if (!renameCategoryTarget || !renameCategoryNewName.trim()) return;
+  const handleEditCategorySubmit = async () => {
+    if (!renameCategoryTarget) return;
     setIsRenamingCategory(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/categories/rename`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ oldName: renameCategoryTarget, newName: renameCategoryNewName.trim() })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to rename category");
+      // 1. Update product assignments FIRST (using old category name)
+      const currentProductsInCat = products.filter(p => {
+        const cats = Array.isArray(p.category) ? p.category : [p.category].filter(Boolean);
+        return cats.includes(renameCategoryTarget);
+      }).map(p => p._id as string);
 
-      const defaultCategoriesList = ["Best Seller"];
-      if (defaultCategoriesList.includes(renameCategoryTarget)) {
-        const updated = [...deletedDefaultCategories, renameCategoryTarget];
-        setDeletedDefaultCategories(updated);
-        localStorage.setItem("admin_deleted_default_categories", JSON.stringify(updated));
+      const toAdd = editCategorySelectedProductIds.filter(id => !currentProductsInCat.includes(id));
+      const toRemove = currentProductsInCat.filter(id => !editCategorySelectedProductIds.includes(id));
+      const productsToUpdateIds = [...toAdd, ...toRemove];
+
+      for (const prodId of productsToUpdateIds) {
+        const prod = products.find(p => p._id === prodId);
+        if (!prod) continue;
+        
+        let updatedCats = Array.isArray(prod.category) ? [...prod.category] : [prod.category].filter(Boolean);
+        if (toAdd.includes(prodId)) {
+          updatedCats = Array.from(new Set([...updatedCats, renameCategoryTarget]));
+        } else if (toRemove.includes(prodId)) {
+          updatedCats = updatedCats.filter(c => c !== renameCategoryTarget);
+        }
+
+        const updatedVariants = (prod.variants || []).map((v: any) => {
+          let vCats = Array.isArray(v.category) ? [...v.category] : [v.category].filter(Boolean);
+          if (toAdd.includes(prodId)) vCats = Array.from(new Set([...vCats, renameCategoryTarget]));
+          else if (toRemove.includes(prodId)) vCats = vCats.filter(c => c !== renameCategoryTarget);
+          return { ...v, category: vCats };
+        });
+
+        const updatedOptions = (prod.options || []).map((o: any) => {
+          let oCats = Array.isArray(o.category) ? [...o.category] : [o.category].filter(Boolean);
+          if (toAdd.includes(prodId)) oCats = Array.from(new Set([...oCats, renameCategoryTarget]));
+          else if (toRemove.includes(prodId)) oCats = oCats.filter(c => c !== renameCategoryTarget);
+          return { ...o, category: oCats };
+        });
+
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/products/${prodId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...prod, category: updatedCats, variants: updatedVariants, options: updatedOptions })
+        });
       }
 
-      // Update customCategories to reflect the new name and remove the old name
+      // 2. Rename category if changed
       const trimmedNewName = renameCategoryNewName.trim();
-      const updatedCustomCats = customCategories.filter(c => c !== renameCategoryTarget);
-      if (!updatedCustomCats.includes(trimmedNewName)) {
-        updatedCustomCats.push(trimmedNewName);
+      if (trimmedNewName && trimmedNewName !== renameCategoryTarget) {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/categories/rename`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ oldName: renameCategoryTarget, newName: trimmedNewName })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to rename category");
+
+        const defaultCategoriesList = ["Best Seller"];
+        if (defaultCategoriesList.includes(renameCategoryTarget)) {
+          const updated = [...deletedDefaultCategories, renameCategoryTarget];
+          setDeletedDefaultCategories(updated);
+          localStorage.setItem("admin_deleted_default_categories", JSON.stringify(updated));
+        }
+
+        const updatedCustomCats = customCategories.filter(c => c !== renameCategoryTarget);
+        if (!updatedCustomCats.includes(trimmedNewName)) {
+          updatedCustomCats.push(trimmedNewName);
+        }
+        setCustomCategories(updatedCustomCats);
+        localStorage.setItem("admin_custom_categories", JSON.stringify(updatedCustomCats));
       }
-      setCustomCategories(updatedCustomCats);
-      localStorage.setItem("admin_custom_categories", JSON.stringify(updatedCustomCats));
 
       fetchProducts();
-      setSuccessMessage("Category renamed successfully!");
+      setSuccessMessage("Category updated successfully!");
       setTimeout(() => setSuccessMessage(null), 3000);
       setRenameCategoryTarget(null);
       setRenameCategoryNewName("");
+      setEditCategorySelectedProductIds([]);
     } catch (err: any) {
       alert(err.message || "Something went wrong.");
     } finally {
@@ -2477,6 +2523,7 @@ const getSearchResults = () => {
               allCategories={allCategories}
               setRenameCategoryTarget={setRenameCategoryTarget}
               setRenameCategoryNewName={setRenameCategoryNewName}
+              setEditCategorySelectedProductIds={setEditCategorySelectedProductIds}
               setDeleteCategoryTarget={setDeleteCategoryTarget}
             />
           <OnlineStoreTab
@@ -2780,7 +2827,7 @@ const getSearchResults = () => {
           handleEditReviewSubmit={handleEditReviewSubmit}
           handleMultipleFilesUpload={handleMultipleFilesUpload}
           handleRemoveImage={handleRemoveImage}
-          handleRenameCategorySubmit={handleRenameCategorySubmit}
+          handleEditCategorySubmit={handleEditCategorySubmit}
           handleResetToDefaults={handleResetToDefaults}
           handleSubmit={handleSubmit}
           handleUpdateOrderStatus={handleUpdateOrderStatus}
@@ -2825,6 +2872,8 @@ const getSearchResults = () => {
           products={products}
           renameCategoryNewName={renameCategoryNewName}
           renameCategoryTarget={renameCategoryTarget}
+          editCategorySelectedProductIds={editCategorySelectedProductIds}
+          setEditCategorySelectedProductIds={setEditCategorySelectedProductIds}
           resetForm={resetForm}
           returnStatusAction={returnStatusAction}
           returnStatusModalOpen={returnStatusModalOpen}

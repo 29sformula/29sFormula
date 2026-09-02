@@ -1,0 +1,60 @@
+.checkbox {
+  --checkbox-color: var(--checkbox-text-color, #111827);
+  --checkbox-size: 0.9rem;
+  display: block;
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--checkbox-color);
+  margin: 0;
+}
+
+.checkbox input {
+  position: absolute;
+  pointer-events: none;
+  inset: 0;
+  opacity: 0;
+}
+
+.checkmark {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--checkbox-size) / 2.5);
+  opacity: 0.7;
+  transition: opacity 150ms ease;
+}
+
+.checkbox:hover .checkmark {
+  opacity: 0.85;
+}
+
+.checkbox input:checked ~ .checkmark {
+  opacity: 1;
+}
+
+.checkmark svg {
+  width: var(--checkbox-size);
+  height: var(--checkbox-size);
+}
+
+.checkmark svg rect {
+  stroke-dasharray: 88 0;
+  stroke-dashoffset: 73;
+  transition: stroke-dasharray 100ms ease;
+}
+
+.checkbox input:checked ~ .checkmark svg rect {
+  stroke-dasharray: 80 18;
+}
+
+.checkmark svg polyline {
+  stroke-dasharray: 0 30;
+  stroke-dashoffset: 1;
+  transition: stroke-dasharray 150ms ease;
+}
+
+.checkbox input:checked ~ .checkmark svg polyline {
+  stroke-dasharray: 30 30;
+}

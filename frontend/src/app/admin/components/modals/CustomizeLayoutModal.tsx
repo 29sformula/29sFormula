@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import styles from "../../page.module.css";
 import { LayoutCustomizationConfig } from '../../types';
 
+import CustomCheckbox from "@/components/CustomCheckbox/CustomCheckbox";
+
 interface CustomizeLayoutModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -458,8 +460,7 @@ export default function CustomizeLayoutModal({
                       <span style={{ fontSize: "0.88rem", fontWeight: 600, color: "#334155" }}>
                         Enable Element Visibility
                       </span>
-                      <input
-                        type="checkbox"
+                      <CustomCheckbox
                         checked={
                           selectedElement === "title" ? showTitle :
                           selectedElement === "manifesto" ? showManifesto :
@@ -471,7 +472,7 @@ export default function CustomizeLayoutModal({
                           else if (selectedElement === "manifesto") setShowManifesto(val);
                           else setShowButton(val);
                         }}
-                        style={{ width: "20px", height: "20px", cursor: "pointer" }}
+                        style={{ '--checkbox-color': '#111827' } as React.CSSProperties}
                       />
                     </div>
 

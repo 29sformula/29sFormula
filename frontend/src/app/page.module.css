@@ -443,7 +443,7 @@
   bottom: 12px;
   right: 12px;
   background-color: var(--primary-brand-color, #57bc74);
-  color: #ffffff;
+  color: var(--primary-contrast-color, #ffffff);
   border: none;
   width: 44px;
   height: 44px;

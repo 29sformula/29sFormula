@@ -279,7 +279,7 @@
 .stepActive .stepCircle {
   background-color: var(--primary-brand-color, #57bc74);
   border-color: var(--primary-brand-color, #57bc74);
-  color: #ffffff;
+  color: var(--primary-contrast-color, #ffffff);
 }
 
 .stepInfo {

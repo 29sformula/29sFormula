@@ -1,5 +1,6 @@
 import React from "react";
 import styles from "../../page.module.css";
+import CustomCheckbox from "@/components/CustomCheckbox/CustomCheckbox";
 
 export default function AdminModals(props: any) {
   const {
@@ -34,7 +35,7 @@ export default function AdminModals(props: any) {
     handleEditReviewSubmit,
     handleMultipleFilesUpload,
     handleRemoveImage,
-    handleRenameCategorySubmit,
+    handleEditCategorySubmit,
     handleResetToDefaults,
     handleSubmit,
     handleUpdateOrderStatus,
@@ -91,6 +92,8 @@ export default function AdminModals(props: any) {
     renameCategoryTarget,
     resetForm,
     returnStatusAction,
+    editCategorySelectedProductIds,
+    setEditCategorySelectedProductIds,
     returnStatusModalOpen,
     returnStatusNotes,
     saveSettingsSilent,
@@ -655,22 +658,18 @@ export default function AdminModals(props: any) {
                         {products.map((product: any) => {
                           const isChecked = selectedProductIds.includes(product._id!);
                           return (
-                            <label
+                            <div
                               key={product._id}
                               style={{
                                 display: "flex",
                                 alignItems: "center",
-                                gap: "12px",
-                                padding: "8px",
                                 border: "1px solid #f3f4f6",
                                 borderRadius: "6px",
-                                cursor: "pointer",
                                 backgroundColor: isChecked ? "#fafafa" : "#fff",
                                 transition: "background-color 0.2s"
                               }}
                             >
-                              <input
-                                type="checkbox"
+                              <CustomCheckbox
                                 checked={isChecked}
                                 onChange={(e) => {
                                   if (e.target.checked) {
@@ -679,20 +678,24 @@ export default function AdminModals(props: any) {
                                     setSelectedProductIds(selectedProductIds.filter((id: any) => id !== product._id));
                                   }
                                 }}
-                                style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                                style={{ '--checkbox-color': '#111827', margin: '8px' } as React.CSSProperties}
+                                label={
+                                  <div style={{ display: "flex", gap: "12px", alignItems: "center", flex: 1 }}>
+                                    {product.imageFront && (
+                                      <img
+                                        src={product.imageFront}
+                                        alt={product.name}
+                                        style={{ width: "32px", height: "32px", objectFit: "cover", borderRadius: "4px", border: "1px solid #eaeaea" }}
+                                      />
+                                    )}
+                                    <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+                                      <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#000" }}>{product.name}</span>
+                                      <span style={{ fontSize: "0.75rem", color: "#6b7280" }}>Current Categories: {Array.isArray(product.category) ? product.category.join(", ") : (product.category || "None")}</span>
+                                    </div>
+                                  </div>
+                                }
                               />
-                              {product.imageFront && (
-                                <img
-                                  src={product.imageFront}
-                                  alt={product.name}
-                                  style={{ width: "32px", height: "32px", objectFit: "cover", borderRadius: "4px", border: "1px solid #eaeaea" }}
-                                />
-                              )}
-                              <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-                                <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#000" }}>{product.name}</span>
-                                <span style={{ fontSize: "0.75rem", color: "#6b7280" }}>Current Categories: {Array.isArray(product.category) ? product.category.join(", ") : (product.category || "None")}</span>
-                              </div>
-                            </label>
+                            </div>
                           );
                         })}
                       </div>
@@ -1445,37 +1448,92 @@ export default function AdminModals(props: any) {
       )}
 
 
-      {/* Rename Category Modal */}
+      {/* Edit Category Modal */}
       {renameCategoryTarget && (
         <div className={styles.modalOverlay}>
-          <div className={styles.unsavedModal}>
-            <div className={styles.modalHeader}>
+          <div className={styles.unsavedModal} style={{ maxWidth: "580px", maxHeight: "90vh", display: "flex", flexDirection: "column" }}>
+            <div className={styles.modalHeader} style={{ flexShrink: 0 }}>
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="#000" style={{ width: "24px", height: "24px", marginRight: "10px" }}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.83 21.75a.75.75 0 0 1-.322.206l-4 1a.75.75 0 0 1-.905-.905l1-4a.75.75 0 0 1 .206-.322l15.118-15.118L16.863 4.487Zm0 0L19.5 7.125" />
               </svg>
-              <h3>Rename Category</h3>
+              <h3>Edit Category</h3>
             </div>
-            <div style={{ marginTop: "15px", marginBottom: "15px" }}>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "8px", color: "#374151" }}>New Category Name</label>
-              <input
-                type="text"
-                value={renameCategoryNewName}
-                onChange={(e) => setRenameCategoryNewName(e.target.value)}
-                placeholder="Enter new category name..."
-                style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "0.95rem" }}
-              />
+            
+            <div style={{ flex: 1, overflowY: "auto", padding: "0 5px", marginTop: "15px", display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "8px", color: "#374151" }}>Category Name</label>
+                <input
+                  type="text"
+                  value={renameCategoryNewName}
+                  onChange={(e) => setRenameCategoryNewName(e.target.value)}
+                  placeholder="Enter category name..."
+                  style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "0.95rem" }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "8px", color: "#374151" }}>
+                  Products in Category
+                </label>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "300px", overflowY: "auto", border: "1px solid #e5e7eb", borderRadius: "6px", padding: "10px", backgroundColor: "#fafafa" }}>
+                  {products.length === 0 ? (
+                    <span style={{ fontSize: "0.85rem", color: "#6b7280", textAlign: "center", padding: "20px 0" }}>No products available.</span>
+                  ) : (
+                    products.map((product: any) => {
+                      const isSelected = editCategorySelectedProductIds?.includes(product._id);
+                      return (
+                        <label
+                          key={product._id}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "12px",
+                            padding: "10px",
+                            borderRadius: "6px",
+                            border: "1px solid #e5e7eb",
+                            cursor: "pointer",
+                            backgroundColor: "#fff",
+                            transition: "background-color 0.2s"
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f9fafb"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#fff"; }}
+                        >
+                          <CustomCheckbox
+                            checked={isSelected}
+                            onChange={(e: any) => {
+                              if (e.target.checked) {
+                                setEditCategorySelectedProductIds([...(editCategorySelectedProductIds || []), product._id]);
+                              } else {
+                                setEditCategorySelectedProductIds((editCategorySelectedProductIds || []).filter((id: string) => id !== product._id));
+                              }
+                            }}
+                            style={{ '--checkbox-color': '#4f46e5' } as React.CSSProperties}
+                          />
+                          <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+                            <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#000" }}>{product.name}</span>
+                            <span style={{ fontSize: "0.75rem", color: "#6b7280" }}>
+                              {Array.isArray(product.category) ? product.category.join(", ") : (product.category || "None")}
+                            </span>
+                          </div>
+                        </label>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
             </div>
-            <div className={styles.modalActionRow}>
+
+            <div className={styles.modalActionRow} style={{ marginTop: "20px", flexShrink: 0 }}>
               <button
-                onClick={handleRenameCategorySubmit}
-                disabled={isRenamingCategory || !renameCategoryNewName.trim() || renameCategoryNewName.trim() === renameCategoryTarget}
+                onClick={handleEditCategorySubmit}
+                disabled={isRenamingCategory || !renameCategoryNewName.trim()}
                 className={styles.primaryActionBtn}
-                style={{ backgroundColor: "#4f46e5", borderColor: "#4f46e5", opacity: (isRenamingCategory || !renameCategoryNewName.trim() || renameCategoryNewName.trim() === renameCategoryTarget) ? 0.7 : 1 }}
+                style={{ backgroundColor: "#4f46e5", borderColor: "#4f46e5", opacity: (isRenamingCategory || !renameCategoryNewName.trim()) ? 0.7 : 1 }}
               >
-                {isRenamingCategory ? "Saving..." : "Rename Category"}
+                {isRenamingCategory ? "Saving..." : "Save Category"}
               </button>
               <button
-                onClick={() => { setRenameCategoryTarget(null); setRenameCategoryNewName(""); }}
+                onClick={() => { setRenameCategoryTarget(null); setRenameCategoryNewName(""); setEditCategorySelectedProductIds([]); }}
                 className={styles.secondaryActionBtn}
                 disabled={isRenamingCategory}
               >

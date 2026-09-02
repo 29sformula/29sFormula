@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import confetti from "canvas-confetti";
 import styles from "./CheckoutDrawer.module.css";
+import CustomCheckbox from "./CustomCheckbox/CustomCheckbox";
 
 const loadRazorpayScript = () => {
   return new Promise((resolve) => {
@@ -459,15 +460,12 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
             {/* Returning Customer Section */}
             {!loggedInUser && (
               <div className={styles.section} style={{ backgroundColor: "#f9fafb", padding: "16px", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
-                <label className={styles.checkboxLabel} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontWeight: 600, fontSize: "0.95rem", color: "#000000" }}>
-                <input
-                  type="checkbox"
+                <CustomCheckbox
                   checked={isReturningCustomer}
                   onChange={(e) => setIsReturningCustomer(e.target.checked)}
-                  style={{ width: "18px", height: "18px", accentColor: primaryColor }}
+                  label={<span style={{ fontWeight: 600, fontSize: "0.95rem", color: "#000000" }}>Are you a returning customer? Autofill your details!</span>}
+                  style={{ '--checkbox-color': primaryColor } as React.CSSProperties}
                 />
-                Are you a returning customer? Autofill your details!
-              </label>
 
               {isReturningCustomer && (
                 <div style={{ marginTop: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>

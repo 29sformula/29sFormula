@@ -29,6 +29,7 @@ interface CategoriesSubTabProps {
   setRenameCategoryTarget: any;
   setRenameCategoryNewName: any;
   setDeleteCategoryTarget: any;
+  setEditCategorySelectedProductIds: any;
 }
 
 export default function CategoriesSubTab({
@@ -57,7 +58,8 @@ export default function CategoriesSubTab({
   allCategories,
   setRenameCategoryTarget,
   setRenameCategoryNewName,
-  setDeleteCategoryTarget
+  setDeleteCategoryTarget,
+  setEditCategorySelectedProductIds
 }: CategoriesSubTabProps) {
   const activeSubTab = "categories" as string;
 
@@ -723,6 +725,11 @@ export default function CategoriesSubTab({
                                     onClick={() => {
                                       setRenameCategoryTarget(catName);
                                       setRenameCategoryNewName(catName);
+                                      const productsInCat = products.filter((p: any) => {
+                                        const cats = Array.isArray(p.category) ? p.category : [p.category].filter(Boolean);
+                                        return cats.includes(catName);
+                                      }).map((p: any) => p._id);
+                                      setEditCategorySelectedProductIds(productsInCat);
                                     }}
                                     style={{
                                       background: "transparent",

@@ -33,9 +33,60 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               try {
-                var color = localStorage.getItem('settings_primaryColor');
-                if (color) {
-                  document.documentElement.style.setProperty('--primary-brand-color', color);
+                function getContrast(color) {
+                  if (!color) return '#ffffff';
+                  color = color.trim();
+                  var r, g, b;
+                  if (color.startsWith('rgb')) {
+                    var match = color.match(/\\d+/g);
+                    if (match && match.length >= 3) {
+                      r = parseInt(match[0], 10);
+                      g = parseInt(match[1], 10);
+                      b = parseInt(match[2], 10);
+                    } else {
+                      return '#ffffff';
+                    }
+                  } else {
+                    var hex = color.replace('#', '');
+                    if (hex.length === 3) {
+                      hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+                    }
+                    r = parseInt(hex.substring(0, 2), 16);
+                    g = parseInt(hex.substring(2, 4), 16);
+                    b = parseInt(hex.substring(4, 6), 16);
+                  }
+                  if (isNaN(r) || isNaN(g) || isNaN(b)) return '#ffffff';
+                  var luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+                  return luminance > 0.5 ? '#000000' : '#ffffff';
+                }
+
+                var lastColor = "";
+                function updateThemeContrast() {
+                  var color = document.documentElement.style.getPropertyValue('--primary-brand-color');
+                  if (color) {
+                    color = color.trim();
+                    if (color !== lastColor) {
+                      lastColor = color;
+                      document.documentElement.style.setProperty('--primary-contrast-color', getContrast(color));
+                    }
+                  }
+                }
+                
+                var initColor = localStorage.getItem('settings_primaryColor');
+                if (initColor) {
+                  document.documentElement.style.setProperty('--primary-brand-color', initColor);
+                  updateThemeContrast();
+                }
+
+                if (typeof MutationObserver !== 'undefined') {
+                  var observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                      if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                        updateThemeContrast();
+                      }
+                    });
+                  });
+                  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
                 }
               } catch (e) {}
             `,

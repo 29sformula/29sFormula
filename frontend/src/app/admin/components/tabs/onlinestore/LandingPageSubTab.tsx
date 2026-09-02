@@ -1,7 +1,6 @@
-import React from 'react';
-import styles from '../../../page.module.css';
-
-
+import React, { useState } from "react";
+import styles from "../../../page.module.css";
+import CustomCheckbox from "@/components/CustomCheckbox/CustomCheckbox";
 export default function LandingPageSubTab({
   heroButtonColor,
   heroButtonSize,
@@ -508,14 +507,11 @@ export default function LandingPageSubTab({
                             </div>
                             <div className={styles.toggleRow} style={{ marginBottom: "15px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                               <span className={styles.toggleLabel} style={{ fontWeight: 600, fontSize: "0.85rem", color: "#374151" }}>Display Video Section on Storefront</span>
-                              <label className={styles.switch}>
-                                <input
-                                  type="checkbox"
-                                  checked={showVideo}
-                                  onChange={(e: any) => setShowVideo(e.target.checked)}
-                                />
-                                <span className={styles.slider} />
-                              </label>
+                              <CustomCheckbox
+                                checked={showVideo}
+                                onChange={(e: any) => setShowVideo(e.target.checked)}
+                                style={{ '--checkbox-color': '#111827' } as React.CSSProperties}
+                              />
                             </div>
                             <div className={styles.inputRow} style={{ marginBottom: "15px" }}>
                               <div className={styles.inputGroup}>
@@ -673,6 +669,46 @@ export default function LandingPageSubTab({
                                   </div>
                                 </div>
                               )}
+
+                              {videoBgType === "video" && (
+                                <div className={styles.inputGroup}>
+                                  <label className={styles.inputLabel}>Background Video URL</label>
+                                  <div style={{ display: "flex", gap: "8px" }}>
+                                    <input
+                                      type="text"
+                                      value={videoUrl || ""}
+                                      onChange={(e: any) => setVideoUrl(e.target.value)}
+                                      placeholder="https://example.com/background.mp4"
+                                      className={styles.textInput}
+                                      style={{ flex: 1 }}
+                                    />
+                                    <label style={{
+                                      padding: "10px 14px",
+                                      backgroundColor: "#ffffff",
+                                      border: "1px solid #d1d5db",
+                                      borderRadius: "8px",
+                                      fontSize: "0.85rem",
+                                      fontWeight: 600,
+                                      cursor: "pointer",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "6px"
+                                    }}>
+                                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "16px", height: "16px" }}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                                      </svg>
+                                      <span>{uploadingVideo ? `Uploading... ${videoProgress !== null ? `${videoProgress}%` : ""}` : "Upload"}</span>
+                                      <input
+                                        type="file"
+                                        accept="video/*"
+                                        style={{ display: "none" }}
+                                        onChange={handleVideoUpload}
+                                        disabled={uploadingVideo}
+                                      />
+                                    </label>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                             <button
                               type="button"
@@ -726,14 +762,11 @@ export default function LandingPageSubTab({
                           <div className={styles.accordionContent}>
                             <div className={styles.toggleRow} style={{ marginBottom: "15px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                               <span className={styles.toggleLabel} style={{ fontWeight: 600, fontSize: "0.85rem", color: "#374151" }}>Display Lifestyle Banner on Storefront</span>
-                              <label className={styles.switch}>
-                                <input
-                                  type="checkbox"
-                                  checked={showLifestyle}
-                                  onChange={(e: any) => setShowLifestyle(e.target.checked)}
-                                />
-                                <span className={styles.slider} />
-                              </label>
+                              <CustomCheckbox
+                                checked={showLifestyle}
+                                onChange={(e: any) => setShowLifestyle(e.target.checked)}
+                                style={{ '--checkbox-color': '#111827' } as React.CSSProperties}
+                              />
                             </div>
                             <div className={styles.inputGroup}>
                               <label className={styles.inputLabel}>Lifestyle Overlay Text Copy</label>
@@ -1231,38 +1264,29 @@ export default function LandingPageSubTab({
                           <div className={styles.accordionContent}>
                             <div className={styles.toggleRow} style={{ marginBottom: "15px" }}>
                               <span className={styles.toggleLabel}>Show Customer Reviews Section</span>
-                              <label className={styles.switch}>
-                                <input
-                                  type="checkbox"
-                                  checked={showProductReviews}
-                                  onChange={(e: any) => setShowProductReviews(e.target.checked)}
-                                />
-                                <span className={styles.slider} />
-                              </label>
+                              <CustomCheckbox
+                                checked={showProductReviews}
+                                onChange={(e: any) => setShowProductReviews(e.target.checked)}
+                                style={{ '--checkbox-color': '#111827' } as React.CSSProperties}
+                              />
                             </div>
 
                             <div className={styles.toggleRow} style={{ marginBottom: "15px" }}>
                               <span className={styles.toggleLabel}>Show Recommended &ldquo;Explore More&rdquo; Section</span>
-                              <label className={styles.switch}>
-                                <input
-                                  type="checkbox"
-                                  checked={showProductExploreMore}
-                                  onChange={(e: any) => setShowProductExploreMore(e.target.checked)}
-                                />
-                                <span className={styles.slider} />
-                              </label>
+                              <CustomCheckbox
+                                checked={showProductExploreMore}
+                                onChange={(e: any) => setShowProductExploreMore(e.target.checked)}
+                                style={{ '--checkbox-color': '#111827' } as React.CSSProperties}
+                              />
                             </div>
 
                             <div className={styles.toggleRow} style={{ marginBottom: "20px" }}>
                               <span className={styles.toggleLabel}>Show Frequently Asked Questions (FAQ) Section</span>
-                              <label className={styles.switch}>
-                                <input
-                                  type="checkbox"
-                                  checked={showProductFaq}
-                                  onChange={(e: any) => setShowProductFaq(e.target.checked)}
-                                />
-                                <span className={styles.slider} />
-                              </label>
+                              <CustomCheckbox
+                                checked={showProductFaq}
+                                onChange={(e: any) => setShowProductFaq(e.target.checked)}
+                                style={{ '--checkbox-color': '#111827' } as React.CSSProperties}
+                              />
                             </div>
 
                             <div className={styles.inputGroup} style={{ marginBottom: "15px" }}>

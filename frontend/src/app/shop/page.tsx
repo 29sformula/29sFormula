@@ -7,6 +7,8 @@ import Footer from "@/components/Footer";
 
 import Navbar from "@/components/Navbar/Navbar";
 import CheckoutDrawer from "@/components/CheckoutDrawer";
+import CustomCheckbox from "@/components/CustomCheckbox/CustomCheckbox";
+
 import NewtonsCradleLoader from "@/components/NewtonsCradleLoader";
 
 interface Variant {
@@ -396,14 +398,12 @@ export default function Shop() {
               </button>
               {activeDropdown === "availability" && (
                 <div className={styles.dropdownContent}>
-                  <label className={styles.checkboxLabel}>
-                    <input 
-                      type="checkbox" 
-                      checked={inStockOnly} 
-                      onChange={(e) => setInStockOnly(e.target.checked)} 
-                    />
-                    In Stock Only
-                  </label>
+                  <CustomCheckbox 
+                    checked={inStockOnly} 
+                    onChange={(e) => setInStockOnly(e.target.checked)}
+                    label="In Stock Only"
+                    style={{ '--checkbox-color': primaryColor } as React.CSSProperties}
+                  />
                 </div>
               )}
             </div>
@@ -899,14 +899,12 @@ export default function Shop() {
 
               <div className={styles.mobileFilterGroup}>
                 <h3 className={styles.mobileFilterGroupTitle}>AVAILABILITY</h3>
-                <label className={styles.checkboxLabel}>
-                  <input 
-                    type="checkbox" 
-                    checked={inStockOnly}
-                    onChange={(e) => setInStockOnly(e.target.checked)}
-                  />
-                  In Stock Only
-                </label>
+                <CustomCheckbox 
+                  checked={inStockOnly}
+                  onChange={(e) => setInStockOnly(e.target.checked)}
+                  label="In Stock Only"
+                  style={{ '--checkbox-color': primaryColor } as React.CSSProperties}
+                />
               </div>
 
             </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from '../../page.module.css';
+import CustomCheckbox from "@/components/CustomCheckbox/CustomCheckbox";
 
 interface MarketingTabProps {
   activeTab: any;
@@ -50,16 +51,11 @@ export default function MarketingTab({
                 <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span style={{ fontWeight: 600, fontSize: "0.88rem", color: "#374151" }}>Top Marquee Ticker Loop Status</span>
-                    <label className={styles.switch}>
-                      <input
-                        type="checkbox"
-                        checked={showTicker}
-                        onChange={(e) => {
-                          setShowTicker(e.target.checked);
-                        }}
-                      />
-                      <span className={styles.slider} />
-                    </label>
+                    <CustomCheckbox
+                      checked={showTicker}
+                      onChange={(e) => setShowTicker(e.target.checked)}
+                      style={{ '--checkbox-color': '#111827' } as React.CSSProperties}
+                    />
                   </div>
                   <div className={styles.inputGroup}>
                     <label className={styles.inputLabel}>Ticker Content Text</label>
