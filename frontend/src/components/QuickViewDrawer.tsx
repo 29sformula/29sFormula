@@ -128,9 +128,10 @@ export default function QuickViewDrawer({
             <h2 className={styles.title}>{cachedProduct.name}</h2>
           </div>
           
-          <p className={styles.subtitle}>
-            {cachedProduct.description || "EAU DE PARFUM SPRAY"}
-          </p>
+          <div 
+            className={styles.subtitle}
+            dangerouslySetInnerHTML={{ __html: cachedProduct.description || "EAU DE PARFUM SPRAY" }}
+          />
 
           {/* SIZES AND PRICING */}
           {(() => {

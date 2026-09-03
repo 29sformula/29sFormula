@@ -83,6 +83,16 @@
   margin-bottom: 24px;
 }
 
+.subtitle ul, .subtitle ol {
+  padding-left: 20px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.subtitle p {
+  margin-bottom: 8px;
+}
+
 .priceRow {
   display: flex;
   justify-content: space-between;
@@ -333,4 +343,84 @@
   .mobileQuantity {
     display: block;
   }
+}
+
+/* Accordion drop-down drawers */
+.accordionContainer {
+  margin-top: 20px;
+}
+
+.accordionItem {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.accordionItem:first-of-type {
+  border-top: 1px solid #e5e7eb;
+}
+
+.accordionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 0;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+}
+
+.accordionTitle {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #111827;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.accordionIcon {
+  width: 16px;
+  height: 16px;
+  color: #4b5563;
+  transition: transform 0.3s ease;
+}
+
+.accordionIconOpen {
+  transform: rotate(180deg);
+}
+
+.accordionContent {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease-out;
+}
+
+.accordionContentOpen {
+  grid-template-rows: 1fr;
+}
+
+.accordionInnerWrapper {
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.3s ease-out;
+}
+
+.accordionContentOpen .accordionInnerWrapper {
+  opacity: 1;
+}
+
+.accordionInner {
+  padding-bottom: 20px;
+  font-family: 'Inter', sans-serif;
+  color: #4b5563;
+  line-height: 1.5;
+  font-size: 0.85rem;
+}
+
+.accordionInner p, .accordionInner ul, .accordionInner li {
+  margin-bottom: 8px;
 }
