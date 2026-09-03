@@ -74,6 +74,7 @@ export default function ProductDetailPage() {
   const [isSizeDropdownOpen, setIsSizeDropdownOpen] = useState<boolean>(false);
   const [reviewSort, setReviewSort] = useState<string>("Most recent");
   const [isReviewSortOpen, setIsReviewSortOpen] = useState<boolean>(false);
+  const [visibleReviewsCount, setVisibleReviewsCount] = useState<number>(3);
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [explorePage, setExplorePage] = useState<number>(1);
   const [exploreDirection, setExploreDirection] = useState<string>("forward");
@@ -803,7 +804,7 @@ export default function ProductDetailPage() {
                     <div 
                       key={idx}
                       className={styles.desktopImageWrapper}
-                      style={{ marginBottom: idx === allImages.length - 1 ? 0 : undefined }}
+                      style={{ marginBottom: idx === allImages.length - 1 ? 0 : 250 }}
                       ref={el => { imageRefs.current[idx] = el; }}
                     >
                       <img 
@@ -1122,6 +1123,7 @@ export default function ProductDetailPage() {
                                const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
                                return dateB - dateA;
                              })
+                             .slice(0, visibleReviewsCount)
                              .map((review, idx) => (
                                <div key={review._id || idx} className={styles.reviewCard}>
                                  <div className={styles.reviewCardHeader}>
@@ -1150,6 +1152,15 @@ export default function ProductDetailPage() {
                                  </p>
                               </div>
                            ))}
+
+                           {visibleReviewsCount < reviewsList.length && (
+                             <button 
+                               className={styles.loadMoreBtn} 
+                               onClick={() => setVisibleReviewsCount(prev => prev + 3)}
+                             >
+                               Load more reviews
+                             </button>
+                           )}
                         </div>
                       </div>
                     </div>
@@ -1197,6 +1208,20 @@ export default function ProductDetailPage() {
             <div 
               key={`explore-${explorePage}`}
               className={`${homeStyles.arrivalsGrid} ${homeStyles.slideAnimated} ${exploreDirection === "forward" ? homeStyles.slideForward : homeStyles.slideBackward}`}
+              onTouchStart={isMobile ? handleTouchStart : undefined}
+              onTouchMove={isMobile ? handleTouchMove : undefined}
+              onTouchEnd={isMobile ? () => {
+                if (!touchStart || !touchEnd) return;
+                const distance = touchStart - touchEnd;
+                if (distance > 50 && explorePage < totalExplorePages) {
+                  setExploreDirection("forward");
+                  setExplorePage(p => p + 1);
+                }
+                if (distance < -50 && explorePage > 1) {
+                  setExploreDirection("backward");
+                  setExplorePage(p => p - 1);
+                }
+              } : undefined}
             >
               {displayedExplore.map((item) => {
                 const cheapestVariant = item.variants && item.variants.length > 0
@@ -1357,6 +1382,20 @@ export default function ProductDetailPage() {
             <div 
               key={`recent-${recentPage}`}
               className={`${homeStyles.arrivalsGrid} ${homeStyles.slideAnimated} ${recentDirection === "forward" ? homeStyles.slideForward : homeStyles.slideBackward}`}
+              onTouchStart={isMobile ? handleTouchStart : undefined}
+              onTouchMove={isMobile ? handleTouchMove : undefined}
+              onTouchEnd={isMobile ? () => {
+                if (!touchStart || !touchEnd) return;
+                const distance = touchStart - touchEnd;
+                if (distance > 50 && recentPage < totalRecentPages) {
+                  setRecentDirection("forward");
+                  setRecentPage(p => p + 1);
+                }
+                if (distance < -50 && recentPage > 1) {
+                  setRecentDirection("backward");
+                  setRecentPage(p => p - 1);
+                }
+              } : undefined}
             >
               {displayedRecent.map((item) => {
                 const cheapestVariant = item.variants && item.variants.length > 0

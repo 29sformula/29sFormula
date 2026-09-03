@@ -56,12 +56,15 @@ export default function CustomizeLayoutModal({
   const [selectedElement, setSelectedElement] = useState<"title" | "manifesto" | "button" | null>("title");
   
   const [isFontDropdownOpen, setIsFontDropdownOpen] = useState(false);
+  const [fontDropdownCoords, setFontDropdownCoords] = useState<{top: number, left: number, width: number} | null>(null);
   const [hoveredFontType, setHoveredFontType] = useState<string | null>(null);
   
   const [isFontSizeDropdownOpen, setIsFontSizeDropdownOpen] = useState(false);
+  const [fontSizeDropdownCoords, setFontSizeDropdownCoords] = useState<{top: number, left: number, width: number} | null>(null);
   const [hoveredFontSize, setHoveredFontSize] = useState<string | null>(null);
   
   const [isFontWeightDropdownOpen, setIsFontWeightDropdownOpen] = useState(false);
+  const [fontWeightDropdownCoords, setFontWeightDropdownCoords] = useState<{top: number, left: number, width: number} | null>(null);
   const [hoveredFontWeight, setHoveredFontWeight] = useState<string | null>(null);
 
   const [drafts, setDrafts] = useState<any>({
@@ -532,7 +535,13 @@ export default function CustomizeLayoutModal({
                           
                           {/* Trigger element */}
                           <div
-                            onClick={() => setIsFontDropdownOpen(!isFontDropdownOpen)}
+                            onClick={(e) => {
+                              if (!isFontDropdownOpen) {
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                setFontDropdownCoords({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+                              }
+                              setIsFontDropdownOpen(!isFontDropdownOpen);
+                            }}
                             style={{
                               padding: "10px 14px",
                               borderRadius: "8px",
@@ -561,10 +570,10 @@ export default function CustomizeLayoutModal({
                             <>
                               <div style={{ position: "fixed", inset: 0, zIndex: 16000 }} onClick={() => { setIsFontDropdownOpen(false); setHoveredFontType(null); }} />
                               <div style={{
-                                position: "absolute",
-                                top: "68px",
-                                left: 0,
-                                width: "100%",
+                                position: "fixed",
+                                top: fontDropdownCoords?.top || 0,
+                                left: fontDropdownCoords?.left || 0,
+                                width: fontDropdownCoords?.width || 280,
                                 minWidth: "280px",
                                 maxHeight: "320px",
                                 overflowY: "auto",
@@ -660,7 +669,13 @@ export default function CustomizeLayoutModal({
                           
                           {/* Trigger */}
                           <div
-                            onClick={() => setIsFontSizeDropdownOpen(!isFontSizeDropdownOpen)}
+                            onClick={(e) => {
+                              if (!isFontSizeDropdownOpen) {
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                setFontSizeDropdownCoords({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+                              }
+                              setIsFontSizeDropdownOpen(!isFontSizeDropdownOpen);
+                            }}
                             style={{
                               padding: "10px 14px",
                               borderRadius: "8px",
@@ -688,10 +703,10 @@ export default function CustomizeLayoutModal({
                             <>
                               <div style={{ position: "fixed", inset: 0, zIndex: 16000 }} onClick={() => { setIsFontSizeDropdownOpen(false); setHoveredFontSize(null); }} />
                               <div style={{
-                                position: "absolute",
-                                top: "68px",
-                                left: 0,
-                                width: "100%",
+                                position: "fixed",
+                                top: fontSizeDropdownCoords?.top || 0,
+                                left: fontSizeDropdownCoords?.left || 0,
+                                width: fontSizeDropdownCoords?.width || 200,
                                 minWidth: "200px",
                                 maxHeight: "280px",
                                 overflowY: "auto",
@@ -699,7 +714,7 @@ export default function CustomizeLayoutModal({
                                 border: "1px solid #cbd5e1",
                                 borderRadius: "8px",
                                 boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)",
-                                zIndex: 16100,
+                                zIndex: 99999,
                                 boxSizing: "border-box"
                               }}>
                                 {(selectedElement === "title"
@@ -780,12 +795,24 @@ export default function CustomizeLayoutModal({
                         </div>
 
                         {/* Font Weight (Custom Popover with hover preview) */}
-                        <div style={{ display: "flex", flexDirection: "column", gap: "6px", position: "relative" }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px", position: "relative", zIndex: isFontWeightDropdownOpen ? 99999 : 1 }}>
                           <label style={{ fontSize: "0.82rem", fontWeight: 700, color: "#475569" }}>Font Weight</label>
                           
                           {/* Trigger */}
                           <div
-                            onClick={() => setIsFontWeightDropdownOpen(!isFontWeightDropdownOpen)}
+                            onClick={(e) => {
+                              if (!isFontWeightDropdownOpen) {
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                // if there is no space below, open upwards (this handles the very bottom edge just in case)
+                                const spaceBelow = window.innerHeight - rect.bottom;
+                                if (spaceBelow < 280) {
+                                  setFontWeightDropdownCoords({ top: rect.top - 284, left: rect.left, width: rect.width });
+                                } else {
+                                  setFontWeightDropdownCoords({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+                                }
+                              }
+                              setIsFontWeightDropdownOpen(!isFontWeightDropdownOpen);
+                            }}
                             style={{
                               padding: "10px 14px",
                               borderRadius: "8px",
@@ -814,12 +841,12 @@ export default function CustomizeLayoutModal({
                           {/* Popover list */}
                           {isFontWeightDropdownOpen && (
                             <>
-                              <div style={{ position: "fixed", inset: 0, zIndex: 16000 }} onClick={() => { setIsFontWeightDropdownOpen(false); setHoveredFontWeight(null); }} />
+                              <div style={{ position: "fixed", inset: 0, zIndex: 99998 }} onClick={() => { setIsFontWeightDropdownOpen(false); setHoveredFontWeight(null); }} />
                               <div style={{
-                                position: "absolute",
-                                top: "68px",
-                                left: 0,
-                                width: "100%",
+                                position: "fixed",
+                                top: fontWeightDropdownCoords?.top || 0,
+                                left: fontWeightDropdownCoords?.left || 0,
+                                width: fontWeightDropdownCoords?.width || 200,
                                 minWidth: "200px",
                                 maxHeight: "280px",
                                 overflowY: "auto",
@@ -827,7 +854,7 @@ export default function CustomizeLayoutModal({
                                 border: "1px solid #cbd5e1",
                                 borderRadius: "8px",
                                 boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)",
-                                zIndex: 16100,
+                                zIndex: 99999,
                                 boxSizing: "border-box"
                               }}>
                                 {[

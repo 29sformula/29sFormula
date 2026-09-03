@@ -83,6 +83,9 @@ export default function Home() {
   const [bestSellersDirection, setBestSellersDirection] = useState<"forward" | "backward">("forward");
   const itemsPerPage = 2;
 
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchEndX, setTouchEndX] = useState<number | null>(null);
+
   // Hero Section State
   const [heroBgType, setHeroBgType] = useState<"color" | "image" | "video">("color");
   const [heroBgColor, setHeroBgColor] = useState<string>("#121212");
@@ -617,6 +620,50 @@ export default function Home() {
   const totalBestSellersPages = Math.ceil(bestSellers.length / itemsPerPage);
   const displayedBestSellers = isMobile ? bestSellers.slice((bestSellersPage - 1) * itemsPerPage, bestSellersPage * itemsPerPage) : bestSellers;
 
+  // Touch Handlers for Swipe
+  const minSwipeDistance = 50;
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEndX(null);
+    setTouchStartX(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEndX(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEndArrivals = () => {
+    if (!touchStartX || !touchEndX) return;
+    const distance = touchStartX - touchEndX;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe && arrivalsPage < totalArrivalsPages) {
+      setArrivalsDirection("forward");
+      setArrivalsPage(p => p + 1);
+    }
+    if (isRightSwipe && arrivalsPage > 1) {
+      setArrivalsDirection("backward");
+      setArrivalsPage(p => p - 1);
+    }
+  };
+
+  const handleTouchEndBestSellers = () => {
+    if (!touchStartX || !touchEndX) return;
+    const distance = touchStartX - touchEndX;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe && bestSellersPage < totalBestSellersPages) {
+      setBestSellersDirection("forward");
+      setBestSellersPage(p => p + 1);
+    }
+    if (isRightSwipe && bestSellersPage > 1) {
+      setBestSellersDirection("backward");
+      setBestSellersPage(p => p - 1);
+    }
+  };
+
   return (
     <div suppressHydrationWarning className={styles.page}>
       <Preloader />
@@ -843,6 +890,9 @@ export default function Home() {
         <div 
           key={`arrivals-${arrivalsPage}`}
           className={`${arrivals.length > 0 ? styles.arrivalsGrid : styles.emptyStateGrid} ${styles.slideAnimated} ${arrivalsDirection === "forward" ? styles.slideForward : styles.slideBackward}`}
+          onTouchStart={isMobile ? handleTouchStart : undefined}
+          onTouchMove={isMobile ? handleTouchMove : undefined}
+          onTouchEnd={isMobile ? handleTouchEndArrivals : undefined}
         >
           {arrivals.length > 0 ? (
             displayedArrivals.map((product) => (
@@ -911,11 +961,6 @@ export default function Home() {
                   </div>
                   <div className={styles.productInfo}>
                     <h3 className={styles.productTitle}>{product.name}</h3>
-                    {isMobile && (
-                      <p className={styles.productSubtitle}>
-                        {product.description || "Signature Fragrance"}
-                      </p>
-                    )}
                       {(() => {
                         const cheapestVariant = product.variants && product.variants.length > 0
                           ? [...product.variants].sort((a, b) => a.price - b.price)[0]
@@ -1027,6 +1072,9 @@ export default function Home() {
         <div 
           key={`bestsellers-${bestSellersPage}`}
           className={`${bestSellers.length > 0 ? styles.arrivalsGrid : styles.emptyStateGrid} ${styles.slideAnimated} ${bestSellersDirection === "forward" ? styles.slideForward : styles.slideBackward}`}
+          onTouchStart={isMobile ? handleTouchStart : undefined}
+          onTouchMove={isMobile ? handleTouchMove : undefined}
+          onTouchEnd={isMobile ? handleTouchEndBestSellers : undefined}
         >
           {bestSellers.length > 0 ? (
             displayedBestSellers.map((product) => (
@@ -1095,11 +1143,6 @@ export default function Home() {
                   </div>
                   <div className={styles.productInfo}>
                     <h3 className={styles.productTitle}>{product.name}</h3>
-                    {isMobile && (
-                      <p className={styles.productSubtitle}>
-                        {product.description || "Signature Fragrance"}
-                      </p>
-                    )}
                       {(() => {
                         const cheapestVariant = product.variants && product.variants.length > 0
                           ? [...product.variants].sort((a, b) => a.price - b.price)[0]
@@ -1223,8 +1266,8 @@ export default function Home() {
           {/* Grid Layout containing rating summary on left and review card on right */}
           <div style={{
             display: "grid",
-            gridTemplateColumns: "minmax(300px, 1fr) 1.2fr",
-            gap: "60px",
+            gridTemplateColumns: isMobile ? "1fr" : "minmax(300px, 1fr) 1.2fr",
+            gap: isMobile ? "30px" : "60px",
             alignItems: "center",
             width: "100%"
           }}>
@@ -1232,14 +1275,16 @@ export default function Home() {
             <div style={{
               display: "flex",
               alignItems: "center",
-              gap: "40px",
-              justifyContent: "space-between"
+              gap: isMobile ? "10px" : "40px",
+              justifyContent: "space-between",
+              flexDirection: "row",
+              width: "100%"
             }}>
               {/* Overall Score */}
               <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
                 <div style={{ display: "flex", alignItems: "baseline" }}>
                   <span style={{
-                    fontSize: "7.5rem",
+                    fontSize: isMobile ? "4.5rem" : "7.5rem",
                     fontWeight: 700,
                     color: "#111827",
                     fontFamily: "Outfit, sans-serif",
@@ -1277,7 +1322,7 @@ export default function Home() {
               }}>
                 {[5, 4, 3, 2, 1].map(star => (
                   <div key={star} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ color: "#d97706", fontSize: "1.1rem" }}>★</span>
+                    <span style={{ color: "#000000", fontSize: "1.1rem" }}>★</span>
                     <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#111827", width: "12px" }}>{star}</span>
                     <div style={{ flexGrow: 1, height: "8px", backgroundColor: "#e5e7eb", borderRadius: "4px", position: "relative" }}>
                       <div style={{ position: "absolute", top: 0, left: 0, height: "100%", width: `${getRatingPercent(star)}%`, backgroundColor: "#111827", borderRadius: "4px", transition: "width 0.3s ease" }} />
@@ -1292,9 +1337,9 @@ export default function Home() {
               backgroundColor: "#ffffff",
               border: "1px solid #e5e7eb",
               borderRadius: "16px",
-              padding: "32px",
+              padding: isMobile ? "20px" : "32px",
               boxShadow: "0 4px 12px -2px rgba(0, 0, 0, 0.03)",
-              minHeight: "220px",
+              minHeight: isMobile ? "auto" : "220px",
               display: "flex",
               flexDirection: "column",
               justifyContent: "space-between",
@@ -1313,22 +1358,11 @@ export default function Home() {
                   </div>
                 ) : (
                   <>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+                    {/* Name and Date Row */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
                       <span style={{ fontWeight: 600, fontSize: "1.1rem", color: "#111827", fontFamily: "Outfit, sans-serif" }}>
                         {allReviews[currentReviewIndex]?.name}
                       </span>
-                    </div>
-                    {/* Stars and Date Row */}
-                    <div style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginBottom: "16px"
-                    }}>
-                      {/* Gold Stars */}
-                      <div style={{ display: "flex", gap: "2px", color: "#d97706", fontSize: "1.1rem" }}>
-                        {"★".repeat(allReviews[currentReviewIndex]?.rating || 5)}
-                      </div>
                       {/* Date */}
                       <span style={{
                         fontSize: "0.9rem",
@@ -1338,6 +1372,17 @@ export default function Home() {
                       }}>
                         {allReviews[currentReviewIndex]?.date}
                       </span>
+                    </div>
+                    {/* Stars Row */}
+                    <div style={{
+                      display: "flex",
+                      alignItems: "center",
+                      marginBottom: "16px"
+                    }}>
+                      {/* Black Stars */}
+                      <div style={{ display: "flex", gap: "2px", color: "#000000", fontSize: "1.1rem" }}>
+                        {"★".repeat(allReviews[currentReviewIndex]?.rating || 5)}
+                      </div>
                     </div>
                     {/* Review text */}
                     <p style={{
