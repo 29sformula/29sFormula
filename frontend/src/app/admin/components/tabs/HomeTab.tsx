@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from '../../page.module.css';
 import { DashboardStats } from '../../types';
 
@@ -83,37 +83,56 @@ export default function HomeTab({
   timelineFilter,
   setTimelineFilter
 }: HomeTabProps) {
-  const [hoveredData, setHoveredData] = useState<{x: number, y: number, date: string, sales: number} | null>(null);
+  const [activeChartMetric, setActiveChartMetric] = useState<"sales" | "profit" | "orders">("sales");
+  const [hoveredBarIndex, setHoveredBarIndex] = useState<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 600);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  let chartData = dashboardStats?.historicalData || [];
+  if (isMobile) {
+    chartData = chartData.slice(-9);
+  }
   
-  const data = dashboardStats?.historicalData || [];
-  const minX = 50, maxX = 750, minY = 205, maxY = 30;
-  const maxValue = Math.max(...data.map(d => d.sales || 0), 1);
-  const width = maxX - minX;
-  const height = minY - maxY;
-  const step = width / Math.max(data.length - 1, 1);
+  const rawMax = Math.max(...chartData.map(d => d[activeChartMetric] || 0), 10);
+  const magnitude = Math.pow(10, Math.floor(Math.log10(rawMax)) || 1);
+  const yAxisMax = Math.max(Math.ceil(rawMax / magnitude) * magnitude, 40);
+  
+  const yTicks = [yAxisMax, yAxisMax * 0.75, yAxisMax * 0.5, yAxisMax * 0.25, 0];
+  
+  const formatYTick = (val: number) => {
+    if (val === 0) return "₹0";
+    if (val >= 1000) return `₹${(val / 1000).toFixed(val % 1000 === 0 ? 0 : 1)}k`;
+    return `₹${val}`;
+  };
+
+  const chartW = 800;
+  const chartH = 360;
+  const leftPad = isMobile ? 75 : 60;
+  const rightPad = 20;
+  const topPad = 60;
+  const bottomPad = isMobile ? 45 : 30;
+
+  const innerW = chartW - leftPad - rightPad;
+  const innerH = chartH - topPad - bottomPad;
+  const barStep = chartData.length > 0 ? innerW / chartData.length : 0;
+  const barWidth = Math.min(48, Math.max(10, barStep * 0.6));
 
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (data.length === 0) return;
+    if (chartData.length === 0) return;
     const svgRect = e.currentTarget.getBoundingClientRect();
-    const mouseX = ((e.clientX - svgRect.left) / svgRect.width) * 800;
+    const mouseX = ((e.clientX - svgRect.left) / svgRect.width) * chartW;
     
-    let closest = data[0];
-    let closestDist = Infinity;
-    let closestIndex = 0;
-    
-    data.forEach((d, i) => {
-      const x = minX + i * step;
-      const dist = Math.abs(x - mouseX);
-      if (dist < closestDist) {
-        closestDist = dist;
-        closest = d;
-        closestIndex = i;
-      }
-    });
-
-    const x = minX + closestIndex * step;
-    const y = minY - ((closest.sales || 0) / maxValue) * height;
-    setHoveredData({ x, y, date: closest.date, sales: closest.sales || 0 });
+    // Find closest bar index based on X coordinate
+    let closestIndex = Math.floor((mouseX - leftPad) / barStep);
+    if (closestIndex < 0) closestIndex = 0;
+    if (closestIndex >= chartData.length) closestIndex = chartData.length - 1;
+    setHoveredBarIndex(closestIndex);
   };
 
   return (
@@ -122,146 +141,142 @@ export default function HomeTab({
 
               {/* Stats widgets layout row */}
               <section className={styles.statsRow}>
-                {/* Stat 1 */}
+                {/* Card 1: Total Revenue */}
                 <div className={styles.statBox}>
                   <div className={styles.statTop}>
-                    <div className={styles.statLabelBlock}>
-                      <span className={styles.statLabelText}>Total Orders</span>
-                      <span className={`${styles.trendTag} ${styles.trendUp}`}>
-                        -
-                      </span>
-                    </div>
-                    <button className={styles.trendArrowCircle}>
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={styles.trendArrowIcon}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 19.5 15-15m0 0H8.25m11.25 0v11.25" />
+                    <div className={styles.statIconWrapper}>
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.0} stroke="currentColor" className={styles.statIcon}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                       </svg>
-                    </button>
+                    </div>
+                    {(dashboardStats?.cardStats?.totalRevenue.change ?? 0) >= 0 ? (
+                      <span className={styles.statPillGreen}>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" style={{ width: "12px", height: "12px" }}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" />
+                        </svg>
+                        {dashboardStats?.cardStats?.totalRevenue.change ?? 0}%
+                      </span>
+                    ) : (
+                      <span className={styles.statPillRed}>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" style={{ width: "12px", height: "12px" }}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3" />
+                        </svg>
+                        {Math.abs(dashboardStats?.cardStats?.totalRevenue.change ?? 0)}%
+                      </span>
+                    )}
                   </div>
                   <div className={styles.statBottom}>
-                    <span className={styles.statValueText}>
-                      {dashboardStats ? dashboardStats.totalSales.toLocaleString() : "0"}
+                    <span className={styles.statMainValue}>
+                      ₹{dashboardStats ? (dashboardStats.cardStats?.totalRevenue.value || 0).toLocaleString("en-IN") : "0"}
                     </span>
-                    <div className={styles.sparkline}>
-                      <svg viewBox="0 0 120 40" className={styles.sparkSvg}>
-                        <defs>
-                          <linearGradient id="blueGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#4f46e5" stopOpacity="0.4" />
-                            <stop offset="100%" stopColor="#4f46e5" stopOpacity="0" />
-                          </linearGradient>
-                        </defs>
-                        <path d={generateSparklinePath(dashboardStats?.historicalData || [], "orders", 120, 0, 5, 40, true)} fill="url(#blueGrad)" />
-                        <path d={generateSparklinePath(dashboardStats?.historicalData || [], "orders", 120, 0, 5, 40, false)} fill="none" stroke="#4f46e5" strokeWidth="2.5" />
-                      </svg>
-                    </div>
+                    <span className={styles.statMainLabel}>Total Revenue</span>
+                    <span className={styles.statSubLabel}>vs last month</span>
                   </div>
                 </div>
 
-                {/* Stat 1.5: Profit */}
+                {/* Card 2: Total Orders */}
                 <div className={styles.statBox}>
                   <div className={styles.statTop}>
-                    <div className={styles.statLabelBlock}>
-                      <span className={styles.statLabelText}>Total Profit</span>
-                      <span className={`${styles.trendTag} ${styles.trendUp}`}>
-                        -
-                      </span>
-                    </div>
-                    <button className={styles.trendArrowCircle}>
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={styles.trendArrowIcon}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 19.5 15-15m0 0H8.25m11.25 0v11.25" />
+                    <div className={styles.statIconWrapper}>
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.0} stroke="currentColor" className={styles.statIcon}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                       </svg>
-                    </button>
+                    </div>
+                    {(dashboardStats?.cardStats?.totalOrders.change ?? 0) >= 0 ? (
+                      <span className={styles.statPillGreen}>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" style={{ width: "12px", height: "12px" }}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" />
+                        </svg>
+                        {dashboardStats?.cardStats?.totalOrders.change ?? 0}%
+                      </span>
+                    ) : (
+                      <span className={styles.statPillRed}>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" style={{ width: "12px", height: "12px" }}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3" />
+                        </svg>
+                        {Math.abs(dashboardStats?.cardStats?.totalOrders.change ?? 0)}%
+                      </span>
+                    )}
                   </div>
                   <div className={styles.statBottom}>
-                    <span className={styles.statValueText}>
-                      ₹{dashboardStats ? (dashboardStats.totalProfitThisMonth || 0).toLocaleString("en-IN") : "0"}
+                    <span className={styles.statMainValue}>
+                      {dashboardStats ? (dashboardStats.cardStats?.totalOrders.value || 0).toLocaleString() : "0"}
                     </span>
-                    <div className={styles.sparkline}>
-                      <svg viewBox="0 0 120 40" className={styles.sparkSvg}>
-                        <defs>
-                          <linearGradient id="greenGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
-                            <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
-                          </linearGradient>
-                        </defs>
-                        <path d={generateSparklinePath(dashboardStats?.historicalData || [], "sales", 120, 0, 5, 40, true)} fill="url(#greenGrad)" />
-                        <path d={generateSparklinePath(dashboardStats?.historicalData || [], "sales", 120, 0, 5, 40, false)} fill="none" stroke="#10b981" strokeWidth="2.5" />
-                      </svg>
-                    </div>
+                    <span className={styles.statMainLabel}>Total Orders</span>
+                    <span className={styles.statSubLabel}>vs last month</span>
                   </div>
                 </div>
 
-                {/* Stat 2 */}
+                {/* Card 3: Net Profit */}
                 <div className={styles.statBox}>
                   <div className={styles.statTop}>
-                    <div className={styles.statLabelBlock}>
-                      <span className={styles.statLabelText}>Total Revenue</span>
-                      <span className={`${styles.trendTag} ${styles.trendDown}`}>
-                        -
-                      </span>
-                    </div>
-                    <button className={styles.trendArrowCircle}>
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={styles.trendArrowIcon}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 19.5 15-15m0 0H8.25m11.25 0v11.25" />
+                    <div className={styles.statIconWrapper}>
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.0} stroke="currentColor" className={styles.statIcon}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
                       </svg>
-                    </button>
+                    </div>
+                    {(dashboardStats?.cardStats?.netProfit.change ?? 0) >= 0 ? (
+                      <span className={styles.statPillGreen}>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" style={{ width: "12px", height: "12px" }}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" />
+                        </svg>
+                        {dashboardStats?.cardStats?.netProfit.change ?? 0}%
+                      </span>
+                    ) : (
+                      <span className={styles.statPillRed}>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" style={{ width: "12px", height: "12px" }}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3" />
+                        </svg>
+                        {Math.abs(dashboardStats?.cardStats?.netProfit.change ?? 0)}%
+                      </span>
+                    )}
                   </div>
                   <div className={styles.statBottom}>
-                    <span className={styles.statValueText}>
-                      ₹{dashboardStats ? dashboardStats.totalIncome.toLocaleString("en-IN") : "0"}
+                    <span className={styles.statMainValue}>
+                      ₹{dashboardStats ? (dashboardStats.cardStats?.netProfit.value || 0).toLocaleString("en-IN") : "0"}
                     </span>
-                    <div className={styles.sparkline}>
-                      <svg viewBox="0 0 120 40" className={styles.sparkSvg}>
-                        <defs>
-                          <linearGradient id="orangeGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#eab308" stopOpacity="0.4" />
-                            <stop offset="100%" stopColor="#eab308" stopOpacity="0" />
-                          </linearGradient>
-                        </defs>
-                        <path d={generateSparklinePath(dashboardStats?.historicalData || [], "sales", 120, 0, 5, 40, true)} fill="url(#orangeGrad)" />
-                        <path d={generateSparklinePath(dashboardStats?.historicalData || [], "sales", 120, 0, 5, 40, false)} fill="none" stroke="#eab308" strokeWidth="2.5" />
-                      </svg>
-                    </div>
+                    <span className={styles.statMainLabel}>Net Profit</span>
+                    <span className={styles.statSubLabel}>vs last month</span>
                   </div>
                 </div>
 
-                {/* Stat 3 */}
+                {/* Card 4: Active Customers */}
                 <div 
-                  className={styles.statBox} 
+                  className={styles.statBox}
                   style={{ cursor: "pointer" }}
                   onClick={() => {
-                    setActiveTab("orders");
+                    setActiveTab("customers");
                     setActiveSubTab("all");
                   }}
                 >
                   <div className={styles.statTop}>
-                    <div className={styles.statLabelBlock}>
-                      <span className={styles.statLabelText}>Active Orders</span>
-                      <span className={`${styles.trendTag} ${styles.trendUp}`}>
-                        -
-                      </span>
-                    </div>
-                    <button className={styles.trendArrowCircle}>
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={styles.trendArrowIcon}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 19.5 15-15m0 0H8.25m11.25 0v11.25" />
+                    <div className={styles.statIconWrapper}>
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.0} stroke="currentColor" className={styles.statIcon}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
                       </svg>
-                    </button>
+                    </div>
+                    {(dashboardStats?.cardStats?.activeCustomers.change ?? 0) >= 0 ? (
+                      <span className={styles.statPillGreen}>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" style={{ width: "12px", height: "12px" }}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" />
+                        </svg>
+                        {dashboardStats?.cardStats?.activeCustomers.change ?? 0}%
+                      </span>
+                    ) : (
+                      <span className={styles.statPillRed}>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" style={{ width: "12px", height: "12px" }}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3" />
+                        </svg>
+                        {Math.abs(dashboardStats?.cardStats?.activeCustomers.change ?? 0)}%
+                      </span>
+                    )}
                   </div>
                   <div className={styles.statBottom}>
-                    <span className={styles.statValueText}>
-                      {dashboardStats ? dashboardStats.activeOrders.toLocaleString() : "0"}
+                    <span className={styles.statMainValue}>
+                      {dashboardStats ? (dashboardStats.cardStats?.activeCustomers.value || 0).toLocaleString() : "0"}
                     </span>
-                    <div className={styles.sparkline}>
-                      <svg viewBox="0 0 120 40" className={styles.sparkSvg}>
-                        <defs>
-                          <linearGradient id="redGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.4" />
-                            <stop offset="100%" stopColor="#f43f5e" stopOpacity="0" />
-                          </linearGradient>
-                        </defs>
-                        <path d={generateSparklinePath(dashboardStats?.historicalData || [], "orders", 120, 0, 5, 40, true)} fill="url(#redGrad)" />
-                        <path d={generateSparklinePath(dashboardStats?.historicalData || [], "orders", 120, 0, 5, 40, false)} fill="none" stroke="#f43f5e" strokeWidth="2.5" />
-                      </svg>
-                    </div>
+                    <span className={styles.statMainLabel}>Active Customers</span>
+                    <span className={styles.statSubLabel}>vs last month</span>
                   </div>
                 </div>
               </section>
@@ -270,136 +285,172 @@ export default function HomeTab({
               <section className={styles.chartPanelGrid}>
                 {/* Main Curve Chart */}
                 <div className={styles.chartContainerCard}>
-                  <div className={styles.chartHeader}>
-                    <div className={styles.chartHeaderLeft}>
-                      <span className={styles.chartHeaderLabel}>Sales Chart</span>
-                      <div className={styles.chartValueRow}>
-                        <span className={styles.chartMainValue}>₹{dashboardStats ? dashboardStats.totalIncome.toLocaleString("en-IN") : "0"}</span>
-                        <span className={styles.chartTrendTag}>-</span>
+                  <div className={styles.chartTopRow}>
+                    <div className={styles.chartTitleBlock}>
+                      <span className={styles.chartMainTitle}>Performance Overview</span>
+                      <span className={styles.chartSubTitle}>Revenue • Profit • Orders — switch metric below</span>
+                      <div className={styles.chartToggles}>
+                        <button 
+                          className={`${styles.chartToggleBtn} ${activeChartMetric === "sales" ? styles.chartToggleBtnActive : ""}`}
+                          onClick={() => setActiveChartMetric("sales")}
+                        >
+                          Revenue
+                        </button>
+                        <button 
+                          className={`${styles.chartToggleBtn} ${activeChartMetric === "profit" ? styles.chartToggleBtnActive : ""}`}
+                          onClick={() => setActiveChartMetric("profit")}
+                        >
+                          Profit
+                        </button>
+                        <button 
+                          className={`${styles.chartToggleBtn} ${activeChartMetric === "orders" ? styles.chartToggleBtnActive : ""}`}
+                          onClick={() => setActiveChartMetric("orders")}
+                        >
+                          Orders
+                        </button>
                       </div>
                     </div>
-                    <div className={styles.chartHeaderRight}>
-                      <div className={styles.legendRow}>
-                        <span className={styles.legendItem}><span className={`${styles.legendDot} ${styles.legendBlack}`} />Sales</span>
-                      </div>
-                      <select 
-                        className={styles.chartSelect}
-                        value={timelineFilter}
-                        onChange={(e) => { setTimelineFilter(e.target.value); }}
-                      >
-                        <option value="today">Today</option>
-                        <option value="7days">Last 7 Days</option>
-                        <option value="30days">Last 30 Days</option>
-                        <option value="year">This Year</option>
-                        <option value="all">All Time</option>
-                      </select>
+                    <div className={styles.chartDateRange}>
+                      Jan – Sep 2026
                     </div>
                   </div>
 
-                  {/* Bezier SVG Line Chart */}
+                  {/* Combination SVG Chart */}
                   <div className={styles.chartCanvasArea} style={{ position: "relative" }}>
                     <svg 
-                      viewBox="0 0 800 240" 
+                      viewBox={`0 0 ${chartW} ${chartH}`} 
                       className={styles.mainSvgChart}
                       onMouseMove={handleMouseMove}
-                      onMouseLeave={() => setHoveredData(null)}
-                      style={{ cursor: 'crosshair', overflow: 'visible' }}
+                      onMouseLeave={() => setHoveredBarIndex(null)}
+                      style={{ overflow: 'visible', width: '100%', height: 'auto' }}
                     >
-                      {/* Grid Lines */}
-                      <line x1="40" y1="30" x2="760" y2="30" stroke="#f3f4f6" strokeWidth="1" />
-                      <line x1="40" y1="65" x2="760" y2="65" stroke="#f3f4f6" strokeWidth="1" />
-                      <line x1="40" y1="100" x2="760" y2="100" stroke="#f3f4f6" strokeWidth="1" />
-                      <line x1="40" y1="135" x2="760" y2="135" stroke="#f3f4f6" strokeWidth="1" />
-                      <line x1="40" y1="170" x2="760" y2="170" stroke="#f3f4f6" strokeWidth="1" />
-                      <line x1="40" y1="205" x2="760" y2="205" stroke="#f3f4f6" strokeWidth="1" />
+                      <defs>
+                        <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#374151" />
+                          <stop offset="100%" stopColor="#9ca3af" />
+                        </linearGradient>
+                      </defs>
 
-
-
-                      {/* Bottom Date Labels */}
-                      {dashboardStats?.historicalData?.map((d, i) => {
-                        const totalPoints = dashboardStats.historicalData?.length || 1;
-                        const step = 700 / Math.max(totalPoints - 1, 1);
-                        // For 30 days, skip labels to prevent overlap (e.g. show every 4th label and the very last one)
-                        if (totalPoints > 15 && i % 4 !== 0 && i !== totalPoints - 1) return null;
+                      {/* Y-Axis Grid Lines & Labels */}
+                      {yTicks.map((tick, i) => {
+                        const y = topPad + (i * (innerH / 4));
                         return (
-                          <text key={i} x={50 + i * step} y="235" className={styles.axisText} textAnchor="middle">{d.date}</text>
+                          <g key={i}>
+                            <line x1={leftPad} y1={y} x2={chartW - rightPad} y2={y} stroke="#f3f4f6" strokeWidth="1" />
+                            <text x={leftPad - 10} y={y + 4} fill="#9ca3af" fontSize={isMobile ? "20" : "13"} fontWeight="500" textAnchor="end">
+                              {formatYTick(tick)}
+                            </text>
+                          </g>
                         );
                       })}
 
-                      {/* Line 1: Sales (Black Line) */}
-                      <path
-                        d={generateChartPath(dashboardStats?.historicalData || [], "sales", 750, 50, 30, 205)}
-                        fill="none"
-                        stroke="#000000"
-                        strokeWidth="3"
-                      />
-                      
-                      {/* Continuous Tracking Crosshair */}
-                      {hoveredData && (
-                        <>
-                          <line 
-                            x1={hoveredData.x} y1="30" x2={hoveredData.x} y2="205" 
-                            stroke="#d1d5db" strokeWidth="1" strokeDasharray="4 4" 
-                          />
-                          <circle
-                            cx={hoveredData.x} cy={hoveredData.y} r="5"
-                            fill="#000000" stroke="#ffffff" strokeWidth="2"
-                            style={{ pointerEvents: 'none', filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.2))' }}
-                          />
-                        </>
+                      {/* Bars */}
+                      {chartData.map((d, i) => {
+                        const val = d[activeChartMetric] || 0;
+                        const barH = (val / yAxisMax) * innerH;
+                        const x = leftPad + (i * barStep) + (barStep / 2) - (barWidth / 2);
+                        const y = topPad + innerH - barH;
+                        const isHovered = hoveredBarIndex === i;
+                        const isFaded = hoveredBarIndex !== null && hoveredBarIndex !== i;
+                        
+                        return (
+                          <g key={`bar-${i}`}>
+                            {/* X-Axis Label */}
+                            <text 
+                              x={x + barWidth / 2} 
+                              y={chartH - bottomPad + (isMobile ? 30 : 20)} 
+                              fill={isHovered ? "#000" : "#9ca3af"} 
+                              fontWeight={isHovered ? "700" : "500"}
+                              fontSize={isMobile ? "20" : "13"} 
+                              textAnchor="middle"
+                              style={{ transition: 'all 0.2s' }}
+                            >
+                              {d.date.split(" ")[0]}
+                            </text>
+                            
+                            <rect
+                              x={x}
+                              y={y}
+                              width={barWidth}
+                              height={barH}
+                              fill={isHovered ? "#374151" : "url(#barGradient)"}
+                              opacity={isFaded ? 0.3 : 1}
+                              style={{ transition: 'all 0.2s', cursor: 'pointer' }}
+                            />
+                          </g>
+                        );
+                      })}
+
+                      {/* Profit Trend Line (Overlay) */}
+                      {chartData.length > 0 && (
+                        <path
+                          d={chartData.map((d, i) => {
+                            const val = d.profit || 0;
+                            const profitMax = Math.max(...chartData.map(cd => cd.profit || 0), 10);
+                            // Scale trend line proportionally to its own max to remain visible, or scale it to current Y-axis?
+                            // Standard combo charts often scale line relative to Y-axis unless it's a dual axis.
+                            // We will scale it relative to the yAxisMax so it's a true overlay.
+                            const y = topPad + innerH - ((val / yAxisMax) * innerH);
+                            const x = leftPad + (i * barStep) + (barStep / 2);
+                            return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+                          }).join(" ")}
+                          fill="none"
+                          stroke="#10b981"
+                          strokeWidth="2"
+                          strokeDasharray="6 4"
+                          style={{ pointerEvents: 'none' }}
+                        />
                       )}
+
+                      {/* Profit Trend Dots */}
+                      {chartData.map((d, i) => {
+                        const val = d.profit || 0;
+                        const y = topPad + innerH - ((val / yAxisMax) * innerH);
+                        const x = leftPad + (i * barStep) + (barStep / 2);
+                        return (
+                          <circle
+                            key={`dot-${i}`}
+                            cx={x} cy={y} r="4"
+                            fill="#10b981"
+                            style={{ pointerEvents: 'none' }}
+                          />
+                        );
+                      })}
+
                     </svg>
 
-                    {/* Tooltip Overlay */}
-                    {hoveredData && (
+                    {/* Custom Tooltip Overlay */}
+                    {hoveredBarIndex !== null && chartData[hoveredBarIndex] && (
                       <div style={{
                         position: 'absolute',
-                        left: `calc(${(hoveredData.x / 800) * 100}% - 50px)`,
-                        top: `calc(${(hoveredData.y / 240) * 100}% - 50px)`,
-                        backgroundColor: '#111827',
-                        color: '#ffffff',
-                        padding: '8px 12px',
-                        borderRadius: '8px',
-                        fontSize: '12px',
+                        left: `${(leftPad + (hoveredBarIndex * barStep) + (barStep / 2)) / chartW * 100}%`,
+                        top: `${(topPad + innerH - ((chartData[hoveredBarIndex][activeChartMetric] || 0) / yAxisMax) * innerH - 12) / chartH * 100}%`,
+                        transform: 'translate(-50%, -100%)',
+                        backgroundColor: '#000',
+                        color: '#fff',
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        fontWeight: '600',
                         pointerEvents: 'none',
-                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                         zIndex: 10,
                         whiteSpace: 'nowrap',
-                        textAlign: 'center',
-                        transform: 'translateY(-10px)',
-                        transition: 'opacity 0.2s',
-                        border: '1px solid rgba(255,255,255,0.1)'
                       }}>
-                        <div style={{ fontWeight: 600, marginBottom: '2px', color: '#f9fafb' }}>{hoveredData.date}</div>
-                        <div style={{ color: '#10b981', fontWeight: 700, fontSize: '14px' }}>₹{hoveredData.sales.toLocaleString('en-IN')}</div>
+                        ₹{(chartData[hoveredBarIndex][activeChartMetric] || 0).toLocaleString('en-IN')}
                       </div>
                     )}
                   </div>
-                </div>
 
-                {/* Right Top Products Widget */}
-                <div className={styles.topProductsCard}>
-                  <h3 className={styles.topProductsTitle}>Top Products</h3>
-                  <div className={styles.topProductsList}>
-                    {!dashboardStats ? (
-                      <p>Loading products...</p>
-                    ) : dashboardStats.topProducts.length === 0 ? (
-                      <p className={styles.emptyText}>No cataloged entries found.</p>
-                    ) : (
-                      dashboardStats.topProducts.map((item) => (
-                        <div key={item._id} className={styles.topProductItem}>
-                          <img
-                            src={item.imageFront}
-                            alt={item.name}
-                            className={styles.productThumbSmall}
-                          />
-                          <div className={styles.productMetaSmall}>
-                            <span className={styles.productTitleSmall}>{item.name}</span>
-                            <span className={styles.productSalesSmall}>100 Items sold</span>
-                          </div>
-                        </div>
-                      ))
-                    )}
+                  <div className={styles.chartLegendRow}>
+                    <span className={styles.legendText}>
+                      <span className={styles.legendIconSquare} />
+                      {activeChartMetric === "sales" ? "Revenue" : activeChartMetric === "profit" ? "Profit" : "Orders"}
+                    </span>
+                    <span className={styles.legendText}>
+                      <span className={styles.legendIconLine} />
+                      Profit trend
+                    </span>
                   </div>
                 </div>
               </section>

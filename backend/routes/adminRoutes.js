@@ -1,6 +1,6 @@
 import express from "express";
 import Order from "../models/Order.js";
-import { Product } from "../models/Product.js";
+import { Product, ProductVariant } from "../models/Product.js";
 import Customer from "../models/Customer.js";
 import Review from "../models/Review.js";
 
@@ -12,26 +12,27 @@ router.get("/api/admin/dashboard-stats", async (req, res) => {
     let dateFilter = {};
     const now = new Date();
     
+    let startOfToday, startOf7Days, startOf30Days, startOfYear;
     if (timeline === "today") {
-      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       dateFilter = { createdAt: { $gte: startOfToday } };
     } else if (timeline === "7days") {
-      const startOf7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      startOf7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       dateFilter = { createdAt: { $gte: startOf7Days } };
     } else if (timeline === "30days") {
-      const startOf30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      startOf30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
       dateFilter = { createdAt: { $gte: startOf30Days } };
     } else if (timeline === "year") {
-      const startOfYear = new Date(now.getFullYear(), 0, 1);
+      startOfYear = new Date(now.getFullYear(), 0, 1);
       dateFilter = { createdAt: { $gte: startOfYear } };
     }
 
-    const [totalProducts, latestArrivalsCount, bestSellersCount, totalCustomers, orders, topProducts, recentOrders] = await Promise.all([
+    const [totalProducts, latestArrivalsCount, bestSellersCount, allCustomers, allOrders, topProducts, recentOrders, allVariants, allBaseProducts] = await Promise.all([
       Product.countDocuments(),
       Product.countDocuments({ category: "Latest Arrivals" }),
       Product.countDocuments({ category: "Best Seller" }),
-      Customer.countDocuments(dateFilter),
-      Order.find(dateFilter, "totalAmount status deletedByAdmin createdAt cartItems").lean(),
+      Customer.find({}, "createdAt").lean(),
+      Order.find({}, "totalAmount status deletedByAdmin createdAt cartItems").lean(),
       Order.aggregate([
         { $match: { ...dateFilter, deletedByAdmin: false, status: { $nin: ["Cancelled"] } } },
         { $unwind: "$cartItems" },
@@ -43,8 +44,111 @@ router.get("/api/admin/dashboard-stats", async (req, res) => {
         const products = await Product.find({ _id: { $in: productIds } }).lean();
         return topSales.map(t => products.find(p => String(p._id) === String(t._id))).filter(Boolean);
       }),
-      Order.find({ deletedByAdmin: false }).sort({ createdAt: -1 }).limit(5).lean()
+      Order.find({ deletedByAdmin: false }).sort({ createdAt: -1 }).limit(5).lean(),
+      ProductVariant.find({}, "productId size makingPrice").lean(),
+      Product.find({}, "makingPrice").lean()
     ]);
+
+    const orders = allOrders.filter(o => {
+       if (!o.createdAt) return true;
+       const d = new Date(o.createdAt);
+       if (timeline === "today") return d >= startOfToday;
+       if (timeline === "7days") return d >= startOf7Days;
+       if (timeline === "30days") return d >= startOf30Days;
+       if (timeline === "year") return d >= startOfYear;
+       return true;
+    });
+
+    const totalCustomers = allCustomers.filter(c => {
+       if (!c.createdAt) return true;
+       const d = new Date(c.createdAt);
+       if (timeline === "today") return d >= startOfToday;
+       if (timeline === "7days") return d >= startOf7Days;
+       if (timeline === "30days") return d >= startOf30Days;
+       if (timeline === "year") return d >= startOfYear;
+       return true;
+    }).length;
+
+    // ----- EXACT CARD METRICS CALCULATION -----
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+
+    const isValidRevenueOrder = (o) => !o.deletedByAdmin && o.status !== "Cancelled" && o.status !== "Return Approved";
+    const allValidOrdersAllTime = allOrders.filter(isValidRevenueOrder);
+
+    const calcTrueRevenue = (orderList) => {
+       return orderList.reduce((acc, o) => acc + (o.totalAmount || 0), 0);
+    };
+
+    const getMakingPrice = (productId, size) => {
+       const variant = allVariants.find(v => String(v.productId) === String(productId) && v.size === size);
+       if (variant && variant.makingPrice > 0) return variant.makingPrice;
+       const product = allBaseProducts.find(p => String(p._id) === String(productId));
+       if (product && product.makingPrice > 0) return product.makingPrice;
+       return 0;
+    };
+
+    const calcTrueProfit = (orderList) => {
+       return orderList.reduce((acc, o) => {
+          let totalMakingCost = 0;
+          if (o.cartItems && Array.isArray(o.cartItems)) {
+             o.cartItems.forEach(item => {
+                const storedMakingPrice = item.makingPrice || 0;
+                const actualMakingPrice = storedMakingPrice > 0 ? storedMakingPrice : getMakingPrice(item.productId, item.size);
+                totalMakingCost += actualMakingPrice * (item.quantity || 1);
+             });
+          }
+          return acc + (o.totalAmount || 0) - totalMakingCost;
+       }, 0);
+    };
+
+    const totalRevenueAllTime = calcTrueRevenue(allValidOrdersAllTime);
+    
+    const nonDeletedOrdersAllTime = allOrders.filter(o => !o.deletedByAdmin);
+    const totalOrdersAllTime = nonDeletedOrdersAllTime.length;
+
+    const netProfitAllTime = calcTrueProfit(allValidOrdersAllTime);
+    const activeCustomersAllTime = allCustomers.length;
+
+    const thisMonthOrders = allValidOrdersAllTime.filter(o => new Date(o.createdAt) >= currentMonthStart);
+    const lastMonthOrders = allValidOrdersAllTime.filter(o => {
+       const d = new Date(o.createdAt);
+       return d >= lastMonthStart && d <= lastMonthEnd;
+    });
+
+    const revThisMonth = calcTrueRevenue(thisMonthOrders);
+    const revLastMonth = calcTrueRevenue(lastMonthOrders);
+    const revChange = revLastMonth === 0 ? (revThisMonth > 0 ? 100 : 0) : ((revThisMonth - revLastMonth) / revLastMonth) * 100;
+
+    const ordThisMonthOrders = nonDeletedOrdersAllTime.filter(o => new Date(o.createdAt) >= currentMonthStart);
+    const ordLastMonthOrders = nonDeletedOrdersAllTime.filter(o => {
+       const d = new Date(o.createdAt);
+       return d >= lastMonthStart && d <= lastMonthEnd;
+    });
+
+    const ordThisMonth = ordThisMonthOrders.length;
+    const ordLastMonth = ordLastMonthOrders.length;
+    const ordChange = ordLastMonth === 0 ? (ordThisMonth > 0 ? 100 : 0) : ((ordThisMonth - ordLastMonth) / ordLastMonth) * 100;
+
+    const profThisMonth = calcTrueProfit(thisMonthOrders);
+    const profLastMonth = calcTrueProfit(lastMonthOrders);
+    const profChange = profLastMonth === 0 ? (profThisMonth > 0 ? 100 : 0) : ((profThisMonth - profLastMonth) / Math.abs(profLastMonth)) * 100;
+
+    const custThisMonth = allCustomers.filter(c => new Date(c.createdAt) >= currentMonthStart).length;
+    const custLastMonth = allCustomers.filter(c => {
+       const d = new Date(c.createdAt);
+       return d >= lastMonthStart && d <= lastMonthEnd;
+    }).length;
+    const custChange = custLastMonth === 0 ? (custThisMonth > 0 ? 100 : 0) : ((custThisMonth - custLastMonth) / custLastMonth) * 100;
+
+    const cardStats = {
+       totalRevenue: { value: totalRevenueAllTime, change: Number(revChange.toFixed(1)) },
+       totalOrders: { value: totalOrdersAllTime, change: Number(ordChange.toFixed(1)) },
+       netProfit: { value: netProfitAllTime, change: Number(profChange.toFixed(1)) },
+       activeCustomers: { value: activeCustomersAllTime, change: Number(custChange.toFixed(1)) }
+    };
+    // ------------------------------------------
 
     const activeOrders = orders.filter(o => 
       !o.deletedByAdmin && 
@@ -113,14 +217,15 @@ router.get("/api/admin/dashboard-stats", async (req, res) => {
         historicalDataMap[dateString].sales += (o.totalAmount || 0);
         historicalDataMap[dateString].orders += 1;
         
-        let orderProfit = 0;
+        let totalMakingCost = 0;
         if (o.cartItems && Array.isArray(o.cartItems)) {
           o.cartItems.forEach(item => {
-            const itemPrice = item.price || 0;
-            const itemMakingPrice = item.makingPrice || 0;
-            orderProfit += (itemPrice - itemMakingPrice) * (item.quantity || 1);
+            const storedMakingPrice = item.makingPrice || 0;
+            const actualMakingPrice = storedMakingPrice > 0 ? storedMakingPrice : getMakingPrice(item.productId, item.size);
+            totalMakingCost += actualMakingPrice * (item.quantity || 1);
           });
         }
+        const orderProfit = (o.totalAmount || 0) - totalMakingCost;
         historicalDataMap[dateString].profit += orderProfit;
       }
     });
@@ -140,6 +245,7 @@ router.get("/api/admin/dashboard-stats", async (req, res) => {
     }, 0);
 
     res.json({
+      cardStats,
       totalSales: totalSalesCount,
       totalIncome,
       activeOrders: activeOrdersCount,

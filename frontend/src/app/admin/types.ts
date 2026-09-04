@@ -4,6 +4,12 @@ export interface FaqItem {
 }
 
 export interface DashboardStats {
+  cardStats?: {
+    totalRevenue: { value: number; change: number };
+    totalOrders: { value: number; change: number };
+    netProfit: { value: number; change: number };
+    activeCustomers: { value: number; change: number };
+  };
   totalSales: number;
   totalIncome: number;
   activeOrders: number;

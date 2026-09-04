@@ -34,13 +34,32 @@ export default function AdminDashboard() {
   const { authorized } = useAdminAuth();
 
   // Layout State
-  const [timelineFilter, setTimelineFilter] = useState<string>("30days");
+  const [timelineFilter, setTimelineFilter] = useState<string>("year");
   const [activeTab, setActiveTab] = useState<"home" | "orders" | "products" | "customers" | "marketing" | "discounts" | "online-store">("home");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [productsDropdownOpen, setProductsDropdownOpen] = useState<boolean>(false);
   const [ordersDropdownOpen, setOrdersDropdownOpen] = useState<boolean>(false);
   const [onlineStoreDropdownOpen, setOnlineStoreDropdownOpen] = useState<boolean>(false);
   const [activeSubTab, setActiveSubTab] = useState<"all" | "categories" | "cancelled" | "completed" | "returns">("all");
+  
+  // Scroll detection state for mobile header
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        setIsHeaderVisible(false); // scrolling down
+      } else {
+        setIsHeaderVisible(true); // scrolling up
+      }
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
   const [customCategories, setCustomCategories] = useState<string[]>([]);
   const [deletedDefaultCategories, setDeletedDefaultCategories] = useState<string[]>([]);
   const [deleteCategoryTarget, setDeleteCategoryTarget] = useState<string | null>(null);
@@ -2275,25 +2294,24 @@ const getSearchResults = () => {
     <div className={styles.adminPageWrapper}>
       
       {/* Mobile Header */}
-      <div className={styles.mobileHeader}>
+      <div className={`${styles.mobileHeader} ${!isHeaderVisible ? styles.mobileHeaderHidden : ''}`}>
         <span className={styles.brandName}>29sFORMULA</span>
+        <button className={styles.hamburgerBtn} onClick={() => {
+          if (!isMobileMenuOpen) {
+            // Open the dropdown for the active tab, close others
+            setOrdersDropdownOpen(activeTab === "orders");
+            setProductsDropdownOpen(activeTab === "products");
+            setOnlineStoreDropdownOpen(activeTab === "online-store");
+          }
+          setIsMobileMenuOpen(!isMobileMenuOpen);
+        }}>
+          <div className={styles.hamburgerInner}>
+            <div className={`${styles.hamburgerLine} ${isMobileMenuOpen ? styles.hamburgerLineTopOpen : ''}`} />
+            <div className={`${styles.hamburgerLine} ${isMobileMenuOpen ? styles.hamburgerLineMiddleOpen : ''}`} />
+            <div className={`${styles.hamburgerLine} ${isMobileMenuOpen ? styles.hamburgerLineBottomOpen : ''}`} />
+          </div>
+        </button>
       </div>
-
-      <button className={styles.hamburgerBtn} onClick={() => {
-        if (!isMobileMenuOpen) {
-          // Open the dropdown for the active tab, close others
-          setOrdersDropdownOpen(activeTab === "orders");
-          setProductsDropdownOpen(activeTab === "products");
-          setOnlineStoreDropdownOpen(activeTab === "online-store");
-        }
-        setIsMobileMenuOpen(!isMobileMenuOpen);
-      }}>
-        <div className={styles.hamburgerInner}>
-          <div className={`${styles.hamburgerLine} ${isMobileMenuOpen ? styles.hamburgerLineTopOpen : ''}`} />
-          <div className={`${styles.hamburgerLine} ${isMobileMenuOpen ? styles.hamburgerLineMiddleOpen : ''}`} />
-          <div className={`${styles.hamburgerLine} ${isMobileMenuOpen ? styles.hamburgerLineBottomOpen : ''}`} />
-        </div>
-      </button>
 
       {/* Sidebar Overlay for Mobile */}
       {isMobileMenuOpen && (
