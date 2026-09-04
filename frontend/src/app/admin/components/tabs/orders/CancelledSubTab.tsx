@@ -199,7 +199,6 @@ export default function CancelledSubTab({
                         </thead>
                         <tbody>
                           {orders
-                            .filter(o => !o.deletedByAdmin)
                             .filter(o => {
                               if (activeSubTab === "returns") {
                                 return o.status === "Return Requested" || 

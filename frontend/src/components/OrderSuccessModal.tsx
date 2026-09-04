@@ -15,7 +15,8 @@ export default function OrderSuccessModal({ isOpen, orderId, orderDetails, onClo
 
   return (
     <div className={styles.overlay}>
-      <div className={styles.modal} style={{ '--primary-color': primaryColor } as React.CSSProperties}>
+      <div className={styles.modal} style={{ '--primary-color': primaryColor, position: 'relative' } as React.CSSProperties}>
+        <button onClick={onClose} style={{ position: "absolute", top: "16px", right: "16px", background: "none", border: "none", fontSize: "1.5rem", cursor: "pointer", color: "#9ca3af", padding: "4px", lineHeight: 1 }}>✕</button>
         {/* Animated Check Icon */}
         <div className={styles.successIconWrapper}>
           <div className={styles.successCircle}>
@@ -25,8 +26,8 @@ export default function OrderSuccessModal({ isOpen, orderId, orderDetails, onClo
           </div>
         </div>
 
-        <h2 className={styles.title}>ORDER CONFIRMED!</h2>
-        <p className={styles.subtitle}>Thank you for your purchase. Your handcrafted formulation has been registered.</p>
+        <h2 className={styles.title}>ORDER CONFIRMED</h2>
+        <p className={styles.subtitle}>Thank you for your purchase! We have successfully received your order.</p>
 
         {/* Order Details Details Card */}
         <div className={styles.detailsCard}>
@@ -36,11 +37,42 @@ export default function OrderSuccessModal({ isOpen, orderId, orderDetails, onClo
           </div>
           <div className={styles.detailRow}>
             <span className={styles.label}>Deliver To</span>
-            <span className={styles.value}>{orderDetails.customerName}</span>
+            <span className={styles.value}>{orderDetails.customerName ? orderDetails.customerName.charAt(0).toUpperCase() + orderDetails.customerName.slice(1).toLowerCase() : "N/A"}</span>
           </div>
           <div className={styles.detailRow}>
             <span className={styles.label}>Shipping Address</span>
-            <span className={styles.addressText}>{orderDetails.shippingAddress}</span>
+            {(() => {
+              const addr = orderDetails.shippingAddress;
+              if (typeof addr === 'string') {
+                 const parts = addr.split(",").map((s: string) => s.trim());
+                 if (parts.length >= 3) {
+                   const street = parts[0];
+                   const city = parts[1];
+                   const statePin = parts.slice(2).join(", ");
+                   const statePinParts = statePin.split("-");
+                   const state = statePinParts[0].trim();
+                   const pin = statePinParts.length > 1 ? statePinParts[1].trim() : "";
+                   
+                   return (
+                     <span className={styles.addressText} style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                       <span>{street}</span>
+                       <span>{city}, {state}</span>
+                       {pin && <span>{pin}</span>}
+                     </span>
+                   );
+                 }
+                 return <span className={styles.addressText}>{addr}</span>;
+              } else if (addr) {
+                return (
+                  <span className={styles.addressText} style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                    <span>{addr.address}</span>
+                    <span>{addr.city}, {addr.state}</span>
+                    <span>{addr.zip}</span>
+                  </span>
+                );
+              }
+              return <span className={styles.addressText}>N/A</span>;
+            })()}
           </div>
           <div className={styles.detailRow}>
             <span className={styles.label}>Payment Method</span>

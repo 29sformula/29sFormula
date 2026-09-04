@@ -727,6 +727,7 @@
   border-radius: 12px;
   padding: 25px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.01);
+  box-sizing: border-box;
 }
 
 .cardHeaderTitle {
@@ -1017,7 +1018,8 @@
 
 /* 7. Storefront Customizer CMS Styles */
 .customizerContainer {
-  max-width: 800px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .customizerForm {

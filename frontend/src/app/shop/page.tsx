@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 
 import Navbar from "@/components/Navbar/Navbar";
 import CheckoutDrawer from "@/components/CheckoutDrawer";
+import OrderSuccessModal from "@/components/OrderSuccessModal";
 import CustomCheckbox from "@/components/CustomCheckbox/CustomCheckbox";
 
 import NewtonsCradleLoader from "@/components/NewtonsCradleLoader";
@@ -54,6 +55,9 @@ export default function Shop() {
   const [activeDropdown, setActiveDropdown] = useState<"availability" | "price" | "sort" | null>(null);
 
   const [showCheckoutDrawer, setShowCheckoutDrawer] = useState<boolean>(false);
+  const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
+  const [completedOrderId, setCompletedOrderId] = useState<string>("");
+  const [completedOrderDetails, setCompletedOrderDetails] = useState<any>(null);
 
   // Swatches mock highlights per product
   const [activeSwatches, setActiveSwatches] = useState<{ [productId: string]: number }>({});
@@ -928,8 +932,17 @@ export default function Shop() {
           setCartItems([]);
           window.dispatchEvent(new Event("cartUpdated"));
           setShowCheckoutDrawer(false);
-          alert("Order Placed Successfully! Order ID: " + orderId);
+          setCompletedOrderId(orderId);
+          setCompletedOrderDetails(orderDetails);
+          setShowSuccessModal(true);
         }}
+      />
+      <OrderSuccessModal
+        isOpen={showSuccessModal}
+        orderId={completedOrderId}
+        orderDetails={completedOrderDetails}
+        onClose={() => setShowSuccessModal(false)}
+        primaryColor="#d0d0d0"
       />
     </div>
   );

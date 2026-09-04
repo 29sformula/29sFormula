@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 
 import Navbar from "@/components/Navbar/Navbar";
 import CheckoutDrawer from "@/components/CheckoutDrawer";
+import OrderSuccessModal from "@/components/OrderSuccessModal";
 
 interface Order {
   _id: string;
@@ -26,6 +27,8 @@ interface Order {
   totalAmount: number;
   paymentMethod: string;
   status: string;
+  deletedByAdmin?: boolean;
+  cancellationReason?: string;
   refundStatus?: string;
   createdAt: string;
   returnRequest?: {
@@ -60,6 +63,9 @@ export default function TrackOrderPage() {
   const resultsRef = useRef<HTMLDivElement>(null);
   const [showCartDrawer, setShowCartDrawer] = useState(false);
   const [showCheckoutDrawer, setShowCheckoutDrawer] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
+  const [completedOrderId, setCompletedOrderId] = useState<string>("");
+  const [completedOrderDetails, setCompletedOrderDetails] = useState<any>(null);
   const [isCartClosing, setIsCartClosing] = useState(false);
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [isDiscountExpanded, setIsDiscountExpanded] = useState<boolean>(false);
@@ -384,19 +390,58 @@ export default function TrackOrderPage() {
 
                 <div className={styles.timeline}>
                   {order.status === "Cancelled" ? (
-                    <div className={styles.cancelledTimelineRow}>
-                      <div className={styles.cancelledCircle}>✕</div>
-                      <div className={styles.timelineInfo}>
-                        <span className={styles.timelineStepTitle}>ORDER CANCELLED</span>
-                        <span className={styles.timelineStepDesc}>
-                          {order.paymentMethod === "COD" 
-                            ? "This order has been cancelled and will not be dispatched."
-                            : order.refundStatus === "Refunded"
-                              ? "This order has been cancelled. Your refund has been successfully processed and returned to your original payment method."
-                              : "This order has been cancelled. Your refund is pending processing. If you have any questions, please contact support."}
-                        </span>
+                    <>
+                      {/* Step 1: Placed */}
+                      <div className={`${styles.timelineStep} ${styles.stepActive}`}>
+                        <div className={styles.stepCircle}>✓</div>
+                        <div className={styles.stepInfo}>
+                          <span className={styles.stepTitle}>Order Placed</span>
+                          <span className={styles.stepDesc}>Order successfully received.</span>
+                        </div>
                       </div>
-                    </div>
+
+                      <div className={`${styles.stepLine} ${styles.lineActive}`} />
+
+                      {/* Step 2: Cancelled */}
+                      <div className={`${styles.timelineStep} ${styles.stepActive}`}>
+                        <div className={styles.stepCircle}>✓</div>
+                        <div className={styles.stepInfo} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <span className={styles.stepTitle}>{order.deletedByAdmin ? "CANCELLED BY OWNER" : "ORDER CANCELLED"}</span>
+                          <span className={styles.stepDesc}>
+                            {order.paymentMethod === "COD" 
+                              ? "This order has been cancelled and will not be dispatched."
+                              : "This order has been cancelled."}
+                          </span>
+                          {order.cancellationReason && (
+                            <div style={{ marginTop: '8px', padding: '8px 12px', backgroundColor: '#fef2f2', borderLeft: '3px solid #ef4444', borderRadius: '4px' }}>
+                              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#991b1b', display: 'block' }}>Reason for cancellation:</span>
+                              <span style={{ fontSize: '0.85rem', color: '#7f1d1d', marginTop: '2px', display: 'block' }}>{order.cancellationReason}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {order.paymentMethod !== "COD" && (
+                        <>
+                          <div className={`${styles.stepLine} ${order.refundStatus === "Refunded" ? styles.lineActive : ""}`} />
+                          
+                          {/* Step 3: Refund */}
+                          <div className={`${styles.timelineStep} ${order.refundStatus === "Refunded" ? styles.stepActive : ""}`}>
+                            <div className={styles.stepCircle}>
+                              {order.refundStatus === "Refunded" ? "✓" : "3"}
+                            </div>
+                            <div className={styles.stepInfo}>
+                              <span className={styles.stepTitle}>Refund {order.refundStatus === "Refunded" ? "Processed" : "Pending"}</span>
+                              <span className={styles.stepDesc}>
+                                {order.refundStatus === "Refunded" 
+                                  ? "Refund successfully returned to original payment method." 
+                                  : "Refund is pending processing."}
+                              </span>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </>
                   ) : (
                     <>
                       {/* Step 1: Placed */}
@@ -572,7 +617,7 @@ export default function TrackOrderPage() {
                 <div className={styles.detailsGrid}>
                   <div className={styles.detailRow}>
                     <span className={styles.detailLabel}>Order ID:</span>
-                    <span className={styles.orderIdVal}>{order.orderId}</span>
+                    <span className={styles.orderIdVal} style={{ color: '#000000' }}>{order.orderId}</span>
                   </div>
                   <div className={styles.detailRow}>
                     <span className={styles.detailLabel}>Recipient:</span>
@@ -641,7 +686,7 @@ export default function TrackOrderPage() {
                               style={{
                                 background: 'none',
                                 border: 'none',
-                                color: primaryColor,
+                                color: '#4b5563',
                                 cursor: 'pointer',
                                 fontWeight: 700,
                                 textDecoration: 'underline',
@@ -660,10 +705,16 @@ export default function TrackOrderPage() {
                               fontSize: "0.75rem", 
                               fontWeight: 700, 
                               backgroundColor: histOrder.status === "Delivered" ? "#d1fae5" : histOrder.status === "Cancelled" ? "#fee2e2" : "#fef3c7",
-                              color: histOrder.status === "Delivered" ? "#065f46" : histOrder.status === "Cancelled" ? "#991b1b" : "#92400e"
+                              color: histOrder.status === "Delivered" ? "#065f46" : histOrder.status === "Cancelled" ? "#991b1b" : "#92400e",
+                              display: "inline-block"
                             }}>
-                              {histOrder.status}
+                              {histOrder.status === "Cancelled" && histOrder.deletedByAdmin ? "Cancelled by owner" : histOrder.status}
                             </span>
+                            {histOrder.status === "Cancelled" && histOrder.cancellationReason && (
+                              <div style={{ marginTop: '6px', fontSize: '0.75rem', color: '#7f1d1d', backgroundColor: '#fef2f2', padding: '4px 6px', borderRadius: '4px', borderLeft: '2px solid #ef4444' }}>
+                                <span style={{ fontWeight: 600 }}>Reason:</span> {histOrder.cancellationReason}
+                              </div>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -1060,10 +1111,19 @@ export default function TrackOrderPage() {
             setShowCheckoutDrawer(false);
             localStorage.removeItem("cart");
             window.dispatchEvent(new Event("cartUpdated"));
-            alert("Order placed successfully! Order ID: " + orderId);
+            setCompletedOrderId(orderId);
+            setCompletedOrderDetails(orderDetails);
+            setShowSuccessModal(true);
           }}
         />
       )}
+      <OrderSuccessModal
+        isOpen={showSuccessModal}
+        orderId={completedOrderId}
+        orderDetails={completedOrderDetails}
+        onClose={() => setShowSuccessModal(false)}
+        primaryColor={primaryColor}
+      />
 
       <Footer />
     </div>

@@ -4,6 +4,10 @@ import mongoose from "mongoose";
 const orderSchema = new mongoose.Schema({
   orderId: { type: String, required: true, unique: true },
   customerId: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", required: false, index: true },
+  customerName: { type: String },
+  customerEmail: { type: String },
+  customerPhone: { type: String },
+  shippingAddress: { type: mongoose.Schema.Types.Mixed },
   cartItems: [
     {
       productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
@@ -20,7 +24,14 @@ const orderSchema = new mongoose.Schema({
   paymentMethod: { type: String, default: "COD" },
   status: { type: String, default: "Processing" },
   deletedByAdmin: { type: Boolean, default: false },
-  refundStatus: { type: String, default: "Not Refunded" }
+  cancellationReason: { type: String },
+  refundStatus: { type: String, default: "Not Refunded" },
+  timeline: [
+    {
+      event: { type: String, required: true },
+      date: { type: Date, default: Date.now }
+    }
+  ]
 }, { timestamps: true });
 
 const Order = mongoose.models.Order || mongoose.model("Order", orderSchema);

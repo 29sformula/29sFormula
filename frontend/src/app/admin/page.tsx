@@ -217,6 +217,7 @@ export default function AdminDashboard() {
   const [returnStatusAction, setReturnStatusAction] = useState<{ orderId: string, newStatus: string }>({ orderId: "", newStatus: "" });
   const [returnStatusNotes, setReturnStatusNotes] = useState("");
   const [deleteOrderTargetId, setDeleteOrderTargetId] = useState<string | null>(null);
+  const [cancelReasonInput, setCancelReasonInput] = useState<string>("");
   const [isDeletingOrder, setIsDeletingOrder] = useState<boolean>(false);
   const [deleteCustomerTargetId, setDeleteCustomerTargetId] = useState<string | null>(null);
   const [isDeletingCustomer, setIsDeletingCustomer] = useState<boolean>(false);
@@ -1529,13 +1530,19 @@ export default function AdminDashboard() {
     setIsDeletingOrder(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001'}/api/orders/${orderId}`, {
-        method: "DELETE"
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cancellationReason: cancelReasonInput.trim() })
       });
-      if (!res.ok) throw new Error("Failed to delete order");
-      await res.json();
-      setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: "Cancelled", deletedByAdmin: true } : o));
-      setSuccessMessage("Order marked as cancelled and moved to returns");
-      setTimeout(() => setSuccessMessage(null), 3000);
+      if (res.ok) {
+        setOrders(prev => prev.filter(o => o._id !== orderId));
+        setDeleteOrderTargetId(null);
+        setCancelReasonInput("");
+        setSuccessMessage("Order cancelled successfully");
+        setTimeout(() => setSuccessMessage(null), 3000);
+      } else {
+        throw new Error("Failed to delete order");
+      }
     } catch (err: any) {
       alert("Error deleting order: " + err.message);
     } finally {
@@ -2800,15 +2807,35 @@ const getSearchResults = () => {
               <h3>Confirm Delete Order</h3>
             </div>
 
-            <p className={styles.modalDescription}>
-              Are you sure you want to delete this order? It will be removed from the admin panel list, marked as Cancelled, and its stock will be restored.
-            </p>
-
-            <div className={styles.modalActionRow}>
+            <p style={{ margin: "0 0 20px 0", color: "#6b7280", fontSize: "0.95rem" }}>
+                Are you sure you want to cancel this order? This action cannot be undone.
+              </p>
+              <div style={{ marginBottom: "20px", textAlign: "left" }}>
+                <label style={{ display: "block", marginBottom: "8px", fontWeight: 600, color: "#374151" }}>Reason for Cancellation <span style={{color: "#ef4444"}}>*</span></label>
+                <textarea
+                  value={cancelReasonInput}
+                  onChange={(e) => setCancelReasonInput(e.target.value)}
+                  placeholder="e.g. Out of stock, customer requested..."
+                  rows={3}
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "6px",
+                    border: "1px solid #d1d5db",
+                    fontSize: "0.9rem",
+                    fontFamily: "inherit",
+                    resize: "vertical"
+                  }}
+                  required
+                />
+              </div>
+              <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
               <button
                 onClick={() => {
-                  if (deleteOrderTargetId) {
+                  if (deleteOrderTargetId && cancelReasonInput.trim()) {
                     executeDeleteOrder(deleteOrderTargetId);
+                  } else if (!cancelReasonInput.trim()) {
+                    alert("Please provide a reason for cancellation.");
                   }
                 }}
                 disabled={isDeletingOrder}

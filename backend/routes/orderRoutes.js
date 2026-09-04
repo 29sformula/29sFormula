@@ -325,10 +325,15 @@ router.post("/api/orders", async (req, res) => {
     const newOrder = new Order({
       orderId,
       customerId: customer._id,
+      customerName,
+      customerEmail,
+      customerPhone,
+      shippingAddress,
       cartItems: resolvedCartItems,
       totalAmount: secureTotalAmount,
       paymentMethod: paymentMethod || "COD",
-      status: "Processing"
+      status: "Processing",
+      timeline: [{ event: "Order Placed" }]
     });
 
     await newOrder.save();
@@ -384,7 +389,7 @@ router.get("/api/orders", async (req, res) => {
         customerName: customer ? customer.name : (order.customerName || "Unknown Customer"),
         customerEmail: customer ? customer.email : (order.customerEmail || ""),
         customerPhone: customer ? customer.phone : (order.customerPhone || ""),
-        shippingAddress: customer ? customer.address : (order.shippingAddress || ""),
+        shippingAddress: (customer && customer.address) ? customer.address : (order.shippingAddress || ""),
         returnRequest: returnRequestsMap[order._id.toString()] || null
       };
     });
@@ -398,17 +403,30 @@ router.get("/api/orders", async (req, res) => {
 router.put("/api/orders/:id", async (req, res) => {
   try {
     const { status, refundStatus } = req.body;
-    const updateData = {};
-    if (status !== undefined) updateData.status = status;
-    if (refundStatus !== undefined) updateData.refundStatus = refundStatus;
+    const $set = {};
+    const $push = { timeline: { $each: [] } };
+    
+    if (status !== undefined) {
+      $set.status = status;
+      $push.timeline.$each.push({ event: `Order Status updated to ${status}` });
+    }
+    if (refundStatus !== undefined) {
+      $set.refundStatus = refundStatus;
+      $push.timeline.$each.push({ event: `Refund Status updated to ${refundStatus}` });
+    }
 
-    if (Object.keys(updateData).length === 0) {
+    if (Object.keys($set).length === 0) {
       return res.status(400).json({ error: "Fulfillment status or refund status is required" });
+    }
+
+    const updateQuery = { $set };
+    if ($push.timeline.$each.length > 0) {
+      updateQuery.$push = $push;
     }
 
     const updatedOrder = await Order.findByIdAndUpdate(
       req.params.id,
-      updateData,
+      updateQuery,
       { returnDocument: "after" }
     ).populate("customerId").lean();
 
@@ -443,6 +461,7 @@ router.put("/api/orders/:id", async (req, res) => {
 
 router.delete("/api/orders/:id", async (req, res) => {
   try {
+    const { cancellationReason } = req.body;
     const order = await Order.findById(req.params.id);
     if (!order) {
       return res.status(404).json({ error: "Order not found" });
@@ -453,6 +472,16 @@ router.delete("/api/orders/:id", async (req, res) => {
     // Mark as deleted by admin and cancel order
     order.deletedByAdmin = true;
     order.status = "Cancelled";
+    if (cancellationReason) {
+      order.cancellationReason = cancellationReason;
+    }
+    
+    if (!order.timeline) order.timeline = [];
+    const timelineEvent = cancellationReason 
+      ? `Order Cancelled by Admin: ${cancellationReason}`
+      : "Order Cancelled by Admin";
+    order.timeline.push({ event: timelineEvent });
+    
     await order.save();
 
     // Restore stock for variants and base product if not already cancelled
@@ -533,7 +562,7 @@ router.get("/api/orders/track", async (req, res) => {
     currentOrder.customerName = activeCustomer ? activeCustomer.name : (currentOrder.customerName || "Unknown Customer");
     currentOrder.customerEmail = activeCustomer ? activeCustomer.email : (currentOrder.customerEmail || "");
     currentOrder.customerPhone = activeCustomer ? activeCustomer.phone : (currentOrder.customerPhone || "");
-    currentOrder.shippingAddress = activeCustomer ? activeCustomer.address : (currentOrder.shippingAddress || "");
+    currentOrder.shippingAddress = (activeCustomer && activeCustomer.address) ? activeCustomer.address : (currentOrder.shippingAddress || "");
 
     // Fetch full order history (all other orders by this customer)
     if (activeCustomer) {
@@ -567,7 +596,7 @@ router.get("/api/orders/track", async (req, res) => {
         customerName: hCust ? hCust.name : (h.customerName || "Unknown Customer"),
         customerEmail: hCust ? hCust.email : (h.customerEmail || ""),
         customerPhone: hCust ? hCust.phone : (h.customerPhone || ""),
-        shippingAddress: hCust ? hCust.address : (h.shippingAddress || ""),
+        shippingAddress: (hCust && hCust.address) ? hCust.address : (h.shippingAddress || ""),
         returnRequest: historyRetReqsMap[h._id.toString()] || null
       };
     });
@@ -594,6 +623,8 @@ router.post("/api/orders/:id/cancel", async (req, res) => {
     }
 
     order.status = "Cancelled";
+    if (!order.timeline) order.timeline = [];
+    order.timeline.push({ event: "Order Cancelled by Customer" });
     await order.save();
 
     // Restore stock for each product in the cancelled order
@@ -719,6 +750,8 @@ router.put("/api/orders/:id/return-status", async (req, res) => {
       } else if (status === "Rejected") {
         order.status = "Return Rejected";
       }
+      if (!order.timeline) order.timeline = [];
+      order.timeline.push({ event: `Return Request ${status}` });
       await order.save();
 
       // Trigger Return Approved/Rejected Email asynchronously
@@ -829,6 +862,7 @@ router.post("/api/orders/razorpay-verify", async (req, res) => {
         name: orderPayload.customerName,
         email: orderPayload.customerEmail,
         phone: orderPayload.customerPhone,
+        address: orderPayload.shippingAddress,
         totalOrders: 1,
         totalSpend: orderPayload.totalAmount,
       });
@@ -836,6 +870,7 @@ router.post("/api/orders/razorpay-verify", async (req, res) => {
     } else {
       customer.totalOrders += 1;
       customer.totalSpend += orderPayload.totalAmount;
+      if (orderPayload.shippingAddress) customer.address = orderPayload.shippingAddress;
       await customer.save();
     }
 

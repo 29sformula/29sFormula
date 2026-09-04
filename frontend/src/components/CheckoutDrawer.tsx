@@ -75,6 +75,7 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
       const session = localStorage.getItem("userSession");
       if (session) {
         try {
@@ -116,11 +117,13 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
       }
     } else {
       document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
     }
 
     // Cleanup on unmount
     return () => {
       document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
     };
   }, [isOpen]);
 
@@ -464,7 +467,7 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
                   checked={isReturningCustomer}
                   onChange={(e) => setIsReturningCustomer(e.target.checked)}
                   label={<span style={{ fontWeight: 600, fontSize: "0.95rem", color: "#000000" }}>Are you a returning customer? Autofill your details!</span>}
-                  style={{ '--checkbox-color': primaryColor } as React.CSSProperties}
+                  style={{ '--checkbox-color': '#000' } as React.CSSProperties}
                 />
 
               {isReturningCustomer && (
@@ -485,7 +488,7 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
                       onClick={handleAutofill}
                       disabled={isSearching}
                       style={{
-                        backgroundColor: primaryColor,
+                        backgroundColor: "#000",
                         color: "white",
                         border: "none",
                         borderRadius: "4px",
@@ -559,8 +562,8 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
                     alignItems: "center",
                     gap: "6px",
                     background: "none",
-                    border: `1px solid ${primaryColor}`,
-                    color: primaryColor,
+                    border: `1px solid #000`,
+                    color: "#000",
                     padding: "4px 10px",
                     borderRadius: "4px",
                     fontSize: "0.8rem",
@@ -700,7 +703,7 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
                   <button 
                     type="button" 
                     onClick={() => setShowCouponField(true)}
-                    style={{ background: 'none', border: 'none', color: primaryColor, textDecoration: 'underline', cursor: 'pointer', fontSize: '0.85rem', textAlign: 'left', padding: 0 }}
+                    style={{ background: 'none', border: 'none', color: '#000', textDecoration: 'underline', cursor: 'pointer', fontSize: '0.85rem', textAlign: 'left', padding: 0 }}
                   >
                     Have a coupon code?
                   </button>
@@ -723,13 +726,13 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, primaryColo
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                       className={styles.couponInput}
-                      style={{ '--primary-color': primaryColor } as React.CSSProperties}
+                      style={{ '--primary-color': '#000' } as React.CSSProperties}
                     />
                     <button 
                       type="button" 
                       onClick={handleApplyCoupon} 
                       className={styles.couponBtn}
-                      style={{ backgroundColor: primaryColor }}
+                      style={{ backgroundColor: "#000" }}
                     >
                       Apply
                     </button>

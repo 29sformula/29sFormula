@@ -1267,197 +1267,304 @@ export default function AdminModals(props: any) {
       {/* Selected Order Detail Modal */}
       {selectedOrder && (
         <div className={styles.modalOverlay} onClick={() => setSelectedOrder(null)} style={{ display: "flex", alignItems: "center", justifyContent: "center", position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", zIndex: 10000, padding: "20px" }}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: "600px", background: "#fff", borderRadius: "8px", padding: "30px", maxHeight: "90vh", overflowY: "auto", display: "flex", flexDirection: "column" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #eaeaea", paddingBottom: "12px", marginBottom: "20px" }}>
-              <h2 style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0, color: "#111827" }}>Order Details: <span style={{ fontFamily: "monospace", color: "#4f46e5" }}>{selectedOrder.orderId}</span></h2>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: "900px", background: "#fff", borderRadius: "8px", padding: "30px", maxHeight: "90vh", overflowY: "auto", display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "12px", marginBottom: "20px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <span style={{ fontSize: "1.1rem", fontWeight: 400, margin: 0, color: "#000", fontFamily: "monospace" }}>{selectedOrder.orderId}</span>
+                <span style={{
+                  display: "inline-block",
+                  padding: "4px 8px",
+                  borderRadius: "12px",
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  backgroundColor: selectedOrder.status === "Delivered" || (selectedOrder.status === "Return Approved" && !(selectedOrder.returnRequest?.returnType === "Refund" && selectedOrder.refundStatus !== "Refunded")) ? "#eaf7ee" : selectedOrder.status === "Return Rejected" ? "#fef2f2" : selectedOrder.status === "Shipped" ? "#eff6ff" : selectedOrder.status === "Cancelled" ? "#fee2e2" : selectedOrder.status === "Return Approved" ? "#fef3c7" : "#fef3c7",
+                  color: selectedOrder.status === "Delivered" || (selectedOrder.status === "Return Approved" && !(selectedOrder.returnRequest?.returnType === "Refund" && selectedOrder.refundStatus !== "Refunded")) ? "#15803d" : selectedOrder.status === "Return Rejected" ? "#991b1b" : selectedOrder.status === "Shipped" ? "#1d4ed8" : selectedOrder.status === "Cancelled" ? "#ef4444" : selectedOrder.status === "Return Approved" ? "#b45309" : "#b45309"
+                }}>
+                  {selectedOrder.status === "Return Approved" ? (selectedOrder.returnRequest?.returnType === "Refund" && selectedOrder.refundStatus !== "Refunded" ? "Payment Pending" : "Approved") : selectedOrder.status === "Return Rejected" ? "Rejected" : selectedOrder.status}
+                </span>
+              </div>
               <button onClick={() => setSelectedOrder(null)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "#6b7280" }}>✕</button>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px", textAlign: "left" }}>
-              <div>
-                <h3 style={{ fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 8px 0", color: "#888" }}>Customer Information</h3>
-                <p style={{ margin: "4px 0", fontSize: "0.88rem", color: "#111827" }}><strong>Name:</strong> {selectedOrder.customerName}</p>
-                <p style={{ margin: "4px 0", fontSize: "0.88rem", color: "#111827" }}><strong>Email:</strong> {selectedOrder.customerEmail}</p>
-                <p style={{ margin: "4px 0", fontSize: "0.88rem", color: "#111827" }}><strong>Phone:</strong> {selectedOrder.customerPhone}</p>
-                <p style={{ margin: "4px 0", fontSize: "0.88rem", color: "#111827" }}><strong>Shipping Address:</strong> {selectedOrder.shippingAddress}</p>
-              </div>
-
-              <div>
-                <h3 style={{ fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 8px 0", color: "#888" }}>Fulfillment status</h3>
-                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                  <span style={{
-                    display: "inline-block",
-                    padding: "4px 8px",
-                    borderRadius: "12px",
-                    fontSize: "0.75rem",
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    backgroundColor: selectedOrder.status === "Delivered" || (selectedOrder.status === "Return Approved" && !(selectedOrder.returnRequest?.returnType === "Refund" && selectedOrder.refundStatus !== "Refunded")) ? "#eaf7ee" : selectedOrder.status === "Return Rejected" ? "#fef2f2" : selectedOrder.status === "Shipped" ? "#eff6ff" : selectedOrder.status === "Cancelled" ? "#fee2e2" : selectedOrder.status === "Return Approved" ? "#fef3c7" : "#fef3c7",
-                    color: selectedOrder.status === "Delivered" || (selectedOrder.status === "Return Approved" && !(selectedOrder.returnRequest?.returnType === "Refund" && selectedOrder.refundStatus !== "Refunded")) ? "#15803d" : selectedOrder.status === "Return Rejected" ? "#991b1b" : selectedOrder.status === "Shipped" ? "#1d4ed8" : selectedOrder.status === "Cancelled" ? "#ef4444" : selectedOrder.status === "Return Approved" ? "#b45309" : "#b45309"
-                  }}>
-                    {selectedOrder.status === "Return Approved" ? (selectedOrder.returnRequest?.returnType === "Refund" && selectedOrder.refundStatus !== "Refunded" ? "Payment Pending" : "Approved") : selectedOrder.status === "Return Rejected" ? "Rejected" : selectedOrder.status}
-                  </span>
-                  {!["Return Approved", "Return Rejected"].includes(selectedOrder.status) && (
-                    <select
-                      value={selectedOrder.status}
-                      onChange={(e) => handleUpdateOrderStatus(selectedOrder._id, e.target.value)}
-                      style={{ padding: "4px 8px", border: "1px solid #d1d5db", borderRadius: "4px", fontSize: "0.8rem", background: "#fff", cursor: "pointer", color: "#000" }}
-                    >
-                      <option value="Processing">Processing</option>
-                      <option value="Shipped">Shipped</option>
-                      <option value="Delivered">Delivered</option>
-                      <option value="Return Requested">Return Requested</option>
-                      <option value="Returned">Returned</option>
-                      <option value="Cancelled">Cancelled</option>
-                    </select>
-                  )}
-                </div>
-              </div>
-
-              {selectedOrder.paymentMethod !== "COD" && ["Return Requested", "Returned", "Return Approved", "Cancelled"].includes(selectedOrder.status) && (
+            <div style={{ display: "flex", gap: "40px", textAlign: "left", alignItems: "stretch" }}>
+              
+              {/* LEFT COLUMN: Items Purchased & Total */}
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "20px" }}>
                 <div>
-                  <h3 style={{ fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 8px 0", color: "#888" }}>Refund Status</h3>
-                  <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                    <span style={{
-                      display: "inline-block",
-                      padding: "4px 8px",
-                      borderRadius: "12px",
-                      fontSize: "0.75rem",
-                      fontWeight: 700,
-                      textTransform: "uppercase",
-                      backgroundColor: selectedOrder.refundStatus === "Refunded" ? "#eaf7ee" : "#fef2f2",
-                      color: selectedOrder.refundStatus === "Refunded" ? "#15803d" : "#991b1b"
-                    }}>
-                      {selectedOrder.refundStatus || "Not Refunded"}
-                    </span>
-                    <select
-                      value={selectedOrder.refundStatus || "Not Refunded"}
-                      onChange={(e) => handleUpdateRefundStatus(selectedOrder._id, e.target.value)}
-                      style={{ padding: "4px 8px", border: "1px solid #d1d5db", borderRadius: "4px", fontSize: "0.8rem", background: "#fff", cursor: "pointer", color: "#000" }}
-                    >
-                      <option value="Not Refunded">Not Refunded</option>
-                      <option value="Refunded">Refunded</option>
-                    </select>
+                  <h3 style={{ fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 10px 0", color: "#888" }}>Items Purchased</h3>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px", maxHeight: "45vh", overflowY: "auto", paddingRight: "5px" }}>
+                    {selectedOrder.cartItems.map((item: any, idx: number) => (
+                      <div key={idx} style={{ display: "flex", alignItems: "center", gap: "15px", borderBottom: "1px solid #f3f4f6", paddingBottom: "10px" }}>
+                        {item.image && (
+                          <img 
+                            src={item.image} 
+                            alt={item.name} 
+                            style={{ width: "45px", height: "45px", objectFit: "cover", borderRadius: "4px", border: "1px solid #eaeaea" }} 
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                          />
+                        )}
+                        <div style={{ flex: 1 }}>
+                          <h4 style={{ margin: 0, fontSize: "0.85rem", fontWeight: 600, color: "#111" }}>{item.name}</h4>
+                          <div style={{ display: "flex", alignItems: "center", marginTop: "4px", gap: "6px" }}>
+                            <span style={{ fontSize: "0.75rem", color: "#6b7280" }}>Size: {item.size || 'Standard'}</span>
+                            <span style={{ fontSize: "0.75rem", color: "#cbd5e1" }}>|</span>
+                            <span style={{ fontSize: "0.75rem", color: "#6b7280" }}>Qty: {item.quantity}</span>
+                          </div>
+                        </div>
+                        <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#111" }}>₹{(item.price * item.quantity).toLocaleString("en-IN")}.00</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              )}
 
-              <div>
-                <h3 style={{ fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 10px 0", color: "#888" }}>Items Purchased</h3>
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                  {selectedOrder.cartItems.map((item: any, idx: number) => (
-                    <div key={idx} style={{ display: "flex", alignItems: "center", gap: "15px", borderBottom: "1px solid #f3f4f6", paddingBottom: "10px" }}>
-                      {item.image && (
-                        <img 
-                          src={item.image} 
-                          alt={item.name} 
-                          style={{ width: "45px", height: "45px", objectFit: "cover", borderRadius: "4px", border: "1px solid #eaeaea" }} 
-                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                        />
-                      )}
-                      <div style={{ flex: 1 }}>
-                        <h4 style={{ margin: 0, fontSize: "0.85rem", fontWeight: 600, color: "#111" }}>{item.name}</h4>
-                        <span style={{ fontSize: "0.75rem", color: "#6b7280" }}>Volume: {item.size} | Qty: {item.quantity}</span>
-                      </div>
-                      <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#111" }}>₹{(item.price * item.quantity).toLocaleString("en-IN")}.00</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ borderTop: "1px solid #eaeaea", paddingTop: "15px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#111" }}>Total Amount Due ({selectedOrder.paymentMethod})</span>
-                <span style={{ fontSize: "1.05rem", fontWeight: 700, color: "#4f46e5" }}>₹{selectedOrder.totalAmount.toLocaleString("en-IN")}.00</span>
-              </div>
-
-              {/* ORDER TIMELINE */}
-              <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px dashed #e5e7eb" }}>
-                <h3 style={{ fontSize: "0.85rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 16px 0", color: "#6b7280" }}>Order Timeline</h3>
-                
-                <div style={{ display: "flex", flexDirection: "column", gap: "16px", position: "relative", paddingLeft: "10px" }}>
-                  <div style={{ position: "absolute", left: "14px", top: "4px", bottom: "4px", width: "2px", backgroundColor: "#e5e7eb", zIndex: 0 }}></div>
+                <div style={{ borderTop: "1px solid #eaeaea", paddingTop: "15px", display: "flex", flexDirection: "column", gap: "8px", marginTop: "auto" }}>
+                  <h3 style={{ fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 4px 0", color: "#888" }}>Total Amount</h3>
                   
-                  {/* Order Placed */}
-                  <div style={{ display: "flex", gap: "12px", position: "relative", zIndex: 1 }}>
-                    <div style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#10b981", marginTop: "4px", flexShrink: 0, boxShadow: "0 0 0 3px #fff, 0 0 0 4px #10b981" }}></div>
-                    <div>
-                      <p style={{ margin: 0, fontSize: "0.85rem", fontWeight: 600, color: "#111827" }}>Order Placed</p>
-                      <p style={{ margin: "2px 0 0 0", fontSize: "0.75rem", color: "#6b7280" }}>{new Date(selectedOrder.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</p>
+                  {(() => {
+                    const originalTotal = selectedOrder.cartItems.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
+                    const discount = originalTotal - selectedOrder.totalAmount;
+                    
+                    return (
+                      <>
+                        {discount > 0 && (
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span style={{ fontSize: "0.85rem", color: "#6b7280" }}>Subtotal</span>
+                            <span style={{ fontSize: "0.85rem", color: "#111" }}>₹{originalTotal.toLocaleString("en-IN")}.00</span>
+                          </div>
+                        )}
+                        
+                        {discount > 0 && (
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span style={{ fontSize: "0.85rem", color: "#10b981", display: "flex", alignItems: "center", gap: "6px" }}>
+                              <span style={{ padding: "2px 6px", backgroundColor: "#eaf7ee", borderRadius: "4px", fontWeight: 700, fontSize: "0.7rem", border: "1px solid #bbf7d0" }}>COUPON APPLIED</span>
+                              Discount
+                            </span>
+                            <span style={{ fontSize: "0.85rem", color: "#10b981", fontWeight: 700 }}>-₹{discount.toLocaleString("en-IN")}.00</span>
+                          </div>
+                        )}
+                        
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: discount > 0 ? "4px" : "0" }}>
+                          <span style={{ fontSize: "0.85rem", color: "#111", fontWeight: 500 }}>
+                            Paid via {selectedOrder.paymentMethod === "Razorpay" ? "Online" : selectedOrder.paymentMethod}
+                          </span>
+                          <span style={{ fontSize: "1.1rem", fontWeight: 400, color: "#000" }}>₹{selectedOrder.totalAmount.toLocaleString("en-IN")}.00</span>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* VERTICAL DIVIDER */}
+              <div style={{ width: "1px", backgroundColor: "#e5e7eb", margin: "0", flexShrink: 0 }}></div>
+
+              {/* RIGHT COLUMN: Info, Status & Timeline */}
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "20px" }}>
+                <div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                      <span style={{ fontSize: "1.76rem", color: "#111827", fontWeight: 700 }}>
+                        {selectedOrder.customerName ? selectedOrder.customerName.charAt(0).toUpperCase() + selectedOrder.customerName.slice(1).toLowerCase() : "N/A"}
+                      </span>
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                      <span style={{ fontSize: "0.88rem", color: "#111827" }}>{selectedOrder.customerEmail}</span>
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                      <span style={{ fontSize: "0.88rem", color: "#111827" }}>{selectedOrder.customerPhone}</span>
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: "3px", flexShrink: 0 }}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                      <span style={{ fontSize: "0.88rem", color: "#111827", lineHeight: "1.4" }}>
+                        {typeof selectedOrder.shippingAddress === 'string' 
+                          ? selectedOrder.shippingAddress 
+                          : (selectedOrder.shippingAddress 
+                              ? `${selectedOrder.shippingAddress.fullName || ''}, ${selectedOrder.shippingAddress.address || ''}, ${selectedOrder.shippingAddress.city || ''}, ${selectedOrder.shippingAddress.state || ''} ${selectedOrder.shippingAddress.zip || ''}`.replace(/(^[,\s]+)|([,\s]+$)/g, '')
+                              : "N/A"
+                            )
+                        }
+                      </span>
                     </div>
                   </div>
+                </div>
 
-                  {/* Shipped */}
-                  {(selectedOrder.status !== "Cancelled") && (
-                    <div style={{ display: "flex", gap: "12px", position: "relative", zIndex: 1 }}>
-                      <div style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: ["Shipped", "Delivered", "Return Requested", "Returned", "Return Approved", "Return Rejected"].includes(selectedOrder.status) ? "#10b981" : "#e5e7eb", marginTop: "4px", flexShrink: 0, boxShadow: ["Shipped", "Delivered", "Return Requested", "Returned", "Return Approved", "Return Rejected"].includes(selectedOrder.status) ? "0 0 0 3px #fff, 0 0 0 4px #10b981" : "0 0 0 3px #fff" }}></div>
-                      <div>
-                        <p style={{ margin: 0, fontSize: "0.85rem", fontWeight: 600, color: ["Shipped", "Delivered", "Return Requested", "Returned", "Return Approved", "Return Rejected"].includes(selectedOrder.status) ? "#111827" : "#9ca3af" }}>Shipped</p>
-                        {["Shipped", "Delivered", "Return Requested", "Returned", "Return Approved", "Return Rejected"].includes(selectedOrder.status) && (
-                          <p style={{ margin: "2px 0 0 0", fontSize: "0.75rem", color: "#6b7280" }}>{new Date(selectedOrder.updatedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</p>
-                        )}
-                      </div>
+                <div>
+                  <h3 style={{ fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 8px 0", color: "#888" }}>Update Status</h3>
+                  <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                    {!["Return Approved", "Return Rejected"].includes(selectedOrder.status) ? (
+                      <select
+                        value={selectedOrder.status}
+                        onChange={(e) => handleUpdateOrderStatus(selectedOrder._id, e.target.value)}
+                        style={{ padding: "6px 10px", border: "1px solid #d1d5db", borderRadius: "4px", fontSize: "0.85rem", background: "#fff", cursor: "pointer", color: "#000" }}
+                      >
+                        <option value="Processing">Processing</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Return Requested">Return Requested</option>
+                        <option value="Returned">Returned</option>
+                        <option value="Cancelled">Cancelled</option>
+                      </select>
+                    ) : (
+                      <span style={{ fontSize: "0.85rem", color: "#6b7280", fontStyle: "italic" }}>Status locked ({selectedOrder.status})</span>
+                    )}
+                  </div>
+                </div>
+
+                {selectedOrder.paymentMethod !== "COD" && ["Return Requested", "Returned", "Return Approved", "Cancelled"].includes(selectedOrder.status) && (
+                  <div>
+                    <h3 style={{ fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 8px 0", color: "#888" }}>Refund Status</h3>
+                    <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                      <span style={{
+                        display: "inline-block",
+                        padding: "4px 8px",
+                        borderRadius: "12px",
+                        fontSize: "0.75rem",
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        backgroundColor: selectedOrder.refundStatus === "Refunded" ? "#eaf7ee" : "#fef2f2",
+                        color: selectedOrder.refundStatus === "Refunded" ? "#15803d" : "#991b1b"
+                      }}>
+                        {selectedOrder.refundStatus || "Not Refunded"}
+                      </span>
+                      <select
+                        value={selectedOrder.refundStatus || "Not Refunded"}
+                        onChange={(e) => handleUpdateRefundStatus(selectedOrder._id, e.target.value)}
+                        style={{ padding: "6px 10px", border: "1px solid #d1d5db", borderRadius: "4px", fontSize: "0.85rem", background: "#fff", cursor: "pointer", color: "#000" }}
+                      >
+                        <option value="Not Refunded">Not Refunded</option>
+                        <option value="Refunded">Refunded</option>
+                      </select>
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {/* Delivered */}
-                  {(selectedOrder.status !== "Cancelled") && (
-                    <div style={{ display: "flex", gap: "12px", position: "relative", zIndex: 1 }}>
-                      <div style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: ["Delivered", "Return Requested", "Returned", "Return Approved", "Return Rejected"].includes(selectedOrder.status) ? "#10b981" : "#e5e7eb", marginTop: "4px", flexShrink: 0, boxShadow: ["Delivered", "Return Requested", "Returned", "Return Approved", "Return Rejected"].includes(selectedOrder.status) ? "0 0 0 3px #fff, 0 0 0 4px #10b981" : "0 0 0 3px #fff" }}></div>
-                      <div>
-                        <p style={{ margin: 0, fontSize: "0.85rem", fontWeight: 600, color: ["Delivered", "Return Requested", "Returned", "Return Approved", "Return Rejected"].includes(selectedOrder.status) ? "#111827" : "#9ca3af" }}>Delivered</p>
-                        {["Delivered", "Return Requested", "Returned", "Return Approved", "Return Rejected"].includes(selectedOrder.status) && (
-                          <p style={{ margin: "2px 0 0 0", fontSize: "0.75rem", color: "#6b7280" }}>{new Date(selectedOrder.updatedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</p>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                {/* ORDER TIMELINE */}
+                <div style={{ marginTop: "10px", paddingTop: "20px", borderTop: "1px dashed #e5e7eb" }}>
+                  <h3 style={{ fontSize: "0.85rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 16px 0", color: "#6b7280" }}>Order Timeline</h3>
+                  
+                  <div style={{ maxHeight: "40vh", overflowY: "auto", paddingRight: "5px" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "16px", position: "relative", paddingLeft: "10px" }}>
+                      <div style={{ position: "absolute", left: "14px", top: "4px", bottom: "4px", width: "2px", backgroundColor: "#e5e7eb", zIndex: 0 }}></div>
+                    {(() => {
+                      const allEvents: any[] = [];
+                      const statusIndex = ["Processing", "Shipped", "Delivered"].indexOf(selectedOrder.status);
+                      
+                      // 1. Order Placed
+                      allEvents.push({
+                        event: "Order Placed",
+                        date: selectedOrder.createdAt || new Date().toISOString(),
+                        color: "#10b981"
+                      });
+                      
+                      const hasEvent = (match: string) => selectedOrder.timeline?.some((e: any) => e.event.toLowerCase().includes(match.toLowerCase()));
 
-                  {/* Cancelled */}
-                  {(selectedOrder.status === "Cancelled") && (
-                    <div style={{ display: "flex", gap: "12px", position: "relative", zIndex: 1 }}>
-                      <div style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#ef4444", marginTop: "4px", flexShrink: 0, boxShadow: "0 0 0 3px #fff, 0 0 0 4px #ef4444" }}></div>
-                      <div>
-                        <p style={{ margin: 0, fontSize: "0.85rem", fontWeight: 600, color: "#111827" }}>Cancelled</p>
-                        <p style={{ margin: "2px 0 0 0", fontSize: "0.75rem", color: "#6b7280" }}>{new Date(selectedOrder.updatedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</p>
-                      </div>
-                    </div>
-                  )}
+                      // 2. Processing (if not explicitly in custom timeline)
+                      if (statusIndex >= 0 || selectedOrder.status === "Cancelled" || selectedOrder.returnRequest) {
+                        if (!hasEvent("processing")) {
+                          allEvents.push({
+                            event: "Processing",
+                            date: selectedOrder.createdAt, 
+                            color: "#10b981"
+                          });
+                        }
+                      }
 
-                  {/* Returns & Refunds */}
-                  {selectedOrder.returnRequest && (
-                    <>
-                      {/* Return Requested */}
-                      <div style={{ display: "flex", gap: "12px", position: "relative", zIndex: 1 }}>
-                        <div style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#f59e0b", marginTop: "4px", flexShrink: 0, boxShadow: "0 0 0 3px #fff, 0 0 0 4px #f59e0b" }}></div>
-                        <div>
-                          <p style={{ margin: 0, fontSize: "0.85rem", fontWeight: 600, color: "#111827" }}>Return Requested</p>
-                          <p style={{ margin: "2px 0 0 0", fontSize: "0.75rem", color: "#6b7280" }}>{new Date(selectedOrder.returnRequest.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</p>
-                        </div>
-                      </div>
+                      // 3. Shipped
+                      if (statusIndex >= 1 || selectedOrder.returnRequest) {
+                        if (!hasEvent("shipped")) {
+                          allEvents.push({
+                            event: "Shipped",
+                            date: selectedOrder.updatedAt,
+                            color: "#10b981"
+                          });
+                        }
+                      }
 
-                      {/* Return Approved/Rejected */}
-                      {selectedOrder.returnRequest.status !== "Pending" && (
-                        <div style={{ display: "flex", gap: "12px", position: "relative", zIndex: 1 }}>
-                          <div style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: selectedOrder.returnRequest.status === "Approved" ? "#10b981" : "#ef4444", marginTop: "4px", flexShrink: 0, boxShadow: `0 0 0 3px #fff, 0 0 0 4px ${selectedOrder.returnRequest.status === "Approved" ? "#10b981" : "#ef4444"}` }}></div>
+                      // 4. Delivered
+                      if (statusIndex >= 2 || selectedOrder.returnRequest) {
+                        if (!hasEvent("delivered")) {
+                          allEvents.push({
+                            event: "Delivered",
+                            date: selectedOrder.updatedAt,
+                            color: "#10b981"
+                          });
+                        }
+                      }
+
+                      // 5. Add all custom events from DB (Cancelled, manual status updates)
+                      if (selectedOrder.timeline && selectedOrder.timeline.length > 0) {
+                        selectedOrder.timeline.forEach((e: any) => {
+                          if (e.event === "Order Placed") return; // Skip dup
+                          
+                          let color = "#10b981"; 
+                          if (e.event.toLowerCase().includes("cancelled") || e.event.toLowerCase().includes("rejected") || e.event.toLowerCase().includes("failed")) {
+                            color = "#ef4444"; 
+                          } else if (e.event.toLowerCase().includes("return request") || e.event.toLowerCase().includes("pending")) {
+                            color = "#f59e0b"; 
+                          }
+                          
+                          allEvents.push({
+                            event: e.event,
+                            date: e.date || selectedOrder.updatedAt,
+                            color
+                          });
+                        });
+                      }
+
+                      // 6. Legacy Return Support (if not in timeline)
+                      if (selectedOrder.returnRequest && !hasEvent("return request")) {
+                        allEvents.push({
+                          event: "Return Requested",
+                          date: selectedOrder.returnRequest.createdAt,
+                          color: "#f59e0b"
+                        });
+                        if (selectedOrder.returnRequest.status !== "Pending") {
+                           allEvents.push({
+                             event: `Return ${selectedOrder.returnRequest.status}`,
+                             date: selectedOrder.returnRequest.updatedAt,
+                             color: selectedOrder.returnRequest.status === "Approved" ? "#10b981" : "#ef4444"
+                           });
+                        }
+                      }
+                      
+                      // 7. Refund Status Support
+                      if (selectedOrder.refundStatus === "Refunded" && !hasEvent("refund")) {
+                        allEvents.push({
+                          event: "Refund Processed",
+                          date: selectedOrder.updatedAt, // Ideally the time the refund was issued, fallback to updatedAt
+                          color: "#10b981"
+                        });
+                      } else if (selectedOrder.refundStatus === "Pending" && !hasEvent("refund")) {
+                         allEvents.push({
+                          event: "Refund Pending",
+                          date: selectedOrder.updatedAt,
+                          color: "#f59e0b"
+                        });
+                      }
+
+                      // Sort chronologically
+                      allEvents.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+                      return allEvents.map((event, idx) => (
+                        <div key={idx} style={{ display: "flex", gap: "12px", position: "relative", zIndex: 1 }}>
+                          <div style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: event.color, marginTop: "4px", flexShrink: 0, boxShadow: `0 0 0 3px #fff, 0 0 0 4px ${event.color}` }}></div>
                           <div>
-                            <p style={{ margin: 0, fontSize: "0.85rem", fontWeight: 600, color: "#111827" }}>Return {selectedOrder.returnRequest.status}</p>
-                            <p style={{ margin: "2px 0 0 0", fontSize: "0.75rem", color: "#6b7280" }}>{new Date(selectedOrder.returnRequest.updatedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</p>
+                            <p style={{ margin: 0, fontSize: "0.85rem", fontWeight: 600, color: "#111827" }}>{event.event}</p>
+                            <p style={{ margin: "2px 0 0 0", fontSize: "0.75rem", color: "#6b7280" }}>
+                              {new Date(event.date).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
+                            </p>
                           </div>
                         </div>
-                      )}
-
-                      {/* Refunded */}
-                      {selectedOrder.refundStatus === "Refunded" && (
-                        <div style={{ display: "flex", gap: "12px", position: "relative", zIndex: 1 }}>
-                          <div style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#10b981", marginTop: "4px", flexShrink: 0, boxShadow: "0 0 0 3px #fff, 0 0 0 4px #10b981" }}></div>
-                          <div>
-                            <p style={{ margin: 0, fontSize: "0.85rem", fontWeight: 600, color: "#111827" }}>Refund Issued</p>
-                            <p style={{ margin: "2px 0 0 0", fontSize: "0.75rem", color: "#6b7280" }}>{new Date(selectedOrder.updatedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</p>
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  )}
+                      ));
+                    })()}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
