@@ -88,6 +88,7 @@ export default function HomeTab({
   const [activeChartMetric, setActiveChartMetric] = useState<"sales" | "profit" | "orders">("sales");
   const [hoveredBarIndex, setHoveredBarIndex] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [mobileFilter, setMobileFilter] = useState("All");
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 600);
@@ -474,16 +475,44 @@ export default function HomeTab({
               {/* Recent Orders Table */}
               <section className={styles.chartPanelGrid} style={{ marginTop: '24px', display: 'block' }}>
                 <div className={styles.chartContainerCard}>
-                  <div className={styles.chartHeader} style={{ borderBottom: '1px solid #f3f4f6', paddingBottom: '16px', marginBottom: '16px' }}>
+                  <div className={`${styles.chartHeader} ${styles.desktopHeaderContainer}`} style={{ borderBottom: '1px solid #f3f4f6', paddingBottom: '16px', marginBottom: '16px' }}>
                     <div className={styles.chartHeaderLeft}>
                       <span className={styles.chartHeaderLabel}>Latest orders</span>
                     </div>
                     <button 
                       onClick={() => { setActiveTab("orders"); setActiveSubTab("all"); }}
-                      style={{ background: 'transparent', border: 'none', color: '#4f46e5', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}
+                      style={{ background: 'transparent', border: 'none', color: '#000', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}
                     >
                       View All
                     </button>
+                  </div>
+
+                  <div className={styles.mobileHeaderContainer}>
+                    <div className={styles.mobileTitleRow}>
+                      <div>
+                        <h1 className={styles.mobileTitle}>Latest Orders</h1>
+                        <div className={styles.mobileSubtitle}>{dashboardStats?.recentOrders?.length || 0} orders</div>
+                      </div>
+                      <button className={styles.mobileRefreshBtn} onClick={() => {}}>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: "20px", height: "20px" }}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                        </svg>
+                      </button>
+                    </div>
+                    
+                    <div className={styles.mobileFiltersScroll}>
+                      <div className={`${styles.mobileFilterPill} ${mobileFilter === 'All' ? styles.mobileFilterPillActive : ''}`} onClick={() => setMobileFilter('All')}>
+                        All <span className={styles.mobileFilterCount}>{dashboardStats?.recentOrders?.length || 0}</span>
+                      </div>
+                      <div className={`${styles.mobileFilterPill} ${mobileFilter === 'Delivered' ? styles.mobileFilterPillActive : ''}`} onClick={() => setMobileFilter('Delivered')}>
+                        <div className={styles.mobileStatusDot} style={{ backgroundColor: '#166534' }}></div>
+                        Delivered <span className={styles.mobileFilterCount}>{dashboardStats?.recentOrders?.filter((o:any)=>o.status==='Delivered').length || 0}</span>
+                      </div>
+                      <div className={`${styles.mobileFilterPill} ${mobileFilter === 'Processing' ? styles.mobileFilterPillActive : ''}`} onClick={() => setMobileFilter('Processing')}>
+                        <div className={styles.mobileStatusDot} style={{ backgroundColor: '#b45309' }}></div>
+                        Processing <span className={styles.mobileFilterCount}>{dashboardStats?.recentOrders?.filter((o:any)=>o.status==='Processing').length || 0}</span>
+                      </div>
+                    </div>
                   </div>
                   
                   <div style={{ overflowX: 'auto' }}>
@@ -505,7 +534,7 @@ export default function HomeTab({
                         ) : !dashboardStats.recentOrders || dashboardStats.recentOrders.length === 0 ? (
                           <tr><td colSpan={7} style={{ padding: '16px', textAlign: 'center', color: '#6b7280' }}>No latest orders found.</td></tr>
                         ) : (
-                          dashboardStats.recentOrders.map((order: any) => (
+                          (mobileFilter === "All" ? dashboardStats.recentOrders : dashboardStats.recentOrders.filter((o:any) => o.status === mobileFilter)).map((order: any) => (
                             <React.Fragment key={order._id}>
                             <tr 
                               className={styles.desktopRow}
@@ -513,7 +542,7 @@ export default function HomeTab({
                               onClick={() => setSelectedOrder(order)}
                             >
                               <td style={{ padding: '12px 16px', fontSize: '12px', color: '#374151', verticalAlign: 'top' }}>
-                                {order.orderId ? (order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId) : `ORD-${order._id.substring(order._id.length - 4).toUpperCase()}`}
+                                #{order.orderId ? (order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId) : `ORD-${order._id.substring(order._id.length - 4).toUpperCase()}`}
                               </td>
                               <td style={{ padding: '12px 16px', fontSize: '14px', color: '#000', textTransform: 'capitalize', verticalAlign: 'top' }}>
                                 {order.customerName ? order.customerName.toLowerCase() : "N/A"}
@@ -555,7 +584,7 @@ export default function HomeTab({
                                 <div className={styles.mobileCardContainer}>
                                   <div className={styles.mobileCardHeader}>
                                     <div>
-                                      <div className={styles.mobileCustomerName}>{order.customerName ? order.customerName : "N/A"}</div>
+                                      <div className={styles.mobileCustomerName}>{order.customerName ? order.customerName.toLowerCase() : "N/A"}</div>
                                       <div className={styles.mobileOrderMeta}>
                                         #{order.orderId ? (order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId) : `ORD-${order._id.substring(order._id.length - 4).toUpperCase()}`} · {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                       </div>

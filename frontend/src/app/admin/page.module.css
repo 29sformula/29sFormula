@@ -1844,6 +1844,7 @@
   font-weight: 700;
   color: #000;
   margin-bottom: 4px;
+  text-transform: capitalize;
 }
 
 .mobileOrderMeta {
@@ -1862,11 +1863,11 @@
 .mobileStatusBadge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   padding: 4px 10px;
-  border-radius: 12px;
+  border-radius: 9999px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .mobileStatusDot {
@@ -1903,4 +1904,104 @@
 .mobileItemsSummary {
   font-size: 13px;
   color: #9ca3af;
+}
+
+.mobileHeaderContainer {
+  display: none;
+}
+.desktopHeaderContainer {
+  display: flex;
+}
+
+@media (max-width: 768px) {
+  .mobileHeaderContainer {
+    display: flex !important;
+    flex-direction: column;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .desktopHeaderContainer {
+    display: none !important;
+  }
+}
+
+.mobileTitleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.mobileTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #000;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.mobileSubtitle {
+  font-size: 14px;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+.mobileRefreshBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.mobileFiltersScroll {
+  display: flex;
+  overflow-x: auto;
+  gap: 8px;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.mobileFiltersScroll::-webkit-scrollbar {
+  display: none;
+}
+
+.mobileFilterPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  color: #4b5563;
+}
+.mobileFilterPillActive {
+  background: #000 !important;
+  color: #fff !important;
+  border-color: #000 !important;
+}
+
+.mobileFilterCount {
+  color: #9ca3af;
+}
+.mobileFilterPillActive .mobileFilterCount {
+  color: #d1d5db;
+}
+
+@media (max-width: 768px) {
+  .chartContainerCard {
+    padding: 16px !important;
+  }
+  .dashboardCard {
+    padding: 16px !important;
+  }
 }

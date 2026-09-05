@@ -49,7 +49,7 @@ export default function CompletedSubTab({
 
   return (
             <div className={styles.viewContainer} style={{ gap: "16px", marginTop: "-12px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "15px" }}>
+              <div className={styles.desktopHeaderContainer} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "15px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   {activeSubTab === "returns" ? (
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "22px", height: "22px", color: "#000" }}>
@@ -164,8 +164,63 @@ export default function CompletedSubTab({
                 </div>
               </div>
 
+              
+              
+
               <div className={styles.tablePanelFull}>
                 <div className={styles.dashboardCard}>
+<div className={styles.mobileHeaderContainer}>
+                <div className={styles.mobileTitleRow}>
+                  <div>
+                    <h1 className={styles.mobileTitle}>
+                      {activeSubTab === "returns" ? "Return Requests" : activeSubTab === "cancelled" ? "Cancelled" : activeSubTab === "completed" ? "Completed" : "Active Orders"}
+                    </h1>
+                    <div className={styles.mobileSubtitle}>{orders.length} orders</div>
+                  </div>
+                  <button className={styles.mobileRefreshBtn} onClick={fetchOrders}>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: "20px", height: "20px" }}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <div className={styles.mobileFiltersScroll}>
+                  {activeSubTab === "cancelled" ? (
+                    <>
+                      <div className={`${styles.mobileFilterPill} ${refundStatusFilter === 'All' ? styles.mobileFilterPillActive : ''}`} onClick={() => setRefundStatusFilter('All')}>
+                        All <span className={styles.mobileFilterCount}>{orders.length}</span>
+                      </div>
+                      <div className={`${styles.mobileFilterPill} ${refundStatusFilter === 'Refunded' ? styles.mobileFilterPillActive : ''}`} onClick={() => setRefundStatusFilter('Refunded')}>
+                        <div className={styles.mobileStatusDot} style={{ backgroundColor: '#166534' }}></div>
+                        Refunded <span className={styles.mobileFilterCount}>{orders.filter((o:any)=>(o.refundStatus || "Not Refunded")==='Refunded').length}</span>
+                      </div>
+                      <div className={`${styles.mobileFilterPill} ${refundStatusFilter === 'Not Refunded' ? styles.mobileFilterPillActive : ''}`} onClick={() => setRefundStatusFilter('Not Refunded')}>
+                        <div className={styles.mobileStatusDot} style={{ backgroundColor: '#b91c1c' }}></div>
+                        Not Refunded <span className={styles.mobileFilterCount}>{orders.filter((o:any)=>(o.refundStatus || "Not Refunded")==='Not Refunded').length}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className={`${styles.mobileFilterPill} ${orderStatusFilter === 'All' ? styles.mobileFilterPillActive : ''}`} onClick={() => setOrderStatusFilter('All')}>
+                        All <span className={styles.mobileFilterCount}>{orders.length}</span>
+                      </div>
+                      <div className={`${styles.mobileFilterPill} ${orderStatusFilter === 'Processing' ? styles.mobileFilterPillActive : ''}`} onClick={() => setOrderStatusFilter('Processing')}>
+                        <div className={styles.mobileStatusDot} style={{ backgroundColor: '#b45309' }}></div>
+                        Processing <span className={styles.mobileFilterCount}>{orders.filter((o:any)=>o.status==='Processing').length}</span>
+                      </div>
+                      <div className={`${styles.mobileFilterPill} ${orderStatusFilter === 'Shipped' ? styles.mobileFilterPillActive : ''}`} onClick={() => setOrderStatusFilter('Shipped')}>
+                        <div className={styles.mobileStatusDot} style={{ backgroundColor: '#4338ca' }}></div>
+                        Shipped <span className={styles.mobileFilterCount}>{orders.filter((o:any)=>o.status==='Shipped').length}</span>
+                      </div>
+                      <div className={`${styles.mobileFilterPill} ${orderStatusFilter === 'Delivered' ? styles.mobileFilterPillActive : ''}`} onClick={() => setOrderStatusFilter('Delivered')}>
+                        <div className={styles.mobileStatusDot} style={{ backgroundColor: '#166534' }}></div>
+                        Delivered <span className={styles.mobileFilterCount}>{orders.filter((o:any)=>o.status==='Delivered').length}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
 
 
                   {orders.length === 0 ? (
@@ -239,7 +294,7 @@ export default function CompletedSubTab({
                                   <React.Fragment key={order._id}>
                                 <tr className={styles.desktopRow} style={{ borderBottom: '1px solid #f9fafb', cursor: 'pointer' }} onClick={() => setSelectedOrder(order)}>
                                     <td>
-                                      <span style={{ fontSize: '12px', color: '#374151' }}>{order.orderId ? (order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId) : order._id.substring(order._id.length - 4)}</span>
+                                      <span style={{ fontSize: '12px', color: '#374151' }}>#{order.orderId ? (order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId) : order._id.substring(order._id.length - 4)}</span>
                                     </td>
                                     <td>
                                       <span style={{ fontSize: '14px', color: '#000', textTransform: 'capitalize' }}>{order.customerName ? order.customerName.toLowerCase() : "N/A"}</span>
@@ -365,7 +420,7 @@ export default function CompletedSubTab({
                                       <div className={styles.mobileCardContainer}>
                                         <div className={styles.mobileCardHeader}>
                                           <div>
-                                            <div className={styles.mobileCustomerName}>{order.customerName ? order.customerName : "N/A"}</div>
+                                            <div className={styles.mobileCustomerName}>{order.customerName ? order.customerName.toLowerCase() : "N/A"}</div>
                                             <div className={styles.mobileOrderMeta}>
                                               #{order.orderId ? (order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId) : `ORD-${order._id.substring(order._id.length - 4).toUpperCase()}`} · {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                             </div>
@@ -407,7 +462,7 @@ export default function CompletedSubTab({
                                 <React.Fragment key={order._id}>
                                 <tr className={styles.desktopRow} style={{ borderBottom: '1px solid #f9fafb', cursor: 'pointer' }} onClick={() => setSelectedOrder(order)}>
                                   <td>
-                                    <span style={{ fontSize: '12px', color: '#374151' }}>{order.orderId ? (order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId) : order._id.substring(order._id.length - 4)}</span>
+                                    <span style={{ fontSize: '12px', color: '#374151' }}>#{order.orderId ? (order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId) : order._id.substring(order._id.length - 4)}</span>
                                   </td>
                                   <td>
                                     <span style={{ fontSize: '14px', color: '#000', textTransform: 'capitalize' }}>{order.customerName ? order.customerName.toLowerCase() : "N/A"}</span>
@@ -509,7 +564,7 @@ export default function CompletedSubTab({
                                       <div className={styles.mobileCardContainer}>
                                         <div className={styles.mobileCardHeader}>
                                           <div>
-                                            <div className={styles.mobileCustomerName}>{order.customerName ? order.customerName : "N/A"}</div>
+                                            <div className={styles.mobileCustomerName}>{order.customerName ? order.customerName.toLowerCase() : "N/A"}</div>
                                             <div className={styles.mobileOrderMeta}>
                                               #{order.orderId ? (order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId) : `ORD-${order._id.substring(order._id.length - 4).toUpperCase()}`} · {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                             </div>
