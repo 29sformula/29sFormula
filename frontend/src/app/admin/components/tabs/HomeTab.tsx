@@ -488,7 +488,7 @@ export default function HomeTab({
                   
                   <div style={{ overflowX: 'auto' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                      <thead>
+                      <thead className={styles.hideOnMobile}>
                         <tr>
                           <th style={{ padding: '12px 16px', color: '#6b7280', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', borderBottom: '1px solid #f3f4f6' }}>ID</th>
                           <th style={{ padding: '12px 16px', color: '#6b7280', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', borderBottom: '1px solid #f3f4f6' }}>Name</th>
@@ -506,15 +506,16 @@ export default function HomeTab({
                           <tr><td colSpan={7} style={{ padding: '16px', textAlign: 'center', color: '#6b7280' }}>No latest orders found.</td></tr>
                         ) : (
                           dashboardStats.recentOrders.map((order: any) => (
+                            <React.Fragment key={order._id}>
                             <tr 
-                              key={order._id} 
+                              className={styles.desktopRow}
                               style={{ borderBottom: '1px solid #f9fafb', cursor: 'pointer' }}
                               onClick={() => setSelectedOrder(order)}
                             >
-                              <td style={{ padding: '12px 16px', fontSize: '13px', color: '#374151', verticalAlign: 'top' }}>
+                              <td style={{ padding: '12px 16px', fontSize: '12px', color: '#374151', verticalAlign: 'top' }}>
                                 {order.orderId ? (order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId) : `ORD-${order._id.substring(order._id.length - 4).toUpperCase()}`}
                               </td>
-                              <td style={{ padding: '12px 16px', fontSize: '14px', color: '#374151', textTransform: 'capitalize', verticalAlign: 'top' }}>
+                              <td style={{ padding: '12px 16px', fontSize: '14px', color: '#000', textTransform: 'capitalize', verticalAlign: 'top' }}>
                                 {order.customerName ? order.customerName.toLowerCase() : "N/A"}
                               </td>
                               <td style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', maxWidth: '180px', verticalAlign: 'top' }}>
@@ -537,9 +538,10 @@ export default function HomeTab({
                               </td>
                               <td style={{ padding: '12px 16px', verticalAlign: 'top' }}>
                                 <span style={{ 
-                                  padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 500,
-                                  backgroundColor: order.status === 'Processing' ? '#fef3c7' : order.status === 'Dispatched' ? '#e0e7ff' : order.status === 'Delivered' ? '#d1fae5' : '#fee2e2',
-                                  color: order.status === 'Processing' ? '#92400e' : order.status === 'Dispatched' ? '#3730a3' : order.status === 'Delivered' ? '#065f46' : '#991b1b'
+                                  display: 'inline-block',
+                                  padding: '2px 6px', borderRadius: '12px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase',
+                                  backgroundColor: order.status === 'Processing' ? '#fef3c7' : order.status === 'Dispatched' ? '#e0e7ff' : order.status === 'Delivered' ? '#dcfce7' : order.status === 'Cancelled' ? '#f3f4f6' : '#fee2e2',
+                                  color: order.status === 'Processing' ? '#b45309' : order.status === 'Dispatched' ? '#4338ca' : order.status === 'Delivered' ? '#15803d' : order.status === 'Cancelled' ? '#4b5563' : '#b91c1c'
                                 }}>
                                   {order.status}
                                 </span>
@@ -548,6 +550,45 @@ export default function HomeTab({
                                 {new Date(order.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                               </td>
                             </tr>
+                            <tr className={styles.mobileCard} onClick={() => setSelectedOrder(order)}>
+                              <td colSpan={7} style={{ padding: 0, border: 'none' }}>
+                                <div className={styles.mobileCardContainer}>
+                                  <div className={styles.mobileCardHeader}>
+                                    <div>
+                                      <div className={styles.mobileCustomerName}>{order.customerName ? order.customerName : "N/A"}</div>
+                                      <div className={styles.mobileOrderMeta}>
+                                        #{order.orderId ? (order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId) : `ORD-${order._id.substring(order._id.length - 4).toUpperCase()}`} · {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                      </div>
+                                    </div>
+                                    <div style={{ textAlign: 'right' }}>
+                                      <div className={styles.mobileOrderAmount}>₹{(order.totalAmount || 0).toLocaleString('en-IN')}</div>
+                                      <div className={styles.mobileStatusBadge} style={{
+                                        backgroundColor: order.status === 'Processing' ? '#fef3c7' : order.status === 'Dispatched' ? '#e0e7ff' : order.status === 'Delivered' ? '#f0fdf4' : order.status === 'Cancelled' ? '#f3f4f6' : '#fee2e2',
+                                        color: order.status === 'Processing' ? '#b45309' : order.status === 'Dispatched' ? '#4338ca' : order.status === 'Delivered' ? '#166534' : order.status === 'Cancelled' ? '#4b5563' : '#b91c1c'
+                                      }}>
+                                        <div className={styles.mobileStatusDot} style={{
+                                          backgroundColor: order.status === 'Processing' ? '#b45309' : order.status === 'Dispatched' ? '#4338ca' : order.status === 'Delivered' ? '#166534' : order.status === 'Cancelled' ? '#4b5563' : '#b91c1c'
+                                        }}></div>
+                                        {order.status}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className={styles.mobileProductsList}>
+                                    {order.cartItems && order.cartItems.map((item: any, idx: number) => (
+                                      <div key={idx} className={styles.mobileProductPill}>
+                                        {item.name} · <span className={styles.mobileProductWeight}>{item.size} ×{item.quantity}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  
+                                  <div className={styles.mobileItemsSummary}>
+                                    {order.cartItems ? order.cartItems.reduce((acc: number, it: any) => acc + (it.quantity || 1), 0) : 0} items · {order.cartItems?.length || 0} products
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                            </React.Fragment>
                           ))
                         )}
                       </tbody>

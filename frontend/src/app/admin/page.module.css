@@ -1805,3 +1805,102 @@
     display: none !important;
   }
 }
+
+/* Mobile Orders Table Responsiveness */
+.desktopRow {
+  display: table-row;
+}
+.mobileCard { display: none; }
+
+@media (max-width: 768px) {
+  .desktopRow {
+    display: none !important;
+  }
+  .mobileCard { display: table-row !important; }
+  .hideOnMobile {
+    display: none !important;
+  }
+}
+
+.mobileCardContainer {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  border-bottom: 1px solid #f3f4f6;
+  background: #fff;
+  cursor: pointer;
+  width: 100%;
+}
+
+.mobileCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.mobileCustomerName {
+  font-size: 16px;
+  font-weight: 700;
+  color: #000;
+  margin-bottom: 4px;
+}
+
+.mobileOrderMeta {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.mobileOrderAmount {
+  font-size: 16px;
+  font-weight: 700;
+  color: #000;
+  text-align: right;
+  margin-bottom: 8px;
+}
+
+.mobileStatusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mobileStatusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.mobileProductsList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.mobileProductPill {
+  background-color: #f3f4f6;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: #4b5563;
+  width: fit-content;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mobileProductWeight {
+  font-weight: 600;
+  color: #111827;
+}
+
+.mobileItemsSummary {
+  font-size: 13px;
+  color: #9ca3af;
+}

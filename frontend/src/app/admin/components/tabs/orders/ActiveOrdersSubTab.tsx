@@ -175,7 +175,7 @@ export default function ActiveOrdersSubTab({
                   ) : (
                     <div className={styles.tableResponsive} style={{ overflow: openStatusDropdownId ? "visible" : "auto" }}>
                       <table className={styles.inventoryTable}>
-                        <thead>
+                        <thead className={styles.hideOnMobile}>
                           {activeSubTab === "returns" ? (
                             <tr>
                               <th>ID</th>
@@ -237,12 +237,13 @@ export default function ActiveOrdersSubTab({
                               const openUpwards = arr.length > 0 && idx >= arr.length - 2;
                               if (activeSubTab === "returns") {
                                 return (
-                                  <tr key={order._id} style={{ cursor: 'pointer' }} onClick={() => setSelectedOrder(order)}>
+                                  <React.Fragment key={order._id}>
+                                <tr className={styles.desktopRow} style={{ borderBottom: '1px solid #f9fafb', cursor: 'pointer' }} onClick={() => setSelectedOrder(order)}>
                                     <td>
-                                      <span style={{ fontSize: '13px', color: '#374151' }}>{order.orderId ? (order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId) : order._id.substring(order._id.length - 4)}</span>
+                                      <span style={{ fontSize: '12px', color: '#374151' }}>{order.orderId ? (order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId) : order._id.substring(order._id.length - 4)}</span>
                                     </td>
                                     <td>
-                                      <span style={{ fontSize: '14px', color: '#374151', textTransform: 'capitalize' }}>{order.customerName ? order.customerName.toLowerCase() : "N/A"}</span>
+                                      <span style={{ fontSize: '14px', color: '#000', textTransform: 'capitalize' }}>{order.customerName ? order.customerName.toLowerCase() : "N/A"}</span>
                                     </td>
                                     <td>
                                       <div style={{ maxWidth: '180px', fontSize: '0.85rem', color: '#6b7280' }}>
@@ -287,15 +288,15 @@ export default function ActiveOrdersSubTab({
                                     </td>
                                     <td>
                                       <span style={{
-                                        display: "inline-block",
-                                        padding: "4px 8px",
-                                        borderRadius: "12px",
-                                        fontSize: "0.75rem",
-                                        fontWeight: 700,
-                                        textTransform: "uppercase",
-                                        backgroundColor: order.returnRequest?.status === "Approved" ? "#eaf7ee" : order.returnRequest?.status === "Rejected" ? "#fef2f2" : "#fffbeb",
-                                        color: order.returnRequest?.status === "Approved" ? "#15803d" : order.returnRequest?.status === "Rejected" ? "#991b1b" : "#b45309"
-                                      }}>
+                                      display: "inline-block",
+                                      padding: "2px 6px",
+                                      borderRadius: "12px",
+                                      fontSize: "0.65rem",
+                                      fontWeight: 700,
+                                      textTransform: "uppercase",
+                                      backgroundColor: order.status === "Delivered" ? "#dcfce7" : order.status === "Return Rejected" ? "#fee2e2" : order.status === "Shipped" || order.status === "Dispatched" ? "#e0e7ff" : order.status === "Return Approved" ? "#ecfccb" : order.status === "Cancelled" ? "#f3f4f6" : order.status === "Processing" ? "#fef3c7" : "#fce7f3",
+                                      color: order.status === "Delivered" ? "#15803d" : order.status === "Return Rejected" ? "#b91c1c" : order.status === "Shipped" || order.status === "Dispatched" ? "#4338ca" : order.status === "Return Approved" ? "#4d7c0f" : order.status === "Cancelled" ? "#4b5563" : order.status === "Processing" ? "#b45309" : "#be185d"
+                                    }}>
                                         {order.returnRequest?.status || "Pending"}
                                       </span>
                                     </td>
@@ -360,22 +361,62 @@ export default function ActiveOrdersSubTab({
                                       </div>
                                     </td>
                                   </tr>
+                                  <tr className={styles.mobileCard} onClick={() => setSelectedOrder(order)}>
+                                    <td colSpan={10} style={{ padding: 0, border: 'none' }}>
+                                      <div className={styles.mobileCardContainer}>
+                                        <div className={styles.mobileCardHeader}>
+                                          <div>
+                                            <div className={styles.mobileCustomerName}>{order.customerName ? order.customerName : "N/A"}</div>
+                                            <div className={styles.mobileOrderMeta}>
+                                              #{order.orderId ? (order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId) : `ORD-${order._id.substring(order._id.length - 4).toUpperCase()}`} · {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                            </div>
+                                          </div>
+                                          <div style={{ textAlign: 'right' }}>
+                                            <div className={styles.mobileOrderAmount}>₹{(order.totalAmount || 0).toLocaleString('en-IN')}</div>
+                                            <div className={styles.mobileStatusBadge} style={{
+                                              backgroundColor: order.status === 'Processing' ? '#fef3c7' : order.status === 'Dispatched' ? '#e0e7ff' : order.status === 'Delivered' ? '#f0fdf4' : order.status === 'Cancelled' ? '#f3f4f6' : '#fee2e2',
+                                              color: order.status === 'Processing' ? '#b45309' : order.status === 'Dispatched' ? '#4338ca' : order.status === 'Delivered' ? '#166534' : order.status === 'Cancelled' ? '#4b5563' : '#b91c1c'
+                                            }}>
+                                              <div className={styles.mobileStatusDot} style={{
+                                                backgroundColor: order.status === 'Processing' ? '#b45309' : order.status === 'Dispatched' ? '#4338ca' : order.status === 'Delivered' ? '#166534' : order.status === 'Cancelled' ? '#4b5563' : '#b91c1c'
+                                              }}></div>
+                                              {order.status}
+                                            </div>
+                                          </div>
+                                        </div>
+                                        
+                                        <div className={styles.mobileProductsList}>
+                                          {order.cartItems && order.cartItems.map((item: any, idx: number) => (
+                                            <div key={idx} className={styles.mobileProductPill}>
+                                              {item.name} · <span className={styles.mobileProductWeight}>{item.size} ×{item.quantity}</span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                        
+                                        <div className={styles.mobileItemsSummary}>
+                                          {order.cartItems ? order.cartItems.reduce((acc: number, it: any) => acc + (it.quantity || 1), 0) : 0} items · {order.cartItems?.length || 0} products
+                                        </div>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                </React.Fragment>
                                 );
                               }
 
 
                               return (
-                                <tr key={order._id} style={{ cursor: 'pointer' }} onClick={() => setSelectedOrder(order)}>
+                                <React.Fragment key={order._id}>
+                                <tr className={styles.desktopRow} style={{ borderBottom: '1px solid #f9fafb', cursor: 'pointer' }} onClick={() => setSelectedOrder(order)}>
                                   <td>
                                     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                                      <span style={{ fontSize: '13px', color: '#374151' }}>{order.orderId ? (order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId) : order._id.substring(order._id.length - 4)}</span>
+                                      <span style={{ fontSize: '12px', color: '#374151' }}>{order.orderId ? (order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId) : order._id.substring(order._id.length - 4)}</span>
                                       {order.returnRequest?.returnType === "Replacement" && order.returnRequest?.status === "Approved" && (
                                         <span style={{ fontSize: "0.65rem", fontWeight: 700, padding: "2px 6px", borderRadius: "8px", backgroundColor: "#e0e7ff", color: "#4338ca", width: "fit-content" }}>EXCHANGE</span>
                                       )}
                                     </div>
                                   </td>
                                   <td>
-                                    <span style={{ fontSize: '14px', color: '#374151', textTransform: 'capitalize' }}>{order.customerName ? order.customerName.toLowerCase() : "N/A"}</span>
+                                    <span style={{ fontSize: '14px', color: '#000', textTransform: 'capitalize' }}>{order.customerName ? order.customerName.toLowerCase() : "N/A"}</span>
                                   </td>
                                   <td>
                                     <div style={{ maxWidth: '180px', fontSize: '0.85rem', color: '#6b7280' }}>
@@ -422,56 +463,6 @@ export default function ActiveOrdersSubTab({
                                   </td>
                                   <td>
                                     <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                                      <div style={{ position: "relative" }}>
-                                        <div
-                                          onClick={() => setOpenStatusDropdownId(openStatusDropdownId === order._id ? null : order._id)}
-                                          className={styles.selectInput}
-                                          style={{ padding: "4px 8px", fontSize: "0.8rem", cursor: "pointer", minWidth: "110px", display: "flex", alignItems: "center", justifyContent: "space-between" }}
-                                        >
-                                          {order.status}
-                                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="#6b7280" style={{ width: "12px", height: "12px", transform: openStatusDropdownId === order._id ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                                          </svg>
-                                        </div>
-
-                                        {openStatusDropdownId === order._id && (
-                                          <>
-                                            <div style={{ position: "fixed", inset: 0, zIndex: 100 }} onClick={() => setOpenStatusDropdownId(null)} />
-                                            <div style={{
-                                              position: "absolute",
-                                              left: 0,
-                                              minWidth: "120px",
-                                              background: "#fff",
-                                              border: "1px solid #e5e7eb",
-                                              borderRadius: "8px",
-                                              boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-                                              zIndex: 9999,
-                                              overflow: "hidden",
-                                              top: "100%",
-                                              marginTop: "4px"
-                                            }}>
-                                              {["Processing", "Shipped", "Delivered"].map((opt) => (
-                                                <div
-                                                  key={opt}
-                                                  onClick={() => { handleUpdateOrderStatus(order._id, opt); setOpenStatusDropdownId(null); }}
-                                                  style={{
-                                                    padding: "6px 12px",
-                                                    fontSize: "0.8rem",
-                                                    cursor: "pointer",
-                                                    backgroundColor: order.status === opt ? "#eff6ff" : "transparent",
-                                                    color: order.status === opt ? "#2563eb" : "#374151",
-                                                    fontWeight: order.status === opt ? 600 : 400
-                                                  }}
-                                                  onMouseEnter={(e) => { if (order.status !== opt) e.currentTarget.style.backgroundColor = "#f3f4f6"; }}
-                                                  onMouseLeave={(e) => { if (order.status !== opt) e.currentTarget.style.backgroundColor = "transparent"; }}
-                                                >
-                                                  {opt}
-                                                </div>
-                                              ))}
-                                            </div>
-                                          </>
-                                        )}
-                                      </div>
                                       <div style={{ position: "relative" }}>
                                         <button
                                           onClick={(e) => { e.stopPropagation(); setOpenActionDropdownId(openActionDropdownId === order._id ? null : order._id); }}
@@ -521,6 +512,45 @@ export default function ActiveOrdersSubTab({
                                     </div>
                                   </td>
                                 </tr>
+                                  <tr className={styles.mobileCard} onClick={() => setSelectedOrder(order)}>
+                                    <td colSpan={10} style={{ padding: 0, border: 'none' }}>
+                                      <div className={styles.mobileCardContainer}>
+                                        <div className={styles.mobileCardHeader}>
+                                          <div>
+                                            <div className={styles.mobileCustomerName}>{order.customerName ? order.customerName : "N/A"}</div>
+                                            <div className={styles.mobileOrderMeta}>
+                                              #{order.orderId ? (order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId) : `ORD-${order._id.substring(order._id.length - 4).toUpperCase()}`} · {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                            </div>
+                                          </div>
+                                          <div style={{ textAlign: 'right' }}>
+                                            <div className={styles.mobileOrderAmount}>₹{(order.totalAmount || 0).toLocaleString('en-IN')}</div>
+                                            <div className={styles.mobileStatusBadge} style={{
+                                              backgroundColor: order.status === 'Processing' ? '#fef3c7' : order.status === 'Dispatched' ? '#e0e7ff' : order.status === 'Delivered' ? '#f0fdf4' : order.status === 'Cancelled' ? '#f3f4f6' : '#fee2e2',
+                                              color: order.status === 'Processing' ? '#b45309' : order.status === 'Dispatched' ? '#4338ca' : order.status === 'Delivered' ? '#166534' : order.status === 'Cancelled' ? '#4b5563' : '#b91c1c'
+                                            }}>
+                                              <div className={styles.mobileStatusDot} style={{
+                                                backgroundColor: order.status === 'Processing' ? '#b45309' : order.status === 'Dispatched' ? '#4338ca' : order.status === 'Delivered' ? '#166534' : order.status === 'Cancelled' ? '#4b5563' : '#b91c1c'
+                                              }}></div>
+                                              {order.status}
+                                            </div>
+                                          </div>
+                                        </div>
+                                        
+                                        <div className={styles.mobileProductsList}>
+                                          {order.cartItems && order.cartItems.map((item: any, idx: number) => (
+                                            <div key={idx} className={styles.mobileProductPill}>
+                                              {item.name} · <span className={styles.mobileProductWeight}>{item.size} ×{item.quantity}</span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                        
+                                        <div className={styles.mobileItemsSummary}>
+                                          {order.cartItems ? order.cartItems.reduce((acc: number, it: any) => acc + (it.quantity || 1), 0) : 0} items · {order.cartItems?.length || 0} products
+                                        </div>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                </React.Fragment>
                               );
                             })}
                         </tbody>
