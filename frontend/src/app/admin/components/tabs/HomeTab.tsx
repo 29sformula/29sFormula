@@ -74,6 +74,7 @@ interface HomeTabProps {
   setActiveSubTab: (val: any) => void;
   timelineFilter: string;
   setTimelineFilter: (val: string) => void;
+  setSelectedOrder: (val: any) => void;
 }
 
 export default function HomeTab({
@@ -81,7 +82,8 @@ export default function HomeTab({
   setActiveTab,
   setActiveSubTab,
   timelineFilter,
-  setTimelineFilter
+  setTimelineFilter,
+  setSelectedOrder
 }: HomeTabProps) {
   const [activeChartMetric, setActiveChartMetric] = useState<"sales" | "profit" | "orders">("sales");
   const [hoveredBarIndex, setHoveredBarIndex] = useState<number | null>(null);
@@ -106,9 +108,11 @@ export default function HomeTab({
   const yTicks = [yAxisMax, yAxisMax * 0.75, yAxisMax * 0.5, yAxisMax * 0.25, 0];
   
   const formatYTick = (val: number) => {
-    if (val === 0) return "₹0";
-    if (val >= 1000) return `₹${(val / 1000).toFixed(val % 1000 === 0 ? 0 : 1)}k`;
-    return `₹${val}`;
+    const isCurrency = activeChartMetric !== "orders";
+    const prefix = isCurrency ? "₹" : "";
+    if (val === 0) return `${prefix}0`;
+    if (val >= 1000) return `${prefix}${(val / 1000).toFixed(val % 1000 === 0 ? 0 : 1)}k`;
+    return `${prefix}${val}`;
   };
 
   const chartW = 800;
@@ -382,7 +386,7 @@ export default function HomeTab({
                       })}
 
                       {/* Profit Trend Line (Overlay) */}
-                      {chartData.length > 0 && (
+                      {chartData.length > 0 && activeChartMetric === 'sales' && (
                         <path
                           d={chartData.map((d, i) => {
                             const val = d.profit || 0;
@@ -403,7 +407,7 @@ export default function HomeTab({
                       )}
 
                       {/* Profit Trend Dots */}
-                      {chartData.map((d, i) => {
+                      {activeChartMetric === 'sales' && chartData.map((d, i) => {
                         const val = d.profit || 0;
                         const y = topPad + innerH - ((val / yAxisMax) * innerH);
                         const x = leftPad + (i * barStep) + (barStep / 2);
@@ -428,16 +432,26 @@ export default function HomeTab({
                         transform: 'translate(-50%, -100%)',
                         backgroundColor: '#000',
                         color: '#fff',
-                        padding: '6px 12px',
+                        padding: '8px 12px',
                         borderRadius: '6px',
                         fontSize: '13px',
-                        fontWeight: '600',
                         pointerEvents: 'none',
                         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                         zIndex: 10,
                         whiteSpace: 'nowrap',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '4px'
                       }}>
-                        ₹{(chartData[hoveredBarIndex][activeChartMetric] || 0).toLocaleString('en-IN')}
+                        <div style={{ fontWeight: '600' }}>
+                          {activeChartMetric === 'sales' ? 'Revenue: ' : activeChartMetric === 'orders' ? 'Orders: ' : 'Profit: '}
+                          {activeChartMetric !== 'orders' ? '₹' : ''}{(chartData[hoveredBarIndex][activeChartMetric] || 0).toLocaleString('en-IN')}
+                        </div>
+                        {activeChartMetric === 'sales' && (
+                          <div style={{ fontWeight: '500', color: '#10b981', fontSize: '12px' }}>
+                            Profit: ₹{(chartData[hoveredBarIndex].profit || 0).toLocaleString('en-IN')}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -447,10 +461,12 @@ export default function HomeTab({
                       <span className={styles.legendIconSquare} />
                       {activeChartMetric === "sales" ? "Revenue" : activeChartMetric === "profit" ? "Profit" : "Orders"}
                     </span>
-                    <span className={styles.legendText}>
-                      <span className={styles.legendIconLine} />
-                      Profit trend
-                    </span>
+                    {activeChartMetric === 'sales' && (
+                      <span className={styles.legendText}>
+                        <span className={styles.legendIconLine} />
+                        Profit trend
+                      </span>
+                    )}
                   </div>
                 </div>
               </section>
@@ -460,7 +476,7 @@ export default function HomeTab({
                 <div className={styles.chartContainerCard}>
                   <div className={styles.chartHeader} style={{ borderBottom: '1px solid #f3f4f6', paddingBottom: '16px', marginBottom: '16px' }}>
                     <div className={styles.chartHeaderLeft}>
-                      <span className={styles.chartHeaderLabel}>Recent Orders</span>
+                      <span className={styles.chartHeaderLabel}>Latest orders</span>
                     </div>
                     <button 
                       onClick={() => { setActiveTab("orders"); setActiveSubTab("all"); }}
@@ -474,37 +490,62 @@ export default function HomeTab({
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                       <thead>
                         <tr>
-                          <th style={{ padding: '12px 16px', color: '#6b7280', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', borderBottom: '1px solid #f3f4f6' }}>Order ID</th>
-                          <th style={{ padding: '12px 16px', color: '#6b7280', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', borderBottom: '1px solid #f3f4f6' }}>Date</th>
-                          <th style={{ padding: '12px 16px', color: '#6b7280', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', borderBottom: '1px solid #f3f4f6' }}>Status</th>
+                          <th style={{ padding: '12px 16px', color: '#6b7280', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', borderBottom: '1px solid #f3f4f6' }}>ID</th>
+                          <th style={{ padding: '12px 16px', color: '#6b7280', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', borderBottom: '1px solid #f3f4f6' }}>Name</th>
+                          <th style={{ padding: '12px 16px', color: '#6b7280', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', borderBottom: '1px solid #f3f4f6' }}>Items</th>
+                          <th style={{ padding: '12px 16px', color: '#6b7280', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', borderBottom: '1px solid #f3f4f6', textAlign: 'center' }}>Qty</th>
                           <th style={{ padding: '12px 16px', color: '#6b7280', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', borderBottom: '1px solid #f3f4f6', textAlign: 'right' }}>Amount</th>
+                          <th style={{ padding: '12px 16px', color: '#6b7280', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', borderBottom: '1px solid #f3f4f6' }}>Status</th>
+                          <th style={{ padding: '12px 16px', color: '#6b7280', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', borderBottom: '1px solid #f3f4f6' }}>Date</th>
                         </tr>
                       </thead>
                       <tbody>
                         {!dashboardStats ? (
-                          <tr><td colSpan={4} style={{ padding: '16px', textAlign: 'center', color: '#6b7280' }}>Loading...</td></tr>
+                          <tr><td colSpan={7} style={{ padding: '16px', textAlign: 'center', color: '#6b7280' }}>Loading...</td></tr>
                         ) : !dashboardStats.recentOrders || dashboardStats.recentOrders.length === 0 ? (
-                          <tr><td colSpan={4} style={{ padding: '16px', textAlign: 'center', color: '#6b7280' }}>No recent orders found.</td></tr>
+                          <tr><td colSpan={7} style={{ padding: '16px', textAlign: 'center', color: '#6b7280' }}>No latest orders found.</td></tr>
                         ) : (
                           dashboardStats.recentOrders.map((order: any) => (
-                            <tr key={order._id} style={{ borderBottom: '1px solid #f9fafb' }}>
-                              <td style={{ padding: '12px 16px', fontSize: '14px', fontWeight: 500, color: '#111827' }}>
-                                ORD-{order._id.substring(order._id.length - 4).toUpperCase()}
+                            <tr 
+                              key={order._id} 
+                              style={{ borderBottom: '1px solid #f9fafb', cursor: 'pointer' }}
+                              onClick={() => setSelectedOrder(order)}
+                            >
+                              <td style={{ padding: '12px 16px', fontSize: '13px', color: '#374151', verticalAlign: 'top' }}>
+                                {order.orderId ? (order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId) : `ORD-${order._id.substring(order._id.length - 4).toUpperCase()}`}
                               </td>
-                              <td style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280' }}>
-                                {new Date(order.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                              <td style={{ padding: '12px 16px', fontSize: '14px', color: '#374151', textTransform: 'capitalize', verticalAlign: 'top' }}>
+                                {order.customerName ? order.customerName.toLowerCase() : "N/A"}
                               </td>
-                              <td style={{ padding: '12px 16px' }}>
+                              <td style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', maxWidth: '180px', verticalAlign: 'top' }}>
+                                {order.cartItems && order.cartItems.length > 0 
+                                  ? order.cartItems.map((item: any, idx: number) => (
+                                      <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        <span style={{ color: '#374151', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</span>
+                                        <span style={{ backgroundColor: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 600, color: '#475569', flexShrink: 0 }}>
+                                          {item.quantity}x {item.size}
+                                        </span>
+                                      </div>
+                                    ))
+                                  : "N/A"}
+                              </td>
+                              <td style={{ padding: '12px 16px', fontSize: '14px', color: '#374151', textAlign: 'center', fontWeight: 500, verticalAlign: 'top' }}>
+                                {order.cartItems ? order.cartItems.reduce((acc: number, item: any) => acc + (item.quantity || 1), 0) : 0}
+                              </td>
+                              <td style={{ padding: '12px 16px', fontSize: '14px', fontWeight: 500, color: '#111827', textAlign: 'right', verticalAlign: 'top' }}>
+                                ₹{(order.totalAmount || 0).toLocaleString('en-IN')}
+                              </td>
+                              <td style={{ padding: '12px 16px', verticalAlign: 'top' }}>
                                 <span style={{ 
-                                  padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 600,
-                                  backgroundColor: order.status === 'Delivered' ? '#dcfce7' : order.status === 'Pending' ? '#fef9c3' : '#f3f4f6',
-                                  color: order.status === 'Delivered' ? '#166534' : order.status === 'Pending' ? '#854d0e' : '#4b5563'
+                                  padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 500,
+                                  backgroundColor: order.status === 'Processing' ? '#fef3c7' : order.status === 'Dispatched' ? '#e0e7ff' : order.status === 'Delivered' ? '#d1fae5' : '#fee2e2',
+                                  color: order.status === 'Processing' ? '#92400e' : order.status === 'Dispatched' ? '#3730a3' : order.status === 'Delivered' ? '#065f46' : '#991b1b'
                                 }}>
-                                  {order.status || 'Pending'}
+                                  {order.status}
                                 </span>
                               </td>
-                              <td style={{ padding: '12px 16px', fontSize: '14px', fontWeight: 600, color: '#111827', textAlign: 'right' }}>
-                                ₹{(order.totalAmount || 0).toLocaleString('en-IN')}
+                              <td style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', verticalAlign: 'top' }}>
+                                {new Date(order.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                               </td>
                             </tr>
                           ))

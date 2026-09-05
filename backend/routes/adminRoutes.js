@@ -44,7 +44,7 @@ router.get("/api/admin/dashboard-stats", async (req, res) => {
         const products = await Product.find({ _id: { $in: productIds } }).lean();
         return topSales.map(t => products.find(p => String(p._id) === String(t._id))).filter(Boolean);
       }),
-      Order.find({ deletedByAdmin: false }).sort({ createdAt: -1 }).limit(5).lean(),
+      Order.find({ deletedByAdmin: false }).sort({ createdAt: -1 }).limit(5).populate("customerId").lean(),
       ProductVariant.find({}, "productId size makingPrice").lean(),
       Product.find({}, "makingPrice").lean()
     ]);
@@ -256,7 +256,10 @@ router.get("/api/admin/dashboard-stats", async (req, res) => {
       topProducts,
       historicalData,
       totalProfitThisMonth,
-      recentOrders
+      recentOrders: recentOrders.map(order => ({
+        ...order,
+        customerName: order.customerId ? order.customerId.name : (order.customerName || "Unknown Customer")
+      }))
     });
   } catch (error) {
     console.error("Failed to fetch dashboard stats:", error);

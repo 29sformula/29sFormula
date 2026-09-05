@@ -44,6 +44,7 @@ export default function CancelledSubTab({
   setSelectedOrder,
   handleDeleteOrder
 }: CancelledSubTabProps) {
+  const [openActionDropdownId, setOpenActionDropdownId] = React.useState<string | null>(null);
   const activeSubTab = "cancelled" as string;
 
   return (
@@ -165,9 +166,7 @@ export default function CancelledSubTab({
 
               <div className={styles.tablePanelFull}>
                 <div className={styles.dashboardCard}>
-                  <h2 className={styles.cardHeaderTitle}>
-                    {activeSubTab === "returns" ? "Return Requests" : activeSubTab === "cancelled" ? "Cancelled" : activeSubTab === "completed" ? "Completed" : "Customer Orders"}
-                  </h2>
+
 
                   {orders.length === 0 ? (
                     <div className={styles.emptyState}>
@@ -179,20 +178,25 @@ export default function CancelledSubTab({
                         <thead>
                           {activeSubTab === "returns" ? (
                             <tr>
-                              <th>OrderId</th>
-                              <th>Customer</th>
+                              <th>ID</th>
+                              <th>Name</th>
+                              <th>Items</th>
+                              <th style={{ textAlign: 'center' }}>Qty</th>
+                              <th style={{ textAlign: 'right' }}>Amount</th>
                               <th style={{ minWidth: "200px" }}>Damage Reason & Proof</th>
-                              <th>Date Requested</th>
                               <th>Return Status</th>
+                              <th>Date</th>
                               <th>Admin Action</th>
                             </tr>
                           ) : (
                             <tr>
-                              <th>OrderId</th>
-                              <th>Customer</th>
-                              <th>Amount</th>
-                              <th>Order Date</th>
+                              <th>ID</th>
+                              <th>Name</th>
+                              <th>Items</th>
+                              <th style={{ textAlign: 'center' }}>Qty</th>
+                              <th style={{ textAlign: 'right' }}>Amount</th>
                               <th>Status</th>
+                              <th>Date</th>
                               <th>Actions</th>
                             </tr>
                           )}
@@ -232,13 +236,32 @@ export default function CancelledSubTab({
                               const openUpwards = arr.length > 0 && idx >= arr.length - 2;
                               if (activeSubTab === "returns") {
                                 return (
-                                  <tr key={order._id}>
+                                  <tr key={order._id} style={{ cursor: 'pointer' }} onClick={() => setSelectedOrder(order)}>
                                     <td>
-                                      <span className={styles.tableName}>{order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId}</span>
+                                      <span style={{ fontSize: '13px', color: '#374151' }}>{order.orderId ? (order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId) : order._id.substring(order._id.length - 4)}</span>
                                     </td>
                                     <td>
-                                      <span className={styles.tableName}>{order.customerName}</span>
-                                      <span className={styles.tableDesc}>{order.customerEmail}</span>
+                                      <span style={{ fontSize: '14px', color: '#374151', textTransform: 'capitalize' }}>{order.customerName ? order.customerName.toLowerCase() : "N/A"}</span>
+                                    </td>
+                                    <td>
+                                      <div style={{ maxWidth: '180px', fontSize: '0.85rem', color: '#6b7280' }}>
+                                        {order.cartItems && order.cartItems.length > 0 
+                                          ? order.cartItems.map((item: any, idx: number) => (
+                                              <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                <span style={{ color: '#374151', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</span>
+                                                <span style={{ backgroundColor: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 600, color: '#475569', flexShrink: 0 }}>
+                                                  {item.quantity}x {item.size}
+                                                </span>
+                                              </div>
+                                            ))
+                                          : "N/A"}
+                                      </div>
+                                    </td>
+                                    <td style={{ textAlign: 'center', fontSize: '14px', fontWeight: 500, color: '#374151' }}>
+                                      {order.cartItems ? order.cartItems.reduce((acc: number, item: any) => acc + (item.quantity || 1), 0) : 0}
+                                    </td>
+                                    <td style={{ textAlign: 'right', fontSize: '14px', fontWeight: 500, color: '#111827' }}>
+                                      ₹{(order.totalAmount || 0).toLocaleString("en-IN")}
                                     </td>
                                     <td>
                                       <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -262,14 +285,6 @@ export default function CancelledSubTab({
                                       </div>
                                     </td>
                                     <td>
-                                      <span className={styles.tableDesc} style={{ whiteSpace: "normal" }}>
-                                        {order.returnRequest?.createdAt 
-                                          ? new Date(order.returnRequest.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
-                                          : new Date(order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
-                                        }
-                                      </span>
-                                    </td>
-                                    <td>
                                       <span style={{
                                         display: "inline-block",
                                         padding: "4px 8px",
@@ -281,6 +296,14 @@ export default function CancelledSubTab({
                                         color: order.returnRequest?.status === "Approved" ? "#15803d" : order.returnRequest?.status === "Rejected" ? "#991b1b" : "#b45309"
                                       }}>
                                         {order.returnRequest?.status || "Pending"}
+                                      </span>
+                                    </td>
+                                    <td>
+                                      <span className={styles.tableDesc} style={{ whiteSpace: "normal" }}>
+                                        {order.returnRequest?.createdAt 
+                                          ? new Date(order.returnRequest.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+                                          : new Date(order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+                                        }
                                       </span>
                                     </td>
                                     <td>
@@ -341,25 +364,34 @@ export default function CancelledSubTab({
 
 
                               return (
-                                <tr key={order._id}>
+                                <tr key={order._id} style={{ cursor: 'pointer' }} onClick={() => setSelectedOrder(order)}>
                                   <td>
-                                    <span className={styles.tableName}>{order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId}</span>
+                                    <div>
+                                      <span style={{ fontSize: '13px', color: '#374151' }}>{order.orderId ? (order.orderId.length > 12 ? order.orderId.substring(0, 4) + '...' + order.orderId.slice(-6) : order.orderId) : order._id.substring(order._id.length - 4)}</span>
+                                    </div>
                                   </td>
                                   <td>
-                                    <span className={styles.tableName}>{order.customerName}</span>
-                                    <span className={styles.tableDesc}>{order.customerEmail}</span>
-                                  </td>
-                                  <td style={{ fontWeight: 700 }}>
-                                    ₹{order.totalAmount.toLocaleString("en-IN")}.00
+                                    <span style={{ fontSize: '14px', color: '#374151', textTransform: 'capitalize' }}>{order.customerName ? order.customerName.toLowerCase() : "N/A"}</span>
                                   </td>
                                   <td>
-                                    <span className={styles.tableDesc} style={{ whiteSpace: "normal" }}>
-                                      {new Date(order.createdAt).toLocaleDateString("en-IN", {
-                                        day: "numeric",
-                                        month: "short",
-                                        year: "numeric"
-                                      })}
-                                    </span>
+                                    <div style={{ maxWidth: '180px', fontSize: '0.85rem', color: '#6b7280' }}>
+                                      {order.cartItems && order.cartItems.length > 0 
+                                        ? order.cartItems.map((item: any, idx: number) => (
+                                            <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                              <span style={{ color: '#374151', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</span>
+                                              <span style={{ backgroundColor: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 600, color: '#475569', flexShrink: 0 }}>
+                                                {item.quantity}x {item.size}
+                                              </span>
+                                            </div>
+                                          ))
+                                        : "N/A"}
+                                    </div>
+                                  </td>
+                                  <td style={{ textAlign: 'center', fontSize: '14px', fontWeight: 500, color: '#374151' }}>
+                                    {order.cartItems ? order.cartItems.reduce((acc: number, item: any) => acc + (item.quantity || 1), 0) : 0}
+                                  </td>
+                                  <td style={{ textAlign: 'right', fontSize: '14px', fontWeight: 500, color: '#111827' }}>
+                                    ₹{(order.totalAmount || 0).toLocaleString("en-IN")}
                                   </td>
                                   <td>
                                     <span style={{
@@ -373,6 +405,15 @@ export default function CancelledSubTab({
                                       color: order.status === "Delivered" || (order.status === "Return Approved" && !(order.returnRequest?.returnType === "Refund" && order.refundStatus !== "Refunded")) ? "#15803d" : order.status === "Return Rejected" ? "#991b1b" : order.status === "Shipped" ? "#1d4ed8" : order.status === "Return Approved" ? "#b45309" : "#b45309"
                                     }}>
                                       {order.status === "Return Approved" ? (order.returnRequest?.returnType === "Refund" && order.refundStatus !== "Refunded" ? "Payment Pending" : "Approved") : order.status === "Return Rejected" ? "Rejected" : order.status}
+                                    </span>
+                                  </td>
+                                  <td>
+                                    <span className={styles.tableDesc} style={{ whiteSpace: "normal" }}>
+                                      {new Date(order.createdAt).toLocaleDateString("en-IN", {
+                                        day: "numeric",
+                                        month: "short",
+                                        year: "numeric"
+                                      })}
                                     </span>
                                   </td>
                                   <td>
@@ -427,25 +468,52 @@ export default function CancelledSubTab({
                                           </>
                                         )}
                                       </div>
-                                      <button
-                                        onClick={() => setSelectedOrder(order)}
-                                        title="View Order Details"
-                                        style={{ background: "transparent", border: "none", cursor: "pointer", color: "#4b5563", padding: "4px" }}
-                                      >
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "16px", height: "16px" }}>
-                                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                        </svg>
-                                      </button>
-                                      <button
-                                        onClick={() => handleDeleteOrder(order._id)}
-                                        title="Delete Order"
-                                        style={{ background: "transparent", border: "none", cursor: "pointer", color: "#ef4444", padding: "4px" }}
-                                      >
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "16px", height: "16px" }}>
-                                          <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                                        </svg>
-                                      </button>
+                                      <div style={{ position: "relative" }}>
+                                        <button
+                                          onClick={(e) => { e.stopPropagation(); setOpenActionDropdownId(openActionDropdownId === order._id ? null : order._id); }}
+                                          title="Actions"
+                                          style={{ background: "transparent", border: "none", cursor: "pointer", color: "#4b5563", padding: "4px", display: "flex", alignItems: "center" }}
+                                        >
+                                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "20px", height: "20px" }}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
+                                          </svg>
+                                        </button>
+                                        {openActionDropdownId === order._id && (
+                                          <>
+                                            <div style={{ position: "fixed", inset: 0, zIndex: 100 }} onClick={(e) => { e.stopPropagation(); setOpenActionDropdownId(null); }} />
+                                            <div style={{
+                                              position: "absolute",
+                                              right: 0,
+                                              minWidth: "120px",
+                                              background: "#fff",
+                                              border: "1px solid #e5e7eb",
+                                              borderRadius: "8px",
+                                              boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                                              zIndex: 9999,
+                                              overflow: "hidden",
+                                              top: "100%",
+                                              marginTop: "4px"
+                                            }}>
+                                              <div
+                                                onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); setOpenActionDropdownId(null); }}
+                                                style={{ padding: "8px 12px", fontSize: "0.85rem", cursor: "pointer", color: "#374151", fontWeight: 500 }}
+                                                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f3f4f6")}
+                                                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                                              >
+                                                View Details
+                                              </div>
+                                              <div
+                                                onClick={(e) => { e.stopPropagation(); handleDeleteOrder(order._id); setOpenActionDropdownId(null); }}
+                                                style={{ padding: "8px 12px", fontSize: "0.85rem", cursor: "pointer", color: "#ef4444", fontWeight: 500 }}
+                                                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#fee2e2")}
+                                                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                                              >
+                                                Cancel Order
+                                              </div>
+                                            </div>
+                                          </>
+                                        )}
+                                      </div>
                                     </div>
                                   </td>
                                 </tr>

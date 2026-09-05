@@ -2294,8 +2294,16 @@ const getSearchResults = () => {
     <div className={styles.adminPageWrapper}>
       
       {/* Mobile Header */}
-      <div className={`${styles.mobileHeader} ${!isHeaderVisible ? styles.mobileHeaderHidden : ''}`}>
-        <span className={styles.brandName}>29sFORMULA</span>
+      <div 
+        className={`${styles.mobileHeader} ${!isHeaderVisible && !isMobileMenuOpen ? styles.mobileHeaderHidden : ''}`}
+        style={{ 
+          zIndex: isMobileMenuOpen ? 10002 : 10000, 
+          backgroundColor: isMobileMenuOpen ? 'transparent' : '#ffffff',
+          borderBottom: isMobileMenuOpen ? 'none' : '1px solid #e5e7eb',
+          transition: 'all 0.3s ease'
+        }}
+      >
+        <span className={styles.brandName} style={{ opacity: isMobileMenuOpen ? 0 : 1, transition: 'opacity 0.3s' }}>29sFORMULA</span>
         <button className={styles.hamburgerBtn} onClick={() => {
           if (!isMobileMenuOpen) {
             // Open the dropdown for the active tab, close others
@@ -2560,6 +2568,7 @@ const getSearchResults = () => {
               setActiveSubTab={setActiveSubTab}
               timelineFilter={timelineFilter}
               setTimelineFilter={setTimelineFilter}
+              setSelectedOrder={setSelectedOrder}
             />
           )}
 
